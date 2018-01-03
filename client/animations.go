@@ -1,32 +1,79 @@
 package main
 
 import (
+	"errors"
 	"github.com/faiface/pixel"
-	"strconv"
+	"image"
+	_ "image/png"
+	"io/ioutil"
+	"os"
 )
 
-type player struct {
-	idle  []*pixel.Sprite
-	move  []*pixel.Sprite
-	shoot []*pixel.Sprite
+type Animation struct {
+	Sprites []*pixel.Sprite
+	Cur     int
 }
 
-func newplayer(weapon string) player {
-
-	p := player{idle: make([]*pixel.Sprite, 20), move: make([]*pixel.Sprite, 20), shoot: make([]*pixel.Sprite, 3)}
-
-	for i := 0; i < len(p.idle); i++ {
-		sprite, _ := loadPicture("sprites/survivor/" + weapon + "/idle/survivor-idle_rifle_" + strconv.Itoa(i) + ".png")
-		p.idle[i] = pixel.NewSprite(sprite, sprite.Bounds())
+func loadAnimations(path string, prefix string) map[string]Animation {
+	res := make(map[string]Animation)
+	elems, err := ioutil.ReadDir(path)
+	if err != nil {
+		panic(err)
 	}
-	for i := 0; i < len(p.move); i++ {
-		sprite, _ := loadPicture("sprites/survivor/" + weapon + "/move/survivor-move_rifle_" + strconv.Itoa(i) + ".png")
-		p.move[i] = pixel.NewSprite(sprite, sprite.Bounds())
+	anim, err := loadAnimation(path)
+	if err == nil {
+		res[prefix] = anim
 	}
-	for i := 0; i < len(p.shoot); i++ {
-		sprite, _ := loadPicture("sprites/survivor/" + weapon + "/shoot/survivor-shoot_rifle_" + strconv.Itoa(i) + ".png")
-		p.shoot[i] = pixel.NewSprite(sprite, sprite.Bounds())
+	for _, elem := range elems {
+		if elem.IsDir() {
+			for k, v := range loadAnimations(path+"/"+elem.Name(), prefix+"."+elem.Name()) {
+				res[k] = v
+			}
+		}
 	}
+	return res
+}
 
-	return p
+func loadAnimation(path string) (Animation, error) {
+	elems, err := ioutil.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+	res := make([]*pixel.Sprite, len(elems))
+	filesPresent := false
+	i := 0
+	for _, elem := range elems {
+		if !elem.IsDir() {
+			img, err := loadPicture(path + "/" + elem.Name())
+			if err != nil {
+				panic(err)
+			}
+			res[i] = pixel.NewSprite(img, img.Bounds())
+			filesPresent = true
+			i++
+		}
+	}
+	if !filesPresent {
+		return Animation{Sprites: nil, Cur: 0}, errors.New("No files were found")
+	}
+	return Animation{Sprites: res, Cur: 0}, nil
+}
+
+func loadPicture(path string) (pixel.Picture, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return pixel.PictureDataFromImage(img), nil
+}
+
+func (a *Animation) Next() (s *pixel.Sprite) {
+	s = a.Sprites[a.Cur]
+	a.Cur = (a.Cur + 1) % len(a.Sprites)
+	return
 }

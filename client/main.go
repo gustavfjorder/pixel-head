@@ -4,27 +4,12 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
-	"image"
 	_ "image/png"
-	"os"
 )
 
 func main() {
 	pixelgl.Run(run)
 
-}
-
-func loadPicture(path string) (pixel.Picture, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	img, _, err := image.Decode(file)
-	if err != nil {
-		return nil, err
-	}
-	return pixel.PictureDataFromImage(img), nil
 }
 
 func run() {
@@ -38,18 +23,19 @@ func run() {
 		panic(err)
 	}
 
-	player1 := newplayer("rifle")
-	player2 := newplayer("rifle")
-	player3 := newplayer("rifle")
+	playerAnim := loadAnimations("sprites/survivor", "player")
+	idle := playerAnim["player.rifle.idle"]
+	move := playerAnim["player.rifle.move"]
+	shoot := playerAnim["player.rifle.shoot"]
 
 	count := 0
 	shootcount := 0
 
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
-		player1.move[count].Draw(win, pixel.IM.Moved(win.Bounds().Center()))
-		player2.idle[count].Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(200, 100))))
-		player3.shoot[shootcount].Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(-200, -100))))
+		move.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center()))
+		idle.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(200, 100))))
+		shoot.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(-200, -100))))
 		count = (count + 1) % 20
 		shootcount = (shootcount + 1) % 3
 		win.Update()
