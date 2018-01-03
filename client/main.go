@@ -41,7 +41,7 @@ func run() {
 	player := make([]*pixel.Sprite, 20)
 
 	for i := 0; i < 20; i++ {
-		sprite, _ := loadPicture("sprites/survivor/rifle/idle/survivor-idle_rifle_1.png" /* + strconv.atoi(i) + ".png"*/)
+		sprite, _ := loadPicture("/sprites/survivor/rifle/idle/survivor-idle_rifle_1.png" /* + strconv.atoi(i) + ".png"*/)
 		player[i] = pixel.NewSprite(sprite, sprite.Bounds())
 	}
 
