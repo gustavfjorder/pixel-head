@@ -7,7 +7,6 @@ import (
 	"image"
 	_ "image/png"
 	"os"
-	"strconv"
 )
 
 func main() {
@@ -39,18 +38,15 @@ func run() {
 		panic(err)
 	}
 
-	player := make([]*pixel.Sprite, 20)
-
-	for i := 0; i < 20; i++ {
-		sprite, _ := loadPicture("sprites/survivor/rifle/idle/survivor-idle_rifle_" + strconv.Itoa(i) + ".png")
-		player[i] = pixel.NewSprite(sprite, sprite.Bounds())
-	}
+	player1 := newplayer()
+	player2 := newplayer()
 
 	count := 0
 
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
-		player[count].Draw(win, pixel.IM.Moved(win.Bounds().Center()))
+		player1.idle[count].Draw(win, pixel.IM.Moved(win.Bounds().Center()))
+		player2.idle[count].Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(200, 100))))
 		count = (count + 1) % 20
 		win.Update()
 	}
