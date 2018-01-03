@@ -1,3 +1,4 @@
 {
-    "animationSpeed" : 30
+    "animationSpeed" : 30,
+    "fps" : 144
 }

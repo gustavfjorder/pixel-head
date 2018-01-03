@@ -17,6 +17,7 @@ var config = LoadConfiguration("conf.json")
 
 type Config struct {
 	AnimationSpeed time.Duration
+	Fps            time.Duration
 }
 
 type Animation struct {
