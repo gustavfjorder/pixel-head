@@ -15,7 +15,7 @@ var (
 )
 
 func run() {
-	LoadConfiguration("conf.json", &config)
+	LoadConfiguration("settings.json", &config)
 	makeWindow()
 	var (
 		frames     = 0
@@ -49,6 +49,7 @@ func run() {
 		}
 		<-fps
 	}
+	SaveConfig()
 }
 
 func makeWindow() {

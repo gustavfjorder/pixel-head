@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/faiface/pixel"
 	"image"
 	_ "image/png"
@@ -67,7 +66,6 @@ func loadAnimation(path string) (Animation, error) {
 	res := make([]*pixel.Sprite, len(elems))
 	i := 0
 	for _, elem := range elems {
-		fmt.Println(elem.Name())
 		if elem.IsDir() {
 			return Animation{Sprites: nil, Cur: 0, Tick: nil}, errors.New("can only load files")
 		}

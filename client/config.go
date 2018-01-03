@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/faiface/pixel/pixelgl"
+	"io/ioutil"
 	"os"
 	"time"
 )
@@ -30,7 +31,13 @@ func LoadConfiguration(file string, config *Config) {
 	defer configFile.Close()
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&config)
+}
+
+func SaveConfig() {
+	js, _ := json.Marshal(config)
+	ioutil.WriteFile("settings.json", js, 0644)
 }
