@@ -8,17 +8,8 @@ import (
 	_ "image/png"
 	"io/ioutil"
 	"os"
-	//"sort"
-	"encoding/json"
 	"time"
 )
-
-var config = LoadConfiguration("conf.json")
-
-type Config struct {
-	AnimationSpeed time.Duration
-	Fps            time.Duration
-}
 
 type Animation struct {
 	Sprites []*pixel.Sprite
@@ -26,8 +17,8 @@ type Animation struct {
 	Tick    *time.Ticker
 }
 
-func (a Animation) start() Animation {
-	a.Tick = time.NewTicker(time.Second / config.AnimationSpeed)
+func (a Animation) start(s time.Duration) Animation {
+	a.Tick = time.NewTicker(time.Second / s)
 	return a
 }
 
@@ -102,16 +93,4 @@ func loadPicture(path string) (pixel.Picture, error) {
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(img), nil
-}
-
-func LoadConfiguration(file string) Config {
-	var config Config
-	configFile, err := os.Open(file)
-	defer configFile.Close()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config)
-	return config
 }
