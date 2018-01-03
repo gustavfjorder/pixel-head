@@ -23,21 +23,19 @@ func run() {
 		panic(err)
 	}
 
-	playerAnim := loadAnimations("sprites/survivor", "player")
-	idle := playerAnim["player.rifle.idle"]
-	move := playerAnim["player.rifle.move"]
-	shoot := playerAnim["player.rifle.shoot"]
-
-	count := 0
-	shootcount := 0
+	playerAnim := loadAnimations("sprites/survivor", "")
+	zombieAnim := loadAnimations("sprites/zombie", "")
+	zMove := zombieAnim["walk"].start()
+	idle := playerAnim["rifle.idle"].start()
+	move := playerAnim["rifle.move"].start()
+	shoot := playerAnim["rifle.shoot"].start()
 
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
 		move.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 		idle.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(200, 100))))
 		shoot.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(-200, -100))))
-		count = (count + 1) % 20
-		shootcount = (shootcount + 1) % 3
+		zMove.Next().Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(-400, -200))))
 		win.Update()
 	}
 

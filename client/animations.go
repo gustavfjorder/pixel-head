@@ -2,16 +2,43 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/faiface/pixel"
 	"image"
 	_ "image/png"
 	"io/ioutil"
 	"os"
+	//"sort"
+	"encoding/json"
+	"time"
 )
+
+var config = LoadConfiguration("conf.json")
+
+type Config struct {
+	AnimationSpeed time.Duration
+}
 
 type Animation struct {
 	Sprites []*pixel.Sprite
 	Cur     int
+	Tick    *time.Ticker
+}
+
+func (a Animation) start() Animation {
+	a.Tick = time.NewTicker(time.Second / config.AnimationSpeed)
+	return a
+}
+
+func (a *Animation) Next() (s *pixel.Sprite) {
+	s = a.Sprites[a.Cur]
+	select {
+	case <-a.Tick.C:
+		a.Cur = (a.Cur + 1) % len(a.Sprites)
+	default:
+		break
+	}
+	return
 }
 
 func loadAnimations(path string, prefix string) map[string]Animation {
@@ -20,15 +47,21 @@ func loadAnimations(path string, prefix string) map[string]Animation {
 	if err != nil {
 		panic(err)
 	}
-	anim, err := loadAnimation(path)
-	if err == nil {
-		res[prefix] = anim
-	}
 	for _, elem := range elems {
 		if elem.IsDir() {
-			for k, v := range loadAnimations(path+"/"+elem.Name(), prefix+"."+elem.Name()) {
+			del := "."
+			if len(prefix) <= 0 {
+				del = ""
+			}
+			for k, v := range loadAnimations(path+"/"+elem.Name(), prefix+del+elem.Name()) {
 				res[k] = v
 			}
+		} else {
+			anim, err := loadAnimation(path)
+			if err == nil {
+				res[prefix] = anim
+			}
+			break
 		}
 	}
 	return res
@@ -40,23 +73,21 @@ func loadAnimation(path string) (Animation, error) {
 		panic(err)
 	}
 	res := make([]*pixel.Sprite, len(elems))
-	filesPresent := false
 	i := 0
 	for _, elem := range elems {
-		if !elem.IsDir() {
-			img, err := loadPicture(path + "/" + elem.Name())
-			if err != nil {
-				panic(err)
-			}
-			res[i] = pixel.NewSprite(img, img.Bounds())
-			filesPresent = true
-			i++
+		fmt.Println(elem.Name())
+		if elem.IsDir() {
+			return Animation{Sprites: nil, Cur: 0, Tick: nil}, errors.New("can only load files")
 		}
+		img, err := loadPicture(path + "/" + elem.Name())
+		if err != nil {
+			panic(err)
+		}
+		res[i] = pixel.NewSprite(img, img.Bounds())
+		i++
+
 	}
-	if !filesPresent {
-		return Animation{Sprites: nil, Cur: 0}, errors.New("No files were found")
-	}
-	return Animation{Sprites: res, Cur: 0}, nil
+	return Animation{Sprites: res, Cur: 0, Tick: nil}, nil
 }
 
 func loadPicture(path string) (pixel.Picture, error) {
@@ -72,8 +103,14 @@ func loadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
-func (a *Animation) Next() (s *pixel.Sprite) {
-	s = a.Sprites[a.Cur]
-	a.Cur = (a.Cur + 1) % len(a.Sprites)
-	return
+func LoadConfiguration(file string) Config {
+	var config Config
+	configFile, err := os.Open(file)
+	defer configFile.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	jsonParser := json.NewDecoder(configFile)
+	jsonParser.Decode(&config)
+	return config
 }
