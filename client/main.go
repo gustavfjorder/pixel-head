@@ -38,16 +38,20 @@ func run() {
 		panic(err)
 	}
 
-	player1 := newplayer()
-	player2 := newplayer()
+	player1 := newplayer("rifle")
+	player2 := newplayer("rifle")
+	player3 := newplayer("rifle")
 
 	count := 0
+	shootcount := 0
 
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
-		player1.idle[count].Draw(win, pixel.IM.Moved(win.Bounds().Center()))
+		player1.move[count].Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 		player2.idle[count].Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(200, 100))))
+		player3.shoot[shootcount].Draw(win, pixel.IM.Moved(win.Bounds().Center().Add(pixel.V(-200, -100))))
 		count = (count + 1) % 20
+		shootcount = (shootcount + 1) % 3
 		win.Update()
 	}
 
