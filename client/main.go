@@ -5,8 +5,9 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 	"image"
+	_ "image/png"
 	"os"
-	//"strconv"
+	"strconv"
 )
 
 func main() {
@@ -41,7 +42,7 @@ func run() {
 	player := make([]*pixel.Sprite, 20)
 
 	for i := 0; i < 20; i++ {
-		sprite, _ := loadPicture("/sprites/survivor/rifle/idle/survivor-idle_rifle_1.png" /* + strconv.atoi(i) + ".png"*/)
+		sprite, _ := loadPicture("sprites/survivor/rifle/idle/survivor-idle_rifle_" + strconv.Itoa(i) + ".png")
 		player[i] = pixel.NewSprite(sprite, sprite.Bounds())
 	}
 
