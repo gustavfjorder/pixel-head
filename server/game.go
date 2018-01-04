@@ -23,12 +23,7 @@ func StartGame(playerIds []string) {
 		player := model.Player{
 			Id:     id,
 			Pos:    pixel.V(0, 0),
-			Weapon: model.Weapon{ // todo: Weapons should be defined somewhere
-				Id:    "gun",
-				Name:  "Magnum",
-				Power: 1,
-				Range: 8,
-			},
+			Weapon: model.Weapons[model.Handgun],
 		}
 
 		spc.Put(player)
