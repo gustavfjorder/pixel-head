@@ -8,7 +8,8 @@ type Player struct {
 	Stats Stats
 }
 
-func (p Player) Move(dir float64) {
+func (p Player) Move(dir float64) (Player) {
 	p.Pos = p.Pos.Add(pixel.V(2, 0).Rotated(dir))
+	return p
 }
 

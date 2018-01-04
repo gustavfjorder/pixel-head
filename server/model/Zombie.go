@@ -2,7 +2,12 @@ package model
 
 import "github.com/faiface/pixel"
 
-type Zoombie struct{
+type Zombie struct{
 	Pos pixel.Vec
 	Stats Stats
+}
+
+
+func (z Zombie) move(){
+
 }
