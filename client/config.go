@@ -17,6 +17,12 @@ var Conf = Config{
 		Right: pixelgl.KeyD,
 		Up:    pixelgl.KeyW,
 		Down:  pixelgl.KeyS,
+		Shoot: pixelgl.KeySpace,
+		Melee: pixelgl.KeyLeftControl,
+		Knife: pixelgl.Key1,
+		Handgun:pixelgl.Key2,
+		Rifle: pixelgl.Key3,
+		Shotgun:pixelgl.Key4,
 	},
 }
 
@@ -26,7 +32,7 @@ type Config struct {
 	Control
 }
 
-func LoadConfiguration(file string, config *Config) {
+func LoadJson(file string, config interface{}) {
 	configFile, err := os.Open(file)
 	defer configFile.Close()
 	if err != nil {

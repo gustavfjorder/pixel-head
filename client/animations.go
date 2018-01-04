@@ -8,6 +8,9 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
+	"sort"
+	"regexp"
+	"strconv"
 )
 
 type Animation struct {
@@ -29,6 +32,16 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 	default:
 		break
 	}
+	return
+}
+
+func (a *Animation) ChangeAnimation(other Animation) (e error){
+	if(len(other.Sprites) <= 0){
+		e = errors.New("Need non empty animation")
+		return
+	}
+	a.Sprites = other.Sprites
+	a.Cur = 0
 	return
 }
 
@@ -58,16 +71,36 @@ func LoadAnimations(path string, prefix string) map[string]Animation {
 	return res
 }
 
+type ByString []os.FileInfo
+
+func (s ByString) Len() int{
+	return len(s)
+}
+
+func (s ByString) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s ByString) Less(i, j int) bool {
+	r := regexp.MustCompile("[0-9]+")
+	si, _ := strconv.Atoi(r.FindString(s[i].Name()))
+	sj, _ := strconv.Atoi(r.FindString(s[j].Name()))
+	return si < sj
+}
+
 func loadAnimation(path string) (Animation, error) {
 	elems, err := ioutil.ReadDir(path)
 	if err != nil {
 		panic(err)
 	}
+	if len(elems) <= 0 || elems[0].IsDir(){
+		return Animation{}, errors.New("can only load files")
+	}
 	res := make([]*pixel.Sprite, len(elems))
+	sort.Sort(ByString(elems))
 	i := 0
 	for _, elem := range elems {
 		if elem.IsDir() {
-			return Animation{Sprites: nil, Cur: 0, Tick: nil}, errors.New("can only load files")
+			return Animation{}, errors.New("can only load files")
 		}
 		img, err := loadPicture(path + "/" + elem.Name())
 		if err != nil {
