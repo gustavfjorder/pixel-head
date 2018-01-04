@@ -2,10 +2,18 @@ package server
 
 import (
 	"github.com/pspaces/gospace"
-	"github.com/faiface/pixel"
+	"github.com/gustavfjorder/pixel-head/server/model"
 )
 
-func handleRequest(space gospace.Space, player Player) {
+//type Request struct {
+//	Id string
+//	CurrentWep byte
+//	Dir float64
+//	Move bool
+//	Shoot bool
+//}
+
+func handleRequest(space gospace.Space, player model.Player) {
 	var requestType string
 
 	t, e := space.GetP(player.Id, "request", &requestType)
@@ -22,7 +30,7 @@ func handleRequest(space gospace.Space, player Player) {
 		if err == nil {
 			dir = request.GetFieldAt(2).(float64)
 
-			player.Pos = player.Pos.Add(pixel.V(2, 0).Rotated(dir))
+			player.Move(dir)
 		}
 
 	default:

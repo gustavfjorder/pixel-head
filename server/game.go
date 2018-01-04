@@ -5,9 +5,10 @@ import (
 	. "github.com/pspaces/gospace"
 	"time"
 	"encoding/gob"
+	"github.com/gustavfjorder/pixel-head/server/model"
 )
 
-func StartGame(players []Player) {
+func StartGame(players []model.Player) {
 	spc := NewSpace("tcp://localhost:31415/game1")
 
 	// Register Vec for encoding to space
@@ -28,7 +29,11 @@ func StartGame(players []Player) {
 		loopPlayers, _ := spc.GetAll("player", &playerId, &playerPos)
 
 		for _, tPlayer := range loopPlayers {
-			player := Player{tPlayer.GetFieldAt(1).(string), tPlayer.GetFieldAt(2).(pixel.Vec)}
+			player := model.Player{
+				Id:    tPlayer.GetFieldAt(1).(string),
+				Pos:   tPlayer.GetFieldAt(2).(pixel.Vec),
+				Stats: nil,
+			}
 
 			handleRequest(spc, player)
 
