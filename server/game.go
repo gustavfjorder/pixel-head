@@ -30,6 +30,8 @@ func StartGame(players []Player) {
 		for _, tPlayer := range loopPlayers {
 			player := Player{tPlayer.GetFieldAt(1).(string), tPlayer.GetFieldAt(2).(pixel.Vec)}
 
+			handleRequest(spc, player)
+
 			spc.Put("player", player.Id, player.Pos)
 		}
 
