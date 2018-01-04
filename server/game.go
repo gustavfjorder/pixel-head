@@ -6,41 +6,56 @@ import (
 	"time"
 	"encoding/gob"
 	"github.com/gustavfjorder/pixel-head/server/model"
+	"fmt"
 )
 
 func StartGame(players []model.Player) {
 	spc := NewSpace("tcp://localhost:31415/game1")
 
-	// Register Vec for encoding to space
-	gob.Register(pixel.Vec{})
+	// Register models for encoding to space
+	gob.Register(Request{})
+	gob.Register(model.Player{})
 
 	// Save players into space
-	for i, player := range players {
-		players[i].Pos = player.Pos.Add(pixel.V(1, 1))
-		spc.Put("player", player.Id, player.Pos)
+	for _, player := range players {
+		player.Pos = player.Pos.Add(pixel.V(1, 1))
+		spc.Put(player)
 	}
 
 	t := time.Tick(time.Second / 60)
 
 	// Game loop
 	for {
-		var playerId string
-		var playerPos pixel.Vec
+		spc.Get("loop_lock")
 
-		// Load players to handle
-		loopPlayers, _ := spc.GetAll("player", &playerId, &playerPos)
+		// Load incoming requests
+		rTuples, _ := spc.GetAll(&Request{})
+		for _, rTuple := range rTuples {
+			request := rTuple.GetFieldAt(0).(Request)
+			fmt.Println("Handling request:", request)
 
-		for _, tPlayer := range loopPlayers {
-			player := model.Player{
-				Id:    tPlayer.GetFieldAt(1).(string),
-				Pos:   tPlayer.GetFieldAt(2).(pixel.Vec),
-				Stats: nil,
+			// Load player who made the request
+			t, _ := spc.GetP(model.Player{Id: request.PlayerId})
+			player := t.GetFieldAt(0).(model.Player)
+
+			// Change weapon
+			player.Weapon = request.CurrentWep
+
+			if request.Move {
+				// todo: check if move is doable in map
+				player = player.Move(request.Dir)
 			}
 
-			handleRequest(spc, player)
+			if request.Reload {
+				// todo: handle reload
+			} else if request.Shoot {
+				// todo: handle shoot
+			}
 
-			spc.Put("player", player.Id, player.Pos)
+			spc.Put(player)
 		}
+
+		spc.Put("loop_lock")
 
 		<- t
 	}
