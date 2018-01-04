@@ -12,7 +12,7 @@ type Player struct {
 func NewPlayer(id string) Player {
 	return Player{
 		Id: id,
-		Pos: pixel.V(0,0),
+		Pos: pixel.V(200,200),
 		Weapon: Weapons[Handgun],
 		Stats: NewStats(Human),
 	}

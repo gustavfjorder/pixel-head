@@ -46,6 +46,7 @@ func run() {
 		panic(err)
 	}
 	win.SetSmooth(true)
+	center := pixel.ZV
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
 		client.HandleControls(*win, &r)
@@ -56,7 +57,11 @@ func run() {
 				curAnim.ChangeAnimation(anim)
 			}
 		}
-		curAnim.Next().Draw(win, r.GetRotation().Moved(win.Bounds().Center()))
+		if r.Move {
+			me.Pos = me.Pos.Add(pixel.V(me.MoveSpeed, 0).Rotated(r.Dir))
+		}
+		transformation := r.GetRotation().Scaled(center, 0.5).Moved(center.Add(me.Pos))
+		curAnim.Next().Draw(win, transformation)
 		win.Update()
 
 		frames++

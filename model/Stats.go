@@ -1,8 +1,8 @@
 package model
 
 type Stats struct {
-	Health int
-	Speed float32
+	Health    int
+	MoveSpeed float64
 }
 
 const (
@@ -14,13 +14,13 @@ func NewStats(being int) (s Stats) {
 	switch being {
 	case Human:
 		s = Stats{
-			Health:100,
-			Speed:2,
+			Health:    100,
+			MoveSpeed: 5,
 		}
 	case zombie:
 		s = Stats{
-			Health:20,
-			Speed:1,
+			Health:    20,
+			MoveSpeed: 1,
 		}
 	}
 	return
