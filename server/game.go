@@ -9,7 +9,9 @@ import (
 	"fmt"
 )
 
-func StartGame(players []model.Player) {
+func StartGame(playerIds []string) {
+	fmt.Println("Starting game with:", playerIds)
+
 	spc := NewSpace("tcp://localhost:31415/game1")
 
 	// Register models for encoding to space
@@ -17,8 +19,18 @@ func StartGame(players []model.Player) {
 	gob.Register(model.Player{})
 
 	// Save players into space
-	for _, player := range players {
-		player.Pos = player.Pos.Add(pixel.V(1, 1))
+	for _, id := range playerIds {
+		player := model.Player{
+			Id:     id,
+			Pos:    pixel.V(0, 0),
+			Weapon: model.Weapon{ // todo: Weapons should be defined somewhere
+				Id:    "gun",
+				Name:  "Magnum",
+				Power: 1,
+				Range: 8,
+			},
+		}
+
 		spc.Put(player)
 	}
 
