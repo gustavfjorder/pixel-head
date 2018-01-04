@@ -1,29 +1,46 @@
 package main
 
 import (
-	"fmt"
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-	"golang.org/x/image/colornames"
-	_ "image/png"
+	"github.com/gustavfjorder/pixel-head/model"
+	"encoding/gob"
 	"time"
-	. "github.com/gustavfjorder/pixel-head/client"
+	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel"
+	"golang.org/x/image/colornames"
+	"fmt"
+	"github.com/pspaces/gospace/space"
+	"github.com/gustavfjorder/pixel-head/client"
+	"github.com/gustavfjorder/pixel-head/Config"
 )
 
 func run() {
-	LoadJson("settings.json", &Conf)
+	Config.LoadJson("settings.json", &Config.Conf)
+	var spc space.Space
+	me := model.NewPlayer(Config.Conf.Id)
+	gob.Register(model.Player{})
+	if Config.Conf.Online {
+		spc = space.NewSpace(Config.Conf.Uri)
+		_, err := spc.Put("client", Config.Conf.Id)
+		panic(err)
+	} else {
+		spc = space.NewSpace("game")
+	}
 	var (
-		frames     = 0
-		second     = time.Tick(time.Second)
-		fps        = time.Tick(time.Second / Conf.Fps)
-		playerAnim = LoadAnimations("client/sprites/survivor", "")
-		cfg = pixelgl.WindowConfig{	Title:  "Pixel Rocks!",	Bounds: pixel.R(0, 0, 1024, 768),}
-		weapon = HANDGUN
-		movement = IDLE
-		curRot = pixel.IM
-		curAnimPath = Prefix(weapon, movement)
-		curAnim = playerAnim[curAnimPath].Start(Conf.AnimationSpeed)
+		frames      = 0
+		second      = time.Tick(time.Second)
+		fps         = time.Tick(time.Second / Config.Conf.Fps)
+		playerAnim  = client.LoadAnimations("client/sprites/survivor", "")
+		cfg         = pixelgl.WindowConfig{Title: "Pixel Rocks!", Bounds: pixel.R(0, 0, 1024, 768),}
+		r           = model.Request{}
+		curAnimPath = client.Prefix(r.WeaponName(), r.MovementName())
+		curAnim     = playerAnim[curAnimPath].Start(Config.Conf.AnimationSpeed)
 	)
+	if Config.Conf.Online {
+		_, err := spc.Get("ready", Config.Conf.Id, &me)
+		if err != nil {
+			panic(err)
+		}
+	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
@@ -31,14 +48,15 @@ func run() {
 	win.SetSmooth(true)
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
-		HandleDir(*win, &curRot, &weapon, &movement)
-		if curAnimPath != Prefix(weapon, movement){
-			if anim, ok := playerAnim[Prefix(weapon, movement)]; ok{
-				curAnimPath = Prefix(weapon, movement)
+		client.HandleControls(*win, &r)
+		prefix := client.Prefix(r.WeaponName(), r.MovementName())
+		if curAnimPath != prefix {
+			if anim, ok := playerAnim[prefix]; ok {
+				curAnimPath = prefix
 				curAnim.ChangeAnimation(anim)
 			}
 		}
-		curAnim.Next().Draw(win, curRot.Moved(win.Bounds().Center()))
+		curAnim.Next().Draw(win, r.GetRotation().Moved(win.Bounds().Center()))
 		win.Update()
 
 		frames++
@@ -51,7 +69,7 @@ func run() {
 		<-fps
 	}
 
-	SaveConfig()
+	Config.SaveConfig("settings.json")
 }
 
 func main() {

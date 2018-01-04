@@ -5,8 +5,17 @@ import "github.com/faiface/pixel"
 type Player struct {
 	Id  string
 	Pos pixel.Vec
-	Weapon Weapon
-	Stats Stats
+	Weapon
+	Stats
+}
+
+func NewPlayer(id string) Player {
+	return Player{
+		Id: id,
+		Pos: pixel.V(0,0),
+		Weapon: Weapons[Handgun],
+		Stats: NewStats(Human),
+	}
 }
 
 func (p Player) Move(dir float64) (Player) {

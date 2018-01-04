@@ -5,7 +5,7 @@ import (
 	. "github.com/pspaces/gospace"
 	"time"
 	"encoding/gob"
-	"github.com/gustavfjorder/pixel-head/server/model"
+	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 )
 
@@ -13,7 +13,7 @@ func StartGame(players []model.Player) {
 	spc := NewSpace("tcp://localhost:31415/game1")
 
 	// Register models for encoding to space
-	gob.Register(Request{})
+	gob.Register(model.Request{})
 	gob.Register(model.Player{})
 
 	// Save players into space
@@ -29,9 +29,9 @@ func StartGame(players []model.Player) {
 		spc.Get("loop_lock")
 
 		// Load incoming requests
-		rTuples, _ := spc.GetAll(&Request{})
+		rTuples, _ := spc.GetAll(&model.Request{})
 		for _, rTuple := range rTuples {
-			request := rTuple.GetFieldAt(0).(Request)
+			request := rTuple.GetFieldAt(0).(model.Request)
 			fmt.Println("Handling request:", request)
 
 			// Load player who made the request
@@ -39,7 +39,7 @@ func StartGame(players []model.Player) {
 			player := t.GetFieldAt(0).(model.Player)
 
 			// Change weapon
-			player.Weapon = request.CurrentWep
+			player.Weapon = model.Weapons[request.CurrentWep]
 
 			if request.Move {
 				// todo: check if move is doable in map

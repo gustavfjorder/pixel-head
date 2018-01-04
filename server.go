@@ -5,7 +5,7 @@ import (
 	"github.com/faiface/pixel"
 	. "github.com/pspaces/gospace"
 	"github.com/gustavfjorder/pixel-head/server"
-	"github.com/gustavfjorder/pixel-head/server/model"
+	"github.com/gustavfjorder/pixel-head/model"
 )
 
 const N = 1
@@ -23,9 +23,10 @@ func main() {
 		if len(awaiting) >= N {
 			cpy := make([]model.Player, N)
 			i := 0
-			for k, _ := range awaiting {
-				spc.Put(k, "ready")
-				cpy[i] = model.Player{Id: k, Pos: pixel.V(0, 0)}
+			for id := range awaiting {
+				cpy[i] = model.Player{Id: id, Pos: pixel.V(0, 0)}
+				spc.Put("ready", id)
+
 				i++
 			}
 			awaiting = make(map[string]bool, N)

@@ -1,97 +1,58 @@
 package client
 
 import (
-	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"math"
-	"fmt"
+	. "github.com/gustavfjorder/pixel-head/Config"
+	"github.com/gustavfjorder/pixel-head/model"
 )
 
-type Control struct {
-	Left  pixelgl.Button
-	Right pixelgl.Button
-	Up    pixelgl.Button
-	Down  pixelgl.Button
-	Shoot pixelgl.Button
-	Melee pixelgl.Button
-	Knife pixelgl.Button
-	Rifle pixelgl.Button
-	Shotgun pixelgl.Button
-	Handgun pixelgl.Button
-}
-
-type Movement string
-type Weapon string
-
-const(
-	IDLE = Movement("idle")
-	MOVE = Movement("move")
-	SHOOT = Movement("shoot")
-	MELEE = Movement("meleeattack")
-	RIFLE = Weapon("rifle")
-	HANDGUN = Weapon("handgun")
-	KNIFE = Weapon("knife")
-	SHOTGUN = Weapon("shotgun")
-)
-
-func (m Movement) String() string{
-	return string(m)
-}
-
-func (w Weapon) String() string{
-	return string(w)
-}
-
-func HandleDir(win pixelgl.Window, mat *pixel.Matrix, w *Weapon, m *Movement)  {
+func HandleControls(win pixelgl.Window, r *model.Request) {
 	angle, i := 0.0, 0
-	if win.Pressed(Conf.Control.Up) {
+	r.Shoot = false; r.Reload = false; r.Melee=false;
+
+	if win.Pressed(Conf.UpKey) {
 		angle += math.Pi / 2
 		i++
 	}
-	if win.Pressed(Conf.Control.Right) {
+	if win.Pressed(Conf.RightKey) {
 		if i <= 0 {
 			angle += math.Pi * 2
 		}
 		i++
 	}
-	if win.Pressed(Conf.Control.Left) {
+	if win.Pressed(Conf.LeftKey) {
 		angle += math.Pi
 		i++
 	}
-	if win.Pressed(Conf.Control.Down) {
+	if win.Pressed(Conf.DownKey) {
 		angle += math.Pi * 3 / 2
 		i++
 	}
 	if i <= 0 {
-		*m = IDLE
+		r.Move = false
 	}else{
-		*mat = pixel.IM.Rotated(pixel.V(0, 0), angle/float64(i))
-		*m = MOVE
-	}
-	if win.Pressed(Conf.Control.Shoot) {
-		*m = SHOOT
-	}else if win.Pressed(Conf.Control.Melee){
-		*m = MELEE
+		r.Move = true
+		angle/= float64(i)
+		r.Dir = angle
 	}
 	switch {
-	case win.JustPressed(Conf.Control.Knife):
-		*w = KNIFE
-	case win.JustPressed(Conf.Control.Rifle):
-		*w = RIFLE
-	case win.JustPressed(Conf.Control.Shotgun):
-		*w = SHOTGUN
-	case win.JustPressed(Conf.Control.Handgun):
-		*w = HANDGUN
-	}
-}
-
-func Prefix(ps ...fmt.Stringer) (res string){
-	if len(ps) > 0 {
-		res = ps[0].String()
+	case win.JustPressed(Conf.KnifeKey):
+		r.CurrentWep = model.Knife
+	case win.JustPressed(Conf.RifleKey):
+		r.CurrentWep = model.Rifle
+	case win.JustPressed(Conf.ShotgunKey):
+		r.CurrentWep = model.Shotgun
+	case win.JustPressed(Conf.HandgunKey):
+		r.CurrentWep = model.Handgun
 	}
 
-	for _, s := range ps[1:] {
-		res += "." + s.String()
+	if win.Pressed(Conf.ShootKey) {
+		r.Shoot = true
+	} else if win.Pressed(Conf.ReloadKey) && r.CurrentWep != model.Knife{
+		r.Reload = true
+	} else if win.Pressed(Conf.MeleeKey){
+		r.Melee = true
 	}
 	return
 }

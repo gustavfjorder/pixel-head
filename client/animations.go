@@ -36,8 +36,8 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 }
 
 func (a *Animation) ChangeAnimation(other Animation) (e error){
-	if(len(other.Sprites) <= 0){
-		e = errors.New("Need non empty animation")
+	if len(other.Sprites) <= 0 {
+		e = errors.New("need non empty animation")
 		return
 	}
 	a.Sprites = other.Sprites
@@ -124,4 +124,15 @@ func loadPicture(path string) (pixel.Picture, error) {
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(img), nil
+}
+
+func Prefix(aps ...string) (res string){
+	if len(aps) > 0 {
+		res = aps[0]
+	}
+
+	for _, ap := range aps[1:] {
+		res += "." + ap
+	}
+	return
 }
