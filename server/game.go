@@ -20,6 +20,8 @@ func StartGame(players []model.Player) {
 		spc.Put("player", player.Id, player.Pos)
 	}
 
+	t := time.Tick(time.Second / 60)
+
 	// Game loop
 	for {
 		var playerId string
@@ -40,6 +42,6 @@ func StartGame(players []model.Player) {
 			spc.Put("player", player.Id, player.Pos)
 		}
 
-		time.Sleep(time.Second / 60)
+		<- t
 	}
 }
