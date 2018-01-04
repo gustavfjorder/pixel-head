@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ type Animation struct {
 	Tick    *time.Ticker
 }
 
-func (a Animation) start(s time.Duration) Animation {
+func (a Animation) Start(s time.Duration) Animation {
 	a.Tick = time.NewTicker(time.Second / s)
 	return a
 }
@@ -32,7 +32,7 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 	return
 }
 
-func loadAnimations(path string, prefix string) map[string]Animation {
+func LoadAnimations(path string, prefix string) map[string]Animation {
 	res := make(map[string]Animation)
 	elems, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -44,7 +44,7 @@ func loadAnimations(path string, prefix string) map[string]Animation {
 			if len(prefix) <= 0 {
 				del = ""
 			}
-			for k, v := range loadAnimations(path+"/"+elem.Name(), prefix+del+elem.Name()) {
+			for k, v := range LoadAnimations(path+"/"+elem.Name(), prefix+del+elem.Name()) {
 				res[k] = v
 			}
 		} else {

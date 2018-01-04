@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Client" type="GoApplicationRunConfiguration" factoryName="Go Application" singleton="true">
     <module name="pixel-head" />
-    <working_directory value="$PROJECT_DIR$/client" />
+    <working_directory value="$PROJECT_DIR$" />
     <go_parameters value="-i" />
-    <kind value="PACKAGE" />
-    <filePath value="$PROJECT_DIR$/client/main.go" />
+    <kind value="FILE" />
+    <filePath value="$PROJECT_DIR$/client.go" />
     <package value="github.com/gustavfjorder/pixel-head/client" />
     <directory value="$PROJECT_DIR$/" />
     <method />

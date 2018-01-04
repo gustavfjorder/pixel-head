@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var config = Config{
+var Conf = Config{
 	AnimationSpeed: 30,
 	Fps:            60,
 	Control: Control{
@@ -38,6 +38,6 @@ func LoadConfiguration(file string, config *Config) {
 }
 
 func SaveConfig() {
-	js, _ := json.Marshal(config)
-	ioutil.WriteFile("settings.json", js, 0644)
+	js, _ := json.Marshal(Conf)
+	ioutil.WriteFile("client/settings.json", js, 0644) // todo: find better way to save settings file
 }
