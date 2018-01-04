@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/faiface/pixel"
@@ -11,7 +11,7 @@ type Player struct {
 	Pos pixel.Vec
 }
 
-func startGame(players []Player) {
+func StartGame(players []Player) {
 	spc := NewSpace("tcp://localhost:31415/game1")
 	for {
 		for i, player := range players {
