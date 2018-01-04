@@ -5,6 +5,7 @@ import "github.com/faiface/pixel"
 type Player struct {
 	Id  string
 	Pos pixel.Vec
+	Weapon Weapon
 	Stats Stats
 }
 
