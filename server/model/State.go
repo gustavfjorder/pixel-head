@@ -3,6 +3,6 @@ package model
 
 type State struct {
 	Players []Player
-	Zombies []Zoombie
+	Zombies []Zombie
 	Shoots  []Shoot
 }
