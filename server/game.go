@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-type Player struct {
-	Id  string
-	Pos pixel.Vec
-}
-
 func StartGame(players []Player) {
 	spc := NewSpace("tcp://localhost:31415/game1")
 	for {
