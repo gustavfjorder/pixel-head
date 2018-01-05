@@ -76,7 +76,14 @@ func handleRequests(space Space) {
 		if request.Reload {
 			// todo: handle reload
 		} else if request.Shoot {
-			// todo: handle shoot
+			shoot := model.Shoot{
+				Start:     player.Pos,
+				Angle:     player.Pos.Angle(),
+				StartTime: request.Timestamp,
+				Weapon:    player.Weapon,
+			}
+
+			space.Put(shoot)
 		}
 
 		space.Put(player)
