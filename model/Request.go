@@ -16,18 +16,18 @@ type Request struct {
 	Reload bool
 }
 
-func (r Request) MovementName() string{
+func (r Request) MovementArgs() (string,bool){
 	switch{
 	case r.Reload:
-		return "reload"
+		return "reload", false
 	case r.Shoot:
-		return "shoot"
+		return "shoot", false
 	case r.Melee:
-		return "meleeattack"
+		return "meleeattack", false
 	case r.Move:
-		return "move"
+		return "move", true
 	default:
-		return "idle"
+		return "idle", true
 	}
 }
 
