@@ -72,7 +72,7 @@ func handleRequests(space Space) {
 		}
 
 		if request.Reload {
-			// todo: handle reload
+			player.Weapon.RefillMag()
 		} else if request.Shoot {
 			shoot := model.Shoot{
 				Start:     player.Pos,
