@@ -23,10 +23,14 @@ func StartGame(uri string, playerIds []string) {
 	for {
 		room.Get("loop_lock")
 
-		newShoots := handleRequests(room)
+		players, newShoots := handleRequests(room)
 
 		shoots := append(loadShoots(room), newShoots...)
 		handleZombies(room, shoots)
+
+		for _, player := range players {
+			room.Put(player)
+		}
 
 		room.Put("loop_lock")
 
@@ -57,10 +61,11 @@ func addPlayerToRoom(space Space, playerIds []string) {
 	}
 }
 
-func handleRequests(space Space) []model.Shoot {
+func handleRequests(space Space) ([]model.Player, []model.Shoot) {
 	// Load incoming requests
 	rTuples, _ := space.GetAll(&model.Request{})
 
+	players := make([]model.Player, 0)
 	newShoots := make([]model.Shoot, 0)
 
 	for _, rTuple := range rTuples {
@@ -86,10 +91,10 @@ func handleRequests(space Space) []model.Shoot {
 			newShoots = append(newShoots, playerShoots...)
 		}
 
-		space.Put(player)
+		players = append(players, player)
 	}
 
-	return newShoots
+	return players, newShoots
 }
 
 func handleZombies(room Space, shoots []model.Shoot) {
