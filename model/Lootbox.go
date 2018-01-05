@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/faiface/pixel"
+	"math/rand"
 )
 
 type Lootbox struct {
@@ -10,7 +11,15 @@ type Lootbox struct {
 	Weapon
 }
 
-func NewLootbox(id string, x float64, y float64, weapon int) Lootbox{
+func NewLootbox(id string, x float64, y float64, randPos bool, weapon int) Lootbox{
+	if randPos{
+		return Lootbox{
+			Id: id,
+			//todo: multiply random numbers by map bounds
+			Pos: pixel.V(rand.Float64(),rand.Float64()),
+			Weapon: Weapons[weapon],
+		}
+	}
 	return Lootbox{
 		Id: id,
 		Pos: pixel.V(x,y),
@@ -21,3 +30,4 @@ func NewLootbox(id string, x float64, y float64, weapon int) Lootbox{
 func (player *Player) PickupLootbox(lootbox Lootbox){
 	player.WeaponList[lootbox.Weapon.Id].Bullets+=lootbox.Weapon.Magazine
 }
+
