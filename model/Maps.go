@@ -55,6 +55,8 @@ func (w Wall) Intersect(l Line) bool {
 		l.Intersect(lL)
 }
 
+
+
 func NewWall(p,q Point, thickness float64) Wall{
 	return Wall{
 		NewLine(p,q),
