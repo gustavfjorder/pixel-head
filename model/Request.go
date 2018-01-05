@@ -1,8 +1,12 @@
 package model
 
-import "github.com/faiface/pixel"
+import (
+	"github.com/faiface/pixel"
+	"time"
+)
 
 type Request struct {
+	Timestamp time.Time
 	PlayerId string
 	CurrentWep int
 	Dir float64
