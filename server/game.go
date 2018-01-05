@@ -9,9 +9,7 @@ import (
 	"fmt"
 )
 
-func StartGame(playerIds []string) {
-	uri := "tcp://localhost:31415/game1"
-
+func StartGame(uri string, playerIds []string) {
 	room := setupSpace(uri)
 
 	fmt.Println("Starting game on uri '" + uri + "'")
