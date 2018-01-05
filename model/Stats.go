@@ -3,6 +3,7 @@ package model
 type Stats struct {
 	Health    int
 	MoveSpeed float64
+	Power     int
 }
 
 const (
@@ -16,11 +17,13 @@ func NewStats(being int) (s Stats) {
 		s = Stats{
 			Health:    100,
 			MoveSpeed: 5,
+			Power:     5,
 		}
 	case zombie:
 		s = Stats{
 			Health:    20,
 			MoveSpeed: 1,
+			Power:     3,
 		}
 	}
 	return

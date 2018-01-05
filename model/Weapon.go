@@ -6,7 +6,6 @@ import (
 	"github.com/faiface/pixel"
 )
 
-// todo: add ammunition handling
 type Weapon struct {
 	Id             int
 	Name           string
@@ -78,11 +77,12 @@ var Weapons = map[int]Weapon{
 	},
 }
 
-func (weapon *Weapon) RefillMag(){
-	weapon.Magazine=Weapons[weapon.Id].Magazine
+func (weapon *Weapon) RefillMag() {
+	weapon.Magazine = Weapons[weapon.Id].Magazine
+	weapon.Bullets -= Weapons[weapon.Id].Magazine
 }
 
-func (weapon Weapon) GenerateShoots(timestamp time.Time, playerPosition pixel.Vec) []Shoot {
+func (weapon *Weapon) GenerateShoots(timestamp time.Time, playerPosition pixel.Vec) []Shoot {
 	shotsPerSideOfDirection := int(math.Floor(float64(weapon.BulletsPerShot / 2)))
 	angle := -(shotsPerSideOfDirection * weapon.BulletsPerShot)
 
@@ -91,12 +91,13 @@ func (weapon Weapon) GenerateShoots(timestamp time.Time, playerPosition pixel.Ve
 	for i := 0; i < weapon.BulletsPerShot; i++ {
 		shoots[i] = Shoot{
 			Start:     playerPosition,
-			Angle:     playerPosition.Angle(), // + float64(angle * (math.Pi / 180)),
+			Angle:     playerPosition.Angle() + (float64(angle) * (math.Pi / 180)),
 			StartTime: timestamp,
 			Weapon:    weapon,
 		}
 
 		angle += weapon.Spread
+		weapon.Magazine--
 	}
 
 	return shoots
