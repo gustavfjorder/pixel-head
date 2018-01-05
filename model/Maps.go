@@ -5,6 +5,10 @@ import (
 	"github.com/faiface/pixel"
 )
 
+type Map struct {
+	Walls []Wall
+}
+
 type Point struct {
 	X float64
 	Y float64
@@ -20,11 +24,22 @@ type Wall struct {
 	Thickness float64
 }
 
+var MapTemplates = map[string]Map{
+	"Test1" : {
+		Walls:[]Wall{
+			NewWall(NewPoint(100,100), NewPoint(1000,100), 30),
+			NewWall(NewPoint(1000,100), NewPoint(1000,1000), 30),
+			NewWall(NewPoint(1000,1000), NewPoint(100,1000), 30),
+			NewWall(NewPoint(100,1000), NewPoint(100,100), 30),
+		},
+	},
+}
+
 func (w Wall) Intersect(l Line) bool {
 	var (
 		angle = w.P.Angle(w.Q)
-		v1    = pixel.V(w.Thickness, 0).Rotated(angle + math.Pi/2)
-		v2    = pixel.V(w.Thickness, 0).Rotated(angle - math.Pi/2)
+		v1    = pixel.V(w.Thickness/2, 0).Rotated(angle + math.Pi/2)
+		v2    = pixel.V(w.Thickness/2, 0).Rotated(angle - math.Pi/2)
 		pBR   = w.P.Add(NewPoint(v1.X, v1.Y))
 		pBL   = w.P.Add(NewPoint(v2.X, v2.Y))
 		pTR   = w.Q.Add(NewPoint(v1.X, v1.Y))
@@ -38,6 +53,13 @@ func (w Wall) Intersect(l Line) bool {
 		l.Intersect(lT) ||
 		l.Intersect(lR) ||
 		l.Intersect(lL)
+}
+
+func NewWall(p,q Point, thickness float64) Wall{
+	return Wall{
+		NewLine(p,q),
+		thickness,
+	}
 }
 
 func NewLine(p, q Point) Line {
@@ -60,12 +82,18 @@ func (this Point) Add(other Point) (Point) {
 	}
 }
 
+func (this Point) Dist(other Point) float64 {
+	dx := other.X - this.X
+	dy := other.Y - this.Y
+	return math.Sqrt( dx*dx + dy*dy)
+}
+
 //implemented from https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 func (this Line) Intersect(other Line) bool {
 	var (
-		p1 = this.P;
-		p2 = this.Q;
-		q1 = other.P;
+		p1 = this.P
+		p2 = this.Q
+		q1 = other.P
 		q2 = other.Q
 		o1 = orientation(p1, q1, p2)
 		o2 = orientation(p1, q1, q2)

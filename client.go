@@ -30,11 +30,13 @@ func run() {
 		second      = time.Tick(time.Second)
 		fps         = time.Tick(time.Second / Config.Conf.Fps)
 		playerAnim  = client.LoadAnimations("client/sprites/survivor", "")
-		cfg         = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1024, 768),}
+		cfg         = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1920, 1080),}
 		r           = model.Request{}
 		s, _ = r.MovementArgs()
 		curAnimPath = client.Prefix(r.WeaponName(),s )
 		curAnim     = playerAnim[curAnimPath].Start(Config.Conf.AnimationSpeed)
+		curMap = client.LoadMap(model.MapTemplates["Test1"])
+		center = pixel.ZV
 	)
 	if Config.Conf.Online {
 		_, err := spc.Get("ready", Config.Conf.Id, &me)
@@ -47,7 +49,6 @@ func run() {
 		panic(err)
 	}
 	win.SetSmooth(true)
-	center := pixel.ZV
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
 		client.HandleControls(*win, &r)
@@ -63,6 +64,7 @@ func run() {
 			me.Pos = me.Pos.Add(pixel.V(me.MoveSpeed, 0).Rotated(r.Dir))
 		}
 		transformation := r.GetRotation().Scaled(center, 0.5).Moved(center.Add(me.Pos))
+		curMap.Draw(win)
 		curAnim.Next().Draw(win, transformation)
 		win.Update()
 
