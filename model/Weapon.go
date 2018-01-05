@@ -8,6 +8,8 @@ type Weapon struct {
 	Range    float64
 	Speed    float64
 	Magazine int
+	Capacity int
+	Bullets  int
 }
 
 const (
@@ -26,6 +28,8 @@ var Weapons = map[int]Weapon{
 		Range:    1000,
 		Speed:    4,
 		Magazine: 30,
+		Capacity: 150,
+		Bullets: 0,
 	},
 	Knife:
 	{
@@ -34,7 +38,9 @@ var Weapons = map[int]Weapon{
 		Power:    20,
 		Range:    20,
 		Speed:    4,
-		Magazine: 0,
+		Magazine: -1,
+		Capacity: -1,
+		Bullets: -1,
 	},
 	Shotgun:
 	{
@@ -43,7 +49,9 @@ var Weapons = map[int]Weapon{
 		Power:    20,
 		Range:    1000,
 		Speed:    4,
-		Magazine: 5,
+		Magazine: 3,
+		Capacity: 24,
+		Bullets: 0,
 	},
 	Handgun:
 	{
@@ -53,5 +61,11 @@ var Weapons = map[int]Weapon{
 		Range:    1000,
 		Speed:    4,
 		Magazine: 10,
+		Capacity: 50,
+		Bullets: 0,
 	},
+}
+
+func (weapon *Weapon) RefillMag(){
+	weapon.Magazine=Weapons[weapon.Id].Magazine
 }
