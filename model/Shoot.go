@@ -9,7 +9,7 @@ type Shoot struct{
 	Start pixel.Vec
 	Angle float64
 	StartTime time.Time
-	Weapon Weapon
+	Weapon *Weapon
 }
 
 func (s Shoot) GetPos() (v pixel.Vec) {
