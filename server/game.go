@@ -26,7 +26,7 @@ func StartGame(uri string, playerIds []string) {
 		players, newShoots := handleRequests(room)
 
 		shoots := append(loadShoots(room), newShoots...)
-		handleZombies(room, shoots)
+		handleZombies(room, players, shoots)
 
 		for _, player := range players {
 			room.Put(player)
@@ -97,7 +97,7 @@ func handleRequests(space Space) ([]model.Player, []model.Shoot) {
 	return players, newShoots
 }
 
-func handleZombies(room Space, shoots []model.Shoot) {
+func handleZombies(room Space, players []model.Player, shoots []model.Shoot) {
 	zTuples, _ := room.GetAll(&model.Zombie{})
 
 	for _, zTuple := range zTuples {
@@ -115,7 +115,7 @@ func handleZombies(room Space, shoots []model.Shoot) {
 			continue
 		}
 
-		zombie.Move()
+		zombie.Move(players)
 
 		room.Put(zombie)
 	}
