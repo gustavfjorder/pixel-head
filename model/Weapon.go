@@ -29,7 +29,7 @@ var Weapons = map[int]Weapon{
 		Speed:    4,
 		Magazine: 30,
 		Capacity: 150,
-		Bullets: 0,
+		Bullets:  0,
 	},
 	Knife:
 	{
