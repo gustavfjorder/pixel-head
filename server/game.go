@@ -10,14 +10,38 @@ import (
 )
 
 func StartGame(playerIds []string) {
-	fmt.Println("Starting game with:", playerIds)
+	uri := "tcp://localhost:31415/game1"
 
-	spc := NewSpace("tcp://localhost:31415/game1")
+	room := setupSpace(uri)
 
+	fmt.Println("Starting game on uri '" + uri + "'")
+	fmt.Println("Players in game:", playerIds)
+
+	addPlayerToRoom(room, playerIds)
+
+	t := time.Tick(time.Second / 60)
+
+	// Game loop
+	for {
+		room.Get("loop_lock")
+
+		handleRequests(room)
+
+		room.Put("loop_lock")
+
+		<- t
+	}
+}
+
+func setupSpace(uri string) Space {
 	// Register models for encoding to space
 	gob.Register(model.Request{})
 	gob.Register(model.Player{})
 
+	return NewSpace(uri)
+}
+
+func addPlayerToRoom(space Space, playerIds []string) {
 	// Save players into space
 	for _, id := range playerIds {
 		player := model.Player{
@@ -26,44 +50,35 @@ func StartGame(playerIds []string) {
 			Weapon: model.Weapons[model.Handgun],
 		}
 
-		spc.Put(player)
+		space.Put(player)
 	}
+}
 
-	t := time.Tick(time.Second / 60)
+func handleRequests(space Space) {
+	// Load incoming requests
+	rTuples, _ := space.GetAll(&model.Request{})
+	for _, rTuple := range rTuples {
+		request := rTuple.GetFieldAt(0).(model.Request)
+		fmt.Println("Handling request:", request)
 
-	// Game loop
-	for {
-		spc.Get("loop_lock")
+		// Load player who made the request
+		t, _ := space.GetP(model.Player{Id: request.PlayerId})
+		player := t.GetFieldAt(0).(model.Player)
 
-		// Load incoming requests
-		rTuples, _ := spc.GetAll(&model.Request{})
-		for _, rTuple := range rTuples {
-			request := rTuple.GetFieldAt(0).(model.Request)
-			fmt.Println("Handling request:", request)
+		// Change weapon
+		player.Weapon = model.Weapons[request.CurrentWep]
 
-			// Load player who made the request
-			t, _ := spc.GetP(model.Player{Id: request.PlayerId})
-			player := t.GetFieldAt(0).(model.Player)
-
-			// Change weapon
-			player.Weapon = model.Weapons[request.CurrentWep]
-
-			if request.Move {
-				// todo: check if move is doable in map
-				player = player.Move(request.Dir)
-			}
-
-			if request.Reload {
-				// todo: handle reload
-			} else if request.Shoot {
-				// todo: handle shoot
-			}
-
-			spc.Put(player)
+		if request.Move {
+			// todo: check if move is doable in map
+			player = player.Move(request.Dir)
 		}
 
-		spc.Put("loop_lock")
+		if request.Reload {
+			// todo: handle reload
+		} else if request.Shoot {
+			// todo: handle shoot
+		}
 
-		<- t
+		space.Put(player)
 	}
 }
