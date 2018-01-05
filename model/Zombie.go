@@ -8,6 +8,6 @@ type Zombie struct{
 }
 
 
-func (z Zombie) move(){
+func (z Zombie) Move() {
 
 }
