@@ -30,9 +30,10 @@ func run() {
 		second      = time.Tick(time.Second)
 		fps         = time.Tick(time.Second / Config.Conf.Fps)
 		playerAnim  = client.LoadAnimations("client/sprites/survivor", "")
-		cfg         = pixelgl.WindowConfig{Title: "Pixel Rocks!", Bounds: pixel.R(0, 0, 1024, 768),}
+		cfg         = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1024, 768),}
 		r           = model.Request{}
-		curAnimPath = client.Prefix(r.WeaponName(), r.MovementName())
+		s, _ = r.MovementArgs()
+		curAnimPath = client.Prefix(r.WeaponName(),s )
 		curAnim     = playerAnim[curAnimPath].Start(Config.Conf.AnimationSpeed)
 	)
 	if Config.Conf.Online {
@@ -50,11 +51,12 @@ func run() {
 	for !win.Closed() {
 		win.Clear(colornames.Darkolivegreen)
 		client.HandleControls(*win, &r)
-		prefix := client.Prefix(r.WeaponName(), r.MovementName())
+		s, b := r.MovementArgs()
+		prefix := client.Prefix(r.WeaponName(), s)
 		if curAnimPath != prefix {
 			if anim, ok := playerAnim[prefix]; ok {
 				curAnimPath = prefix
-				curAnim.ChangeAnimation(anim)
+				curAnim.ChangeAnimation(anim,b)
 			}
 		}
 		if r.Move {
