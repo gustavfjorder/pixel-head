@@ -4,7 +4,7 @@ package model
 type Weapon struct {
 	Id       int
 	Name     string
-	Power    float64
+	Power    int
 	Range    float64
 	Speed    float64
 	Magazine int
