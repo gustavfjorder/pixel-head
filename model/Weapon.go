@@ -91,7 +91,7 @@ func (weapon *Weapon) GenerateShoots(timestamp time.Time, playerPosition pixel.V
 	for i := 0; i < weapon.BulletsPerShot; i++ {
 		shoots[i] = Shoot{
 			Start:     playerPosition,
-			Angle:     playerPosition.Angle() + float64(angle * (math.Pi / 180)),
+			Angle:     playerPosition.Angle() + (float64(angle) * (math.Pi / 180)),
 			StartTime: timestamp,
 			Weapon:    weapon,
 		}
