@@ -25,6 +25,17 @@ func (zombie* Zombie) Move(players []Player) {
 	zombie.Pos = zombie.Pos.Add(move)
 }
 
+func (zombie *Zombie) Attack(players []Player) {
+	for _, player := range players {
+		if zombie.Pos.Sub(player.Pos).Len() < 1 {
+			zombie.Pos = zombie.Pos.Rotated(angle(zombie.Pos, player.Pos))
+			player.Stats.Health -= zombie.Stats.Power
+			break
+		}
+	}
+}
+
+
 func angle(this pixel.Vec, other pixel.Vec) float64 {
 	return math.Atan2(other.Y - this.Y, other.X - this.X)
 }

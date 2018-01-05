@@ -116,6 +116,7 @@ func handleZombies(room Space, players []model.Player, shoots []model.Shoot) {
 		}
 
 		zombie.Move(players)
+		zombie.Attack(players)
 
 		room.Put(zombie)
 	}
