@@ -9,7 +9,7 @@ import (
 
 func HandleControls(win pixelgl.Window, r *model.Request) {
 	angle, i := 0.0, 0
-	r.Shoot = false; r.Reload = false; r.Melee=false;
+	r.Shoot = false; r.Reload = false; r.Melee=false
 
 	if win.Pressed(Conf.UpKey) {
 		angle += math.Pi / 2
