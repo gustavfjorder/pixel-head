@@ -82,14 +82,8 @@ func handleRequests(space Space) []model.Shoot {
 		if request.Reload {
 			player.Weapon.RefillMag()
 		} else if request.Shoot {
-			shoot := model.Shoot{
-				Start:     player.Pos,
-				Angle:     player.Pos.Angle(),
-				StartTime: request.Timestamp,
-				Weapon:    player.Weapon,
-			}
-
-			newShoots = append(newShoots, shoot)
+			playerShoots := player.Weapon.GenerateShoots(request.Timestamp, player.Pos)
+			newShoots = append(newShoots, playerShoots...)
 		}
 
 		space.Put(player)
