@@ -17,17 +17,27 @@ type Animation struct {
 	Sprites []*pixel.Sprite
 	Cur     int
 	Tick    *time.Ticker
+	NextAnim *Animation
+	Blocking bool
 }
 
-func (a Animation) Start(s time.Duration) Animation {
+func (a Animation) Start(s time.Duration) (Animation)  {
 	a.Tick = time.NewTicker(time.Second / s)
 	return a
 }
+
+
 
 func (a *Animation) Next() (s *pixel.Sprite) {
 	s = a.Sprites[a.Cur]
 	select {
 	case <-a.Tick.C:
+		if a.Blocking && len(a.Sprites)-1==a.Cur && a.NextAnim!=nil && len(a.NextAnim.Sprites)>0{
+			a.Blocking=a.NextAnim.Blocking
+			a.Sprites=a.NextAnim.Sprites
+			*a.NextAnim=Animation{}
+			a.Cur=0
+		}
 		a.Cur = (a.Cur + 1) % len(a.Sprites)
 	default:
 		break
@@ -35,13 +45,19 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 	return
 }
 
-func (a *Animation) ChangeAnimation(other Animation) (e error){
+
+func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error){
 	if len(other.Sprites) <= 0 {
 		e = errors.New("need non empty animation")
 		return
 	}
-	a.Sprites = other.Sprites
-	a.Cur = 0
+	a.Blocking=blocking
+	if blocking{
+		*a.NextAnim=other
+	} else {
+		a.Sprites = other.Sprites
+		a.Cur = 0
+	}
 	return
 }
 
@@ -110,7 +126,7 @@ func loadAnimation(path string) (Animation, error) {
 		i++
 
 	}
-	return Animation{Sprites: res, Cur: 0, Tick: nil}, nil
+	return Animation{Sprites: res, Cur: 0, Tick: nil, NextAnim:&Animation{}}, nil
 }
 
 func loadPicture(path string) (pixel.Picture, error) {
