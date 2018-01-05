@@ -1,3 +1,11 @@
+## Project
+settings.json
+
+
+## macOS
+.DS_Store
+
+
 ## JetBrains - GoLand
 # User-specific stuff:
 .idea/**/workspace.xml
@@ -12,4 +20,3 @@
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
-client/settings.json
