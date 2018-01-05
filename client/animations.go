@@ -11,6 +11,9 @@ import (
 	"sort"
 	"regexp"
 	"strconv"
+	"github.com/faiface/pixel/imdraw"
+	"github.com/gustavfjorder/pixel-head/model"
+	"golang.org/x/image/colornames"
 )
 
 type Animation struct {
@@ -43,6 +46,17 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 		break
 	}
 	return
+}
+
+func LoadMap(m model.Map) *imdraw.IMDraw{
+	imd := imdraw.New(nil)
+	for _ , w := range m.Walls {
+		imd.Color = colornames.Black
+		imd.EndShape = imdraw.SharpEndShape
+		imd.Push(pixel.V(w.P.X, w.P.Y), pixel.V(w.Q.X, w.Q.Y))
+		imd.Line(w.Thickness)
+	}
+	return imd
 }
 
 
@@ -118,7 +132,7 @@ func loadAnimation(path string) (Animation, error) {
 		if elem.IsDir() {
 			return Animation{}, errors.New("can only load files")
 		}
-		img, err := loadPicture(path + "/" + elem.Name())
+		img, err := LoadPicture(path + "/" + elem.Name())
 		if err != nil {
 			panic(err)
 		}
@@ -129,7 +143,7 @@ func loadAnimation(path string) (Animation, error) {
 	return Animation{Sprites: res, Cur: 0, Tick: nil, NextAnim:&Animation{}}, nil
 }
 
-func loadPicture(path string) (pixel.Picture, error) {
+func LoadPicture(path string) (pixel.Picture, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
