@@ -6,7 +6,9 @@ import (
 )
 
 type Zombie struct{
+	Id string
 	Pos pixel.Vec
+	Dir float64
 	Stats Stats
 }
 

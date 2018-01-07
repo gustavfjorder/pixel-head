@@ -16,21 +16,6 @@ type Request struct {
 	Reload bool
 }
 
-func (r Request) MovementArgs() (string,bool){
-	switch{
-	case r.Reload:
-		return "reload", false
-	case r.Shoot:
-		return "shoot", false
-	case r.Melee:
-		return "meleeattack", false
-	case r.Move:
-		return "move", true
-	default:
-		return "idle", true
-	}
-}
-
 func (r Request) WeaponName() string{
 	return Weapons[r.CurrentWep].Name
 }
