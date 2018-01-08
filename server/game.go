@@ -27,11 +27,7 @@ func (g *Game) AddPlayers(playerIds []string) {
 func (g *Game) AddPlayer(id string) {
 	players := g.memory.GetW("players", make([]model.Player, 0)).([]model.Player)
 
-	players = append(players, model.Player{
-		Id:     id,
-		Pos:    pixel.V(0, 0),
-		Weapon: model.Weapons[model.Handgun],
-	})
+	players = append(players, model.NewPlayer(id))
 
 	g.memory.Update("players", players)
 }
