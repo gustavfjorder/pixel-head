@@ -39,7 +39,10 @@ func main() {
 				lounge.Put("join", id, uri, model.NewPlayer(model.Human))
 			}
 
-			go server.StartGame(uri, awaiting)
+			game := server.NewGame(uri)
+			game.AddPlayers(awaiting)
+
+			go game.Start()
 
 			startPort++
 			awaiting = make([]string, 0, PlayersPerRoom)
