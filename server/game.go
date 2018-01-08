@@ -146,8 +146,6 @@ func (g *Game) handleRequests() {
 			player = player.Move(request.Dir)
 		}
 
-		player.Melee = true
-
 		if request.Reload {
 			player.Reload = true
 			player.GetWeapon().RefillMag()
@@ -155,6 +153,9 @@ func (g *Game) handleRequests() {
 			player.Shoot = true
 			playerShoots := player.GetWeapon().GenerateShoots(request.Timestamp, player.Pos)
 			g.memory.PutToArray("shots", playerShoots)
+		} else if request.Melee {
+			player.Melee = true
+			// todo: create melee attack
 		}
 
 		//g.memory.Update("player." + request.PlayerId, player)
