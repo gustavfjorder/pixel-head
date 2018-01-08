@@ -32,25 +32,29 @@ func run() {
 		fps              = time.Tick(time.Second / config.Conf.Fps)
 		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1920, 1080),}
 		r                = model.Request{}
-		GameUri          = ""
+		GameUri          string
+		ClientUri        string
 		state            = client.StateLock{}
 		animations       = client.LoadAnimations("client/sprites", "")
 		activeAnimations = make(map[string]client.Animation)
-		port             = "31415"
-		room             = "game"
-		myuri            = fmt.Sprint("tcp://%s:%s/%s", config.GetIp(), port, room)
-		myspc            = space.NewSpace(fmt.Sprint("tcp://localhost:%s/%s", port, room))
+		myspc            space.Space
 		servspc          space.Space
 	)
 
 	if config.Conf.Online {
 		servspc = space.NewRemoteSpace(config.Conf.LoungeUri)
-		_, err := servspc.Put("client", config.Conf.Id, myuri)
-		panic(err)
-		_, err = servspc.Get("ready", config.Conf.Id, &GameUri, &me)
+		_, err := servspc.Put("client", config.Conf.Id)
 		if err != nil {
 			panic(err)
 		}
+
+		_, err = servspc.Get("ready", config.Conf.Id, &GameUri, &ClientUri)
+		if err != nil {
+			panic(err)
+		}
+
+		servspc = space.NewRemoteSpace(GameUri)
+		myspc = space.NewRemoteSpace(ClientUri)
 	} else {
 		// todo: Implement when Game/Server is final
 		//go server.StartGame(myuri, []string{config.Conf.Id})
@@ -62,6 +66,13 @@ func run() {
 		panic(err)
 	}
 
+	// Load map from server
+	mapTuple, err := myspc.Get("map", &model.Map{})
+	if err != nil {
+		panic(err)
+	}
+	imd := client.LoadMap(mapTuple.GetFieldAt(1).(model.Map))
+
 	go client.HandleEvents(myspc, &state)
 
 	win.SetSmooth(true)
@@ -72,6 +83,7 @@ func run() {
 
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
+		imd.Draw(win)
 		client.HandleAnimations(win, state, animations, activeAnimations)
 		win.Update()
 
