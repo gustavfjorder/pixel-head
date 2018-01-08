@@ -16,6 +16,7 @@ import (
 	"golang.org/x/image/colornames"
 	"github.com/faiface/pixel/pixelgl"
 	"fmt"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 type Animation struct {
@@ -27,9 +28,8 @@ type Animation struct {
 	Blocking bool
 }
 
-func (a Animation) Start(s time.Duration) (Animation) {
+func (a *Animation) Start(s time.Duration) {
 	a.Tick = time.NewTicker(time.Second / s)
-	return a
 }
 
 func (a *Animation) Next() (s *pixel.Sprite) {
@@ -37,6 +37,7 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 	select {
 	case <-a.Tick.C:
 		a.Cur = (a.Cur + 1) % len(a.Sprites)
+		fmt.Println(len(a.Sprites), a.Cur, len(a.Sprites))
 		if a.Cur <= 0 && a.NextAnim != nil && len(a.NextAnim.Sprites) > 0 {
 			a.Blocking = a.NextAnim.Blocking
 			a.Sprites = a.NextAnim.Sprites
@@ -49,6 +50,7 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 }
 
 func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
+	fmt.Println("Changing animation")
 	if len(other.Sprites) <= 0 {
 		e = errors.New("need non empty animation")
 		return
@@ -59,7 +61,7 @@ func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
 	} else {
 		a.Sprites = other.Sprites
 		a.Blocking = blocking
-		a.Cur = 0
+		//a.Cur = 0
 	}
 	return
 }
@@ -102,7 +104,7 @@ func LoadAnimations(path string, prefix string) map[string]Animation {
 	return res
 }
 
-func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Animation, currentAnims map[string]Animation){
+func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Animation, currentAnims map[string]*Animation){
 	center := pixel.ZV
 	state.Mutex.Lock()
 	defer state.Mutex.Unlock()
@@ -125,26 +127,45 @@ func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Ani
 		default:
 			movement = "idle"
 		}
-		prefix := Prefix("survivor", player.Weapon.Name, movement)
+		prefix := Prefix("survivor", player.GetWeapon().Name, movement)
+		//fmt.Println("survivor", player.Weapon.Name, movement)
+		fmt.Println(player.GetWeapon())
+		fmt.Println(prefix)
+
+
 		v, ok := currentAnims[player.Id]
+		fmt.Println("first", v, ok)
 		if !ok {
-			v = anims[prefix]
-			currentAnims[player.Id] = v
+			v2, ok := anims[prefix]
+			fmt.Println("second", v2, ok)
+			if ok {
+				//fmt.Println("Starter")
+				v2.prefix = prefix
+				v2.Start(config.Conf.AnimationSpeed)
+				currentAnims[player.Id] = &v2
+			}
+			v = &v2
 		}
-		if v.prefix != prefix {
-			v.ChangeAnimation(anims[prefix], blocking)
+		if v != nil && v.prefix != prefix {
+			v, found := anims[prefix]
+			if found {
+				v.prefix = prefix
+				v.ChangeAnimation(v, blocking)
+			}
 		}
-		v.Next().Draw(win, transformation)
+		if len(v.Sprites) > 0 {
+			v.Next().Draw(win, transformation)
+		}
 	}
-	for _, zombie := range state.State.Zombies {
-		v, ok := currentAnims[zombie.Id]
-		transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
-		if !ok {
-			v = anims[Prefix("zombie","idle")]
-			currentAnims[zombie.Id] = v
-		}
-		v.Next().Draw(win, transformation)
-	}
+	//for _, zombie := range state.State.Zombies {
+	//	v, ok := currentAnims[zombie.Id]
+	//	transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
+	//	if !ok {
+	//		v = anims[Prefix("zombie","idle")]
+	//		currentAnims[zombie.Id] = v
+	//	}
+	//	v.Next().Draw(win, transformation)
+	//}
 	for _, shoot := range state.State.Shoots {
 		fmt.Println(shoot.Weapon)
 	}
@@ -189,6 +210,7 @@ func loadAnimation(path string) (Animation, error) {
 		i++
 
 	}
+	fmt.Println("Returning animation")
 	return Animation{
 		Sprites: res,
 		Cur: 0,

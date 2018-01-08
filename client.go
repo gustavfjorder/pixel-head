@@ -17,8 +17,19 @@ func registerModels() {
 	// Register models for encoding to space
 	gob.Register(model.Request{})
 	gob.Register(model.Player{})
+	gob.Register([]model.Player{})
 	gob.Register(model.Zombie{})
+	gob.Register([]model.Zombie{})
 	gob.Register(model.Shoot{})
+	gob.Register([]model.Shoot{})
+	gob.Register(model.Map{})
+	gob.Register(model.Wall{})
+	gob.Register(model.Line{})
+	gob.Register(model.Point{})
+	gob.Register(model.Map{})
+	gob.Register(model.Wall{})
+	gob.Register(model.Line{})
+	gob.Register(model.Point{})
 }
 
 func run() {
@@ -26,29 +37,31 @@ func run() {
 	registerModels()
 
 	var (
-		me               = model.NewPlayer(config.Conf.Id)
+		//me               = model.NewPlayer(config.Conf.Id)
 		frames           = 0
 		second           = time.Tick(time.Second)
 		fps              = time.Tick(time.Second / config.Conf.Fps)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1920, 1080),}
-		r                = model.Request{}
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
+		r                = model.Request{PlayerId: config.Conf.Id}
 		GameUri          string
 		ClientUri        string
 		state            = client.StateLock{}
 		animations       = client.LoadAnimations("client/sprites", "")
-		activeAnimations = make(map[string]client.Animation)
+		activeAnimations = make(map[string]*client.Animation)
 		myspc            space.Space
 		servspc          space.Space
 	)
+	fmt.Println(animations)
 
 	if config.Conf.Online {
 		servspc = space.NewRemoteSpace(config.Conf.LoungeUri)
-		_, err := servspc.Put("client", config.Conf.Id)
+		_, err := servspc.Put("request", config.Conf.Id)
 		if err != nil {
 			panic(err)
 		}
 
-		_, err = servspc.Get("ready", config.Conf.Id, &GameUri, &ClientUri)
+		k, err := servspc.Get("join", config.Conf.Id, &GameUri, &ClientUri)
+		fmt.Println(k)
 		if err != nil {
 			panic(err)
 		}
@@ -61,11 +74,6 @@ func run() {
 		//servspc = space.NewRemoteSpace(myuri)
 	}
 
-	win, err := pixelgl.NewWindow(cfg)
-	if err != nil {
-		panic(err)
-	}
-
 	// Load map from server
 	mapTuple, err := myspc.Get("map", &model.Map{})
 	if err != nil {
@@ -73,18 +81,24 @@ func run() {
 	}
 	imd := client.LoadMap(mapTuple.GetFieldAt(1).(model.Map))
 
+	win, err := pixelgl.NewWindow(cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	go client.HandleEvents(myspc, &state)
 
 	win.SetSmooth(true)
 	for !win.Closed() {
 		//Handle controls -> send request
 		client.HandleControls(*win, &r)
-		servspc.Put(config.Conf.Id, r)
+		servspc.Put(r)
 
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 		imd.Draw(win)
 		client.HandleAnimations(win, state, animations, activeAnimations)
+		//fmt.Println(activeAnimations)
 		win.Update()
 
 		//Count FPS

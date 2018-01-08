@@ -6,8 +6,8 @@ type Player struct {
 	Id         string
 	Pos        pixel.Vec
 	Dir        float64
-	Weapon     Weapon
-	WeaponList []bool
+	Weapon     int
+	WeaponList []Weapon
 	Reload     bool
 	Shoot      bool
 	Melee      bool
@@ -16,23 +16,29 @@ type Player struct {
 }
 
 func NewPlayer(id string) Player {
-	Weaponslist := make([]bool, len(Weapons))
-	weapon := Knife
-	Weaponslist[weapon] = true
+	weaponList := make([]Weapon, 0, len(Weapons))
+	weaponList = append(weaponList, Weapons[Knife])
+
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),
-		Weapon:     Weapon{},
-		WeaponList: Weaponslist,
+		Dir:        0,
+		Weapon:     Knife,
+		WeaponList: weaponList,
 		Stats:      NewStats(Human),
 	}
 }
 
 func (player Player) Move(dir float64) (Player) {
-	player.Pos = player.Pos.Add(pixel.V(2, 0).Rotated(dir))
+	player.Dir = dir
+	player.Pos = player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(dir))
 	return player
 }
 
 func (player *Player) NewWeapon(weapon Weapon) {
-	player.WeaponList[weapon.Id] = true
+	player.WeaponList = append(player.WeaponList, weapon)
+}
+
+func (player *Player) GetWeapon() *Weapon {
+	return &player.WeaponList[player.Weapon]
 }

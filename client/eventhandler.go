@@ -4,6 +4,7 @@ import (
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/model"
 	"sync"
+	"fmt"
 )
 
 type StateLock struct {
@@ -13,25 +14,38 @@ type StateLock struct {
 
 func HandleEvents(spc space.Space, stateLock *StateLock) {
 	//Handle loop
+	fmt.Println("Handling events")
 	for {
-		state := getState(spc)
+		state := getState(spc, stateLock.State)
 		stateLock.Mutex.Lock()
 		stateLock.State = state
 		stateLock.Mutex.Unlock()
 	}
 }
 
-func getState(spc space.Space) (state model.State) {
+func getState(spc space.Space, oldState model.State) (state model.State) {
 	spc.Get("ready")
 
-	playerTuples, _ := spc.GetP("players", &[]model.Player{})
-	state.Players = playerTuples.GetFieldAt(1).([]model.Player)
+	playerTuples, err := spc.GetP("players", &[]model.Player{})
+	if err == nil {
+		state.Players = playerTuples.GetFieldAt(1).([]model.Player)
+	} else {
+		state.Players = oldState.Players
+	}
 
-	zombieTuples, _ := spc.GetP("zombies", &[]model.Zombie{})
-	state.Zombies = zombieTuples.GetFieldAt(1).([]model.Zombie)
+	zombieTuples, err := spc.GetP("zombies", &[]model.Zombie{})
+	if err == nil {
+		state.Zombies = zombieTuples.GetFieldAt(1).([]model.Zombie)
+	} else {
+		state.Zombies = oldState.Zombies
+	}
 
-	shootTuples, _ := spc.GetP("shoots", &[]model.Shoot{})
-	state.Shoots = shootTuples.GetFieldAt(1).([]model.Shoot)
+	shootTuples, err := spc.GetP("shoots", &[]model.Shoot{})
+	if err == nil {
+		state.Shoots = shootTuples.GetFieldAt(1).([]model.Shoot)
+	} else {
+		state.Shoots = oldState.Shoots
+	}
 
 	spc.Put("done")
 

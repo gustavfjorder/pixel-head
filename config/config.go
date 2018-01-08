@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 	"github.com/rs/xid"
-	"net"
 )
 
 var Conf = Config{
@@ -27,8 +26,8 @@ var Conf = Config{
 	ShotgunKey:      pixelgl.Key4,
 	ReloadKey:       pixelgl.KeyR,
 	Id:              xid.New().String(),
-	Online:          false,
-	LoungeUri:       "tcp://localhost:31414/room1",
+	Online:          true,
+	LoungeUri:       "tcp://localhost:31414/lounge",
 
 	LocalUri:      "game",
 	AnimationPath: "client/sprites",
@@ -68,22 +67,7 @@ func LoadJson(file string, config interface{}) {
 }
 
 func SaveConfig(file string) {
+	return
 	js, _ := json.Marshal(Conf)
 	ioutil.WriteFile(file, js, 0644) // todo: find better way to save settings file
-}
-
-func GetIp() string {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		os.Stderr.WriteString("Oops: " + err.Error() + "\n")
-		os.Exit(1)
-	}
-
-	for _, a := range addrs {
-		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
-			}
-		}
-	}
 }

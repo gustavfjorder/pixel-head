@@ -6,19 +6,21 @@ import (
 	"github.com/gustavfjorder/pixel-head/server"
 	"strconv"
 	"github.com/gustavfjorder/pixel-head/Config"
-	"github.com/gustavfjorder/pixel-head/model"
 )
 
-const MaxRooms = 2
-const PlayersPerRoom = 3
+const MaxRooms = 10
+const PlayersPerRoom = 2
 
 var startPort = 31415
 
 func main() {
-	lounge := setupSpace(Config.Conf.LoungeUri)
+	lounge := NewSpace(config.Conf.LoungeUri)
 
 	rooms := make([]string, 0, MaxRooms)
 	awaiting := make([]string, 0, PlayersPerRoom)
+
+	//lounge.Put("request", "a")
+	//lounge.Put("request", "b")
 
 	for len(rooms) < cap(rooms) {
 		var id string
@@ -31,20 +33,27 @@ func main() {
 		fmt.Printf("Awaiting %d more players \n", cap(awaiting) - len(awaiting))
 
 		if len(awaiting) == cap(awaiting) {
-			uri := "tcp://localhost:" + strconv.Itoa(startPort) + "/game"
+			gameUri := "tcp://localhost:" + strconv.Itoa(startPort) + "/game"
+			startPort++
 
-			rooms = append(rooms, uri)
+			rooms = append(rooms, gameUri)
 
-			for _, id := range awaiting {
-				lounge.Put("join", id, uri, model.NewPlayer(model.Human))
+			clientUris := make([]string, len(awaiting))
+			for i, id := range awaiting {
+				clientUris[i] = "tcp://localhost:" + strconv.Itoa(startPort) + "/game/" + id
+				startPort++
+				fmt.Println("Client uri: " + clientUris[i])
 			}
 
-			game := server.NewGame(uri)
+			game := server.NewGame(gameUri, clientUris)
 			game.AddPlayers(awaiting)
 
 			go game.Start()
 
-			startPort++
+			for i, id := range awaiting {
+				lounge.Put("join", id, gameUri, clientUris[i])
+			}
+
 			awaiting = make([]string, 0, PlayersPerRoom)
 		}
 	}
