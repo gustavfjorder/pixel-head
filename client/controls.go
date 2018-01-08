@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/faiface/pixel/pixelgl"
 	"math"
-	. "github.com/gustavfjorder/pixel-head/Config"
+	. "github.com/gustavfjorder/pixel-head/config"
 	"github.com/gustavfjorder/pixel-head/model"
 )
 

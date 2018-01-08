@@ -1,4 +1,4 @@
-package Config
+package config
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 	"github.com/rs/xid"
+	"net"
 )
 
 var Conf = Config{
@@ -28,8 +29,9 @@ var Conf = Config{
 	Id:              xid.New().String(),
 	Online:          false,
 	LoungeUri:       "tcp://localhost:31414/room1",
-	LocalUri:        "game",
-	AnimationPath:   "client/sprites",
+
+	LocalUri:      "game",
+	AnimationPath: "client/sprites",
 }
 
 type Config struct {
@@ -68,4 +70,20 @@ func LoadJson(file string, config interface{}) {
 func SaveConfig(file string) {
 	js, _ := json.Marshal(Conf)
 	ioutil.WriteFile(file, js, 0644) // todo: find better way to save settings file
+}
+
+func GetIp() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		os.Stderr.WriteString("Oops: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
 }

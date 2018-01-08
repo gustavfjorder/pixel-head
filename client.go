@@ -10,78 +10,67 @@ import (
 	"fmt"
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/client"
-	"github.com/gustavfjorder/pixel-head/Config"
+	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/gustavfjorder/pixel-head/server"
 )
 
-func setupSpace(uri string) space.Space {
+func registerModels() {
 	// Register models for encoding to space
 	gob.Register(model.Request{})
 	gob.Register(model.Player{})
 	gob.Register(model.Zombie{})
 	gob.Register(model.Shoot{})
-
-	return space.NewRemoteSpace(uri)
 }
 
 func run() {
-	Config.LoadJson("settings.json", &Config.Conf)
-	var spc space.Space
-	me := model.NewPlayer(Config.Conf.Id)
-	if Config.Conf.Online {
-		spc = setupSpace(Config.Conf.LoungeUri)
-		_, err := spc.Put("client", Config.Conf.Id)
-		panic(err)
-	}
+	config.LoadJson("settings.json", &config.Conf)
+	registerModels()
 	var (
-		frames     = 0
-		second     = time.Tick(time.Second)
-		fps        = time.Tick(time.Second / Config.Conf.Fps)
-		cfg        = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1920, 1080),}
-		r          = model.Request{}
-		GameUri    = ""
-		state      = client.StateLock{}
-		animations = client.LoadAnimations("client/sprites", "")
+		me               = model.NewPlayer(config.Conf.Id)
+		frames           = 0
+		second           = time.Tick(time.Second)
+		fps              = time.Tick(time.Second / config.Conf.Fps)
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1920, 1080),}
+		r                = model.Request{}
+		GameUri          = ""
+		state            = client.StateLock{}
+		animations       = client.LoadAnimations("client/sprites", "")
 		activeAnimations = make(map[string]client.Animation)
+		port             = "31415"
+		room             = "game"
+		myuri            = fmt.Sprint("tcp://%s:%s/%s", config.GetIp(), port, room)
+		myspc            = space.NewSpace(fmt.Sprint("tcp://localhost:%s/%s", port, room))
+		servspc          space.Space
 	)
-	if Config.Conf.Online {
-		_, err := spc.Get("ready", Config.Conf.Id, &GameUri, &me)
+	if config.Conf.Online {
+		servspc = space.NewRemoteSpace(config.Conf.LoungeUri)
+		_, err := servspc.Put("client", config.Conf.Id, myuri)
+		panic(err)
+		_, err = servspc.Get("ready", config.Conf.Id, &GameUri, &me)
 		if err != nil {
 			panic(err)
 		}
-		spc = space.NewSpace(GameUri)
 	} else {
-		spc = setupSpace(Config.Conf.LocalUri)
-		go server.StartGame(Config.Conf.LocalUri, []string{Config.Conf.Id})
+		go server.StartGame(myuri, []string{config.Conf.Id})
+		servspc = space.NewRemoteSpace(myuri)
 	}
-	go client.HandleEvents(spc, &state)
+	go client.HandleEvents(myspc, &state)
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
 	}
 	win.SetSmooth(true)
 	for !win.Closed() {
+		//Handle controls -> send request
 		client.HandleControls(*win, &r)
-		spc.Put(Config.Conf.Id, r)
+		myspc.Put(config.Conf.Id, r)
+
+		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 		client.HandleAnimations(win, state, animations, activeAnimations)
 		win.Update()
 
-		//s, b := r.MovementArgs()
-		//prefix := client.Prefix(r.WeaponName(), s)
-		//if curAnimPath != prefix {
-		//	if anim, ok := playerAnim[prefix]; ok {
-		//		curAnimPath = prefix
-		//		curAnim.ChangeAnimation(anim, b)
-		//	}
-		//}
-		//if r.Move {
-		//	me.Pos = me.Pos.Add(pixel.V(me.MoveSpeed, 0).Rotated(r.Dir))
-		//}
-		//transformation := r.GetRotation().Scaled(center, 0.5).Moved(center.Add(me.Pos))
-		//curMap.Draw(win)
-		//curAnim.Next().Draw(win, transformation)
-
+		//Count FPS
 		frames++
 		select {
 		case <-second:
@@ -89,10 +78,11 @@ func run() {
 			frames = 0
 		default:
 		}
+
+		//Don't exceed the fps limit
 		<-fps
 	}
-
-	Config.SaveConfig("settings.json")
+	config.SaveConfig("settings.json")
 }
 
 func main() {
