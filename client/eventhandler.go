@@ -2,8 +2,6 @@ package client
 
 import (
 	"github.com/pspaces/gospace/space"
-	"time"
-	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/gustavfjorder/pixel-head/model"
 	"sync"
 )
@@ -14,18 +12,9 @@ type StateLock struct {
 }
 
 func HandleEvents(spc space.Space, stateLock *StateLock) {
-	var (
-		state  = getState(spc)
-		ticker = time.NewTicker(time.Second / config.Conf.HandleFrequency).C
-	)
-	stateLock.Mutex.Lock()
-	stateLock.State = state
-	stateLock.Mutex.Unlock()
-
 	//Handle loop
 	for {
-		<-ticker //Stop from starving server too much
-		state = getState(spc)
+		state := getState(spc)
 		stateLock.Mutex.Lock()
 		stateLock.State = state
 		stateLock.Mutex.Unlock()
@@ -33,30 +22,18 @@ func HandleEvents(spc space.Space, stateLock *StateLock) {
 }
 
 func getState(spc space.Space) (state model.State) {
-	playerTuples, err := spc.QueryAll(&model.Player{})
-	if err != nil {
-		panic(err)
-	}
-	state.Players = make([]model.Player, len(playerTuples))
-	for i, playerTuple := range playerTuples {
-		state.Players[i] = playerTuple.GetFieldAt(0).(model.Player)
-	}
+	spc.Get("ready")
 
-	zoombieTuples, err := spc.QueryAll(&model.Zombie{})
-	if err != nil {
-		panic(err)
-	}
-	state.Zombies = make([]model.Zombie, len(zoombieTuples))
-	for i, zoombieTuple := range zoombieTuples {
-		state.Zombies[i] = zoombieTuple.GetFieldAt(0).(model.Zombie)
-	}
-	shootsTuple, err := spc.QueryAll(&model.Shoot{})
-	if err != nil {
-		panic(err)
-	}
-	state.Shoots = make([]model.Shoot, len(shootsTuple))
-	for i, shootTuple := range shootsTuple {
-		state.Shoots[i] = shootTuple.GetFieldAt(0).(model.Shoot)
-	}
+	playerTuples, _ := spc.GetP("players", &[]model.Player{})
+	state.Players = playerTuples.GetFieldAt(1).([]model.Player)
+
+	zombieTuples, _ := spc.GetP("zombies", &[]model.Zombie{})
+	state.Zombies = zombieTuples.GetFieldAt(1).([]model.Zombie)
+
+	shootTuples, _ := spc.GetP("shoots", &[]model.Shoot{})
+	state.Shoots = shootTuples.GetFieldAt(1).([]model.Shoot)
+
+	spc.Put("done")
+
 	return
 }

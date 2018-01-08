@@ -11,7 +11,6 @@ import (
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/client"
 	"github.com/gustavfjorder/pixel-head/config"
-	"github.com/gustavfjorder/pixel-head/server"
 )
 
 func registerModels() {
@@ -25,6 +24,7 @@ func registerModels() {
 func run() {
 	config.LoadJson("settings.json", &config.Conf)
 	registerModels()
+
 	var (
 		me               = model.NewPlayer(config.Conf.Id)
 		frames           = 0
@@ -42,6 +42,7 @@ func run() {
 		myspc            = space.NewSpace(fmt.Sprint("tcp://localhost:%s/%s", port, room))
 		servspc          space.Space
 	)
+
 	if config.Conf.Online {
 		servspc = space.NewRemoteSpace(config.Conf.LoungeUri)
 		_, err := servspc.Put("client", config.Conf.Id, myuri)
@@ -51,19 +52,23 @@ func run() {
 			panic(err)
 		}
 	} else {
-		go server.StartGame(myuri, []string{config.Conf.Id})
-		servspc = space.NewRemoteSpace(myuri)
+		// todo: Implement when Game/Server is final
+		//go server.StartGame(myuri, []string{config.Conf.Id})
+		//servspc = space.NewRemoteSpace(myuri)
 	}
-	go client.HandleEvents(myspc, &state)
+
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
 	}
+
+	go client.HandleEvents(myspc, &state)
+
 	win.SetSmooth(true)
 	for !win.Closed() {
 		//Handle controls -> send request
 		client.HandleControls(*win, &r)
-		myspc.Put(config.Conf.Id, r)
+		servspc.Put(config.Conf.Id, r)
 
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
