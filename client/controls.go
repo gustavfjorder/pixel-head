@@ -48,11 +48,11 @@ func HandleControls(win pixelgl.Window, r *model.Request) {
 	}
 
 
-	if win.Pressed(Conf.ReloadKey) && r.CurrentWep != model.Knife{
+	if win.JustPressed(Conf.ReloadKey) && r.CurrentWep != model.Knife{
 		r.Reload = true
-	} else if win.Pressed(Conf.ShootKey) {
+	} else if win.JustPressed(Conf.ShootKey) {
 		r.Shoot = true
-	} else if win.Pressed(Conf.MeleeKey){
+	} else if win.JustPressed(Conf.MeleeKey){
 		r.Melee = true
 	}
 

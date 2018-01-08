@@ -43,13 +43,12 @@ func (g *Game) AddPlayer(id string) {
 
 func (g *Game) Start() {
 	fmt.Println("Starting game")
-	//fmt.Println("Starting game on uri '" + uri + "'")
-	//fmt.Println("Players in game:", playerIds)
 
 	g.currentMap = model.MapTemplates["Test1"]
 
 	for _, space := range g.clientSpaces {
 		space.Put("map", g.currentMap)
+		space.Put("ready")
 	}
 
 	time.Sleep(time.Second * 2)
@@ -154,8 +153,6 @@ func setupSpace(uri string) Space {
 	space.QueryP(&model.Point{})
 	space.QueryP(&model.State{})
 
-	space.Put("loop_lock")
-
 	return space
 }
 
@@ -164,10 +161,8 @@ func (g *Game) handleRequests() {
 	rTuples, _ := g.space.GetAll(&model.Request{})
 
 	players := g.state.Players
-
 	for _, rTuple := range rTuples {
 		request := rTuple.GetFieldAt(0).(model.Request)
-		fmt.Println("Handling request:", request)
 
 		// Load player
 		var player *model.Player
@@ -182,9 +177,15 @@ func (g *Game) handleRequests() {
 		player.ChangeWeapon(request.CurrentWep)
 
 		if request.Move {
+			fmt.Println("Handling move request from:", player.Pos)
 			// todo: check if move is doable in map
 			player.Move(request.Dir)
+			fmt.Println("Moved to:",player.Pos)
 		}
+
+		player.Reload = false
+		player.Shoot = false
+		player.Melee = false
 
 		if request.Reload {
 			player.Reload = true

@@ -92,6 +92,7 @@ func run() {
 	win.SetSmooth(true)
 	for !win.Closed() {
 		//Handle controls -> send request
+
 		client.HandleControls(*win, &r)
 		servspc.Put(r)
 

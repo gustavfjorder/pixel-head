@@ -12,7 +12,7 @@ import (
 
 var Conf = Config{
 	AnimationSpeed:  30,
-	Fps:             60,
+	Fps:             1000,
 	HandleFrequency: 30,
 	LeftKey:         pixelgl.KeyA,
 	RightKey:        pixelgl.KeyD,

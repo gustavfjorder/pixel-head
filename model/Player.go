@@ -16,14 +16,14 @@ type Player struct {
 }
 
 func NewPlayer(id string) Player {
-	weaponList := make([]Weapon, 0, len(Weapons))
-	weaponList = append(weaponList, Weapons[Knife])
-
+	weaponList := make([]Weapon, len(Weapons))
+	weaponList[Knife] = Weapons[Knife]
+	weaponList[Handgun] = Weapons[Handgun]
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),
 		Dir:        0,
-		Weapon:     Knife,
+		Weapon:     Handgun,
 		WeaponList: weaponList,
 		Stats:      NewStats(Human),
 	}
@@ -35,10 +35,10 @@ func (player *Player) Move(dir float64) {
 }
 
 func (player *Player) NewWeapon(weapon Weapon) {
-	player.WeaponList = append(player.WeaponList, weapon)
+	player.WeaponList[weapon.Id] = weapon
 }
 
-func (player *Player) GetWeapon() *Weapon {
+func (player Player) GetWeapon() *Weapon {
 	return &player.WeaponList[player.Weapon]
 }
 
