@@ -35,6 +35,8 @@ func (g *Game) Start() {
 	//fmt.Println("Starting game on uri '" + uri + "'")
 	//fmt.Println("Players in game:", playerIds)
 
+	g.space.Put("map", model.MapTemplates["test1"])
+
 	t := time.Tick(time.Second / 60)
 
 	for {
@@ -66,6 +68,7 @@ func setupSpace(uri string) Space {
 	gob.Register(model.Player{})
 	gob.Register(model.Zombie{})
 	gob.Register(model.Shoot{})
+	gob.Register(model.Map{})
 
 	space := NewSpace(uri)
 
