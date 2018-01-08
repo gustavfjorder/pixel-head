@@ -3,22 +3,28 @@ package model
 import "github.com/faiface/pixel"
 
 type Player struct {
-	Id  string
-	Pos pixel.Vec
-	Weapon Weapon
-	WeaponList []Weapon
+	Id         string
+	Pos        pixel.Vec
+	Dir        float64
+	Weapon     Weapon
+	WeaponList []bool
+	Reload     bool
+	Shoot      bool
+	Melee      bool
+	Moved      bool
 	Stats
 }
 
 func NewPlayer(id string) Player {
-	var Weaponslist = make([]Weapon, len(Weapons))
-	Weaponslist[Knife]=Weapons[Knife]
+	Weaponslist := make([]bool, len(Weapons))
+	weapon := Knife
+	Weaponslist[weapon] = true
 	return Player{
-		Id: id,
-		Pos: pixel.V(200,200),
-		Weapon: Weapons[Knife],
+		Id:         id,
+		Pos:        pixel.V(200, 200),
+		Weapon:     Weapon{},
 		WeaponList: Weaponslist,
-		Stats: NewStats(Human),
+		Stats:      NewStats(Human),
 	}
 }
 
@@ -27,6 +33,6 @@ func (player Player) Move(dir float64) (Player) {
 	return player
 }
 
-func (player *Player) NewWeapon (weapon Weapon){
-	player.WeaponList[weapon.Id]=weapon
+func (player *Player) NewWeapon(weapon Weapon) {
+	player.WeaponList[weapon.Id] = true
 }

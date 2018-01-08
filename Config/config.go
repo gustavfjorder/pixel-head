@@ -11,41 +11,47 @@ import (
 )
 
 var Conf = Config{
-	AnimationSpeed: 30,
-	Fps:            60,
-	LeftKey:        pixelgl.KeyA,
-	RightKey:       pixelgl.KeyD,
-	UpKey:          pixelgl.KeyW,
-	DownKey:        pixelgl.KeyS,
-	ShootKey:       pixelgl.KeySpace,
-	MeleeKey:       pixelgl.KeyLeftControl,
-	KnifeKey:       pixelgl.Key1,
-	HandgunKey:     pixelgl.Key2,
-	RifleKey:       pixelgl.Key3,
-	ShotgunKey:     pixelgl.Key4,
-	ReloadKey:      pixelgl.KeyR,
-	Id:             xid.New().String(),
-	Online:         false,
-	Uri:            "tcp://localhost:31414/room1",
+	AnimationSpeed:  30,
+	Fps:             60,
+	HandleFrequency: 30,
+	LeftKey:         pixelgl.KeyA,
+	RightKey:        pixelgl.KeyD,
+	UpKey:           pixelgl.KeyW,
+	DownKey:         pixelgl.KeyS,
+	ShootKey:        pixelgl.KeySpace,
+	MeleeKey:        pixelgl.KeyLeftControl,
+	KnifeKey:        pixelgl.Key1,
+	HandgunKey:      pixelgl.Key2,
+	RifleKey:        pixelgl.Key3,
+	ShotgunKey:      pixelgl.Key4,
+	ReloadKey:       pixelgl.KeyR,
+	Id:              xid.New().String(),
+	Online:          false,
+	LoungeUri:       "tcp://localhost:31414/room1",
+	LocalUri:        "game",
+	AnimationPath:   "client/sprites",
 }
 
 type Config struct {
-	AnimationSpeed time.Duration
-	Fps            time.Duration
-	LeftKey        pixelgl.Button
-	RightKey       pixelgl.Button
-	UpKey          pixelgl.Button
-	DownKey        pixelgl.Button
-	ShootKey       pixelgl.Button
-	MeleeKey       pixelgl.Button
-	KnifeKey       pixelgl.Button
-	HandgunKey     pixelgl.Button
-	RifleKey       pixelgl.Button
-	ShotgunKey     pixelgl.Button
-	ReloadKey      pixelgl.Button
-	Id             string
-	Online         bool
-	Uri            string
+	AnimationSpeed  time.Duration
+	Fps             time.Duration
+	HandleFrequency time.Duration
+	LeftKey         pixelgl.Button
+	RightKey        pixelgl.Button
+	UpKey           pixelgl.Button
+	DownKey         pixelgl.Button
+	ShootKey        pixelgl.Button
+	MeleeKey        pixelgl.Button
+	KnifeKey        pixelgl.Button
+	HandgunKey      pixelgl.Button
+	RifleKey        pixelgl.Button
+	ShotgunKey      pixelgl.Button
+	ReloadKey       pixelgl.Button
+	Id              string
+	Online          bool
+	LoungeUri       string
+	LocalUri        string
+	AnimationPath   string
 }
 
 func LoadJson(file string, config interface{}) {

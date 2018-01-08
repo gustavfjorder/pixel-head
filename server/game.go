@@ -11,6 +11,7 @@ import (
 
 func StartGame(uri string, playerIds []string) {
 	room := setupSpace(uri)
+	room.Put("rw_lock", 0)
 
 	fmt.Println("Starting game on uri '" + uri + "'")
 	fmt.Println("Players in game:", playerIds)
@@ -21,7 +22,7 @@ func StartGame(uri string, playerIds []string) {
 
 	// Game loop
 	for {
-		room.Get("loop_lock")
+		room.Get("rw_lock", 0)
 
 		players, newShoots := handleRequests(room)
 
@@ -32,9 +33,9 @@ func StartGame(uri string, playerIds []string) {
 			room.Put(player)
 		}
 
-		room.Put("loop_lock")
+		room.Put("rw_lock", 0)
 
-		<- t
+		<-t
 	}
 }
 
@@ -107,7 +108,7 @@ func handleZombies(room Space, players []model.Player, shoots []model.Shoot) {
 		for i, shoot := range shoots {
 			if shoot.GetPos() == zombie.Pos {
 				zombie.Stats.Health -= shoot.Weapon.Power
-				shoots = append(shoots[:i], shoots[i + 1:]...)
+				shoots = append(shoots[:i], shoots[i+1:]...)
 			}
 		}
 
