@@ -19,9 +19,6 @@ func main() {
 	rooms := make([]string, 0, MaxRooms)
 	awaiting := make([]string, 0, PlayersPerRoom)
 
-	//lounge.Put("request", "a")
-	//lounge.Put("request", "b")
-
 	for len(rooms) < cap(rooms) {
 		var id string
 		lounge.Get("request", &id)
