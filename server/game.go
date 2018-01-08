@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/faiface/pixel"
 	. "github.com/pspaces/gospace"
 	"time"
 	"encoding/gob"
@@ -45,15 +44,15 @@ func (g *Game) Start() {
 		g.handleZombies()
 
 		for _, player := range g.memory.GetW("players").([]model.Player) {
-			g.space.Put(player)
+			g.space.Put("players", player)
 		}
 
 		for _, zombie := range g.memory.GetW("zombies").([]model.Zombie) {
-			g.space.Put(zombie)
+			g.space.Put("zombies", zombie)
 		}
 
 		for _, shoot := range g.memory.GetW("shots").([]model.Shoot) {
-			g.space.Put(shoot)
+			g.space.Put("shoots", shoot)
 		}
 
 		g.space.Put("loop_lock")
