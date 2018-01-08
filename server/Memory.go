@@ -1,6 +1,9 @@
 package server
 
-import "sync"
+import (
+	"sync"
+	"reflect"
+)
 
 
 type Memory struct {
@@ -22,6 +25,19 @@ func (m *Memory) Get(key string) (interface{}, bool) {
 	}
 
 	return item, true
+}
+
+func (m *Memory) GetW(key string, defaultValue ...interface{}) interface{} {
+	item, found := m.Get(key)
+	if found {
+		return item
+	}
+
+	if len(defaultValue) < 1 {
+		return nil
+	}
+
+	return defaultValue[0]
 }
 
 func (m *Memory) GetDelete(key string) (interface{}, bool) {
@@ -66,4 +82,24 @@ func (m *Memory) Clear() {
 	defer m.mu.Unlock()
 
 	m.items = make(map[string]interface{})
+}
+
+
+/**
+ * Array helpers
+ */
+func (m *Memory) PutToArray(key string, value ...interface{}) bool {
+	items, found := m.GetDelete(key)
+	if !found {
+		items = make([]interface{}, 0)
+	}
+
+	itemType := reflect.TypeOf(items).Kind()
+	if itemType != reflect.Array && itemType != reflect.Slice {
+		return false
+	}
+
+	items = append(items.([]interface{}), value...)
+
+	return m.Put(key, items)
 }
