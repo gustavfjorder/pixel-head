@@ -24,25 +24,11 @@ func HandleEvents(spc space.Space, stateLock *StateLock) {
 func getState(spc space.Space, oldState model.State) (state model.State) {
 	spc.Get("ready")
 
-	playerTuples, err := spc.GetP("players", &[]model.Player{})
+	s, err := spc.GetP("state", &model.State{})
 	if err == nil {
-		state.Players = playerTuples.GetFieldAt(1).([]model.Player)
+		state = s.GetFieldAt(1).(model.State)
 	} else {
-		state.Players = oldState.Players
-	}
-
-	zombieTuples, err := spc.GetP("zombies", &[]model.Zombie{})
-	if err == nil {
-		state.Zombies = zombieTuples.GetFieldAt(1).([]model.Zombie)
-	} else {
-		state.Zombies = oldState.Zombies
-	}
-
-	shootTuples, err := spc.GetP("shoots", &[]model.Shoot{})
-	if err == nil {
-		state.Shoots = shootTuples.GetFieldAt(1).([]model.Shoot)
-	} else {
-		state.Shoots = oldState.Shoots
+		state = oldState
 	}
 
 	spc.Put("done")
