@@ -11,28 +11,44 @@ import (
 	"errors"
 )
 
-func LoadAnimations(path string, prefix string) map[string]Animation {
+const(
+	ANIM  = iota
+	IMG
+)
+
+func Load(path string, prefix string, op int) map[string]Animation {
 	res := make(map[string]Animation)
 	elems, err := ioutil.ReadDir(path)
 	if err != nil {
 		panic(err)
 	}
 	for _, elem := range elems {
+		del := "."
+		if len(prefix) <= 0 {
+			del = ""
+		}
 		if elem.IsDir() {
-			del := "."
-			if len(prefix) <= 0 {
-				del = ""
-			}
-			for k, v := range LoadAnimations(path+"/"+elem.Name(), prefix+del+elem.Name()) {
+
+			for k, v := range Load(path+"/"+elem.Name(), prefix+del+elem.Name(), op) {
 				res[k] = v
 			}
 		} else {
-			anim, err := loadAnimation(path)
-			if err == nil {
-				anim.prefix = prefix
-				res[prefix] = anim
+			if op == ANIM {
+				anim, err := loadAnimation(path)
+				if err == nil {
+					anim.Prefix = prefix
+					res[prefix] = anim
+				}
+				break
+			}else if op == IMG {
+				pic, err := LoadPicture(path + "/" + elem.Name())
+				if err == nil {
+					res[del + elem.Name()] = Animation{
+						Prefix:   del + elem.Name(),
+						Sprites: []*pixel.Sprite{pixel.NewSprite(pic, pic.Bounds())},
+					}
+				}
 			}
-			break
 		}
 	}
 	return res

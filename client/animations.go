@@ -14,7 +14,7 @@ import (
 )
 
 type Animation struct {
-	prefix   string
+	Prefix   string
 	Sprites  []*pixel.Sprite
 	Cur      int
 	Tick     *time.Ticker
@@ -60,9 +60,9 @@ func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
 	return
 }
 
-func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Animation, currentAnims map[string]*Animation){
+func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]Animation, currentAnims map[string]*Animation){
 	center := pixel.ZV
-	for _, player := range state.State.Players {
+	for _, player := range state.Players {
 		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.5).Moved(player.Pos)
 		movement := "idle"
 		blocking := false
@@ -89,16 +89,16 @@ func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Ani
 			if ok {
 				newAnim.Start(config.Conf.AnimationSpeed)
 				currentAnims[player.Id] = &newAnim
-				fmt.Println(newAnim.prefix, prefix)
-				newAnim.prefix = prefix
+				fmt.Println(newAnim.Prefix, prefix)
+				newAnim.Prefix = prefix
 			}
 			anim = &newAnim
 		}
-		if anim.prefix != prefix {
+		if anim.Prefix != prefix {
 			newAnim, found := anims[prefix]
 			if found {
-				fmt.Println(anim.prefix, prefix)
-				anim.prefix = prefix
+				fmt.Println(anim.Prefix, prefix)
+				anim.Prefix = prefix
 				anim.ChangeAnimation(newAnim, blocking)
 			}
 		}

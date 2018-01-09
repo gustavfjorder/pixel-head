@@ -3,25 +3,33 @@ package client
 import (
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/model"
-	"sync"
 	"fmt"
 	"time"
 )
 
-type StateLock struct {
-	Mutex sync.Mutex
-	State model.State
-}
-
-func HandleEvents(spc space.Space, stateLock *StateLock) {
+func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
 	//Handle loop
 	sec := time.Tick(time.Second)
 	count := 0
 	fmt.Println("Handling events")
 	for {
-		state := getState(spc)
-		stateLock.State = state
-		count++;
+		_, err := spc.Get("state", state)
+		if err != nil {
+			continue
+		}
+
+		fmt.Println("Got state:",state)
+
+		spc.Put("ready")
+
+		for _,p := range state.Players{
+			if p.Id == me.Id {
+				me = &p
+			}
+		}
+
+		count++
+
 		select{
 		case <-sec:
 			fmt.Println("Handled:", count, "state updates")
@@ -30,19 +38,4 @@ func HandleEvents(spc space.Space, stateLock *StateLock) {
 			break
 		}
 	}
-}
-
-func getState(spc space.Space, oldState model.State) (state model.State) {
-	spc.Get("ready")
-
-	s, err := spc.GetP("state", &model.State{})
-	if err == nil {
-		state = s.GetFieldAt(1).(model.State)
-	} else {
-		state = oldState
-	}
-
-	spc.Put("done")
-
-	return
 }

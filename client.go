@@ -42,15 +42,16 @@ func run() {
 		frames           = 0
 		second           = time.Tick(time.Second)
 		fps              = time.Tick(time.Second / config.Conf.Fps)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1024, 800),}
 		r                = model.Request{PlayerId: config.Conf.Id}
 		GameUri          string
 		ClientUri        string
-		state            = client.StateLock{}
-		animations       = client.LoadAnimations("client/sprites", "")
+		state            = &model.State{}
+		animations       = client.Load("client/sprites", "", client.ANIM)
 		activeAnimations = make(map[string]*client.Animation)
 		myspc            space.Space
 		servspc          space.Space
+		me               = model.Player{Id: config.Conf.Id}
 	)
 	for k, _ := range animations {
 		fmt.Print(k, " ")
@@ -89,7 +90,7 @@ func run() {
 		panic(err)
 	}
 
-	go client.HandleEvents(myspc, &state)
+	go client.HandleEvents(myspc, state, &me)
 
 	win.SetSmooth(true)
 	for !win.Closed() {
@@ -100,11 +101,11 @@ func run() {
 			servspc.Put(r)
 		}
 
-
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 		imd.Draw(win)
-		client.HandleAnimations(win, state, animations, activeAnimations)
+		client.HandleAnimations(win, *state, animations, activeAnimations)
+		client.DrawAbilities(win, me)
 		//fmt.Println(activeAnimations)
 		win.Update()
 

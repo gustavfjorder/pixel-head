@@ -42,10 +42,6 @@ func (player Player) GetWeapon() *Weapon {
 	return &player.WeaponList[player.Weapon]
 }
 
-func (player *Player) IsAvailable(weapon int) bool {
-	return player.WeaponList[weapon]==Weapon{}
-}
-
 func (player *Player) ChangeWeapon(weapon int) {
 	for i := range player.WeaponList {
 		if i == weapon {
@@ -53,4 +49,8 @@ func (player *Player) ChangeWeapon(weapon int) {
 			break
 		}
 	}
+}
+
+func (player *Player) IsAvailable(weapon int) bool{
+	return weapon < len(player.WeaponList) && player.WeaponList[weapon] != (Weapon{})
 }
