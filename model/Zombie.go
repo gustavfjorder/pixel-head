@@ -7,10 +7,11 @@ import (
 )
 
 type Zombie struct {
-	Id    string
-	Pos   pixel.Vec
-	Dir   float64
-	Stats Stats
+	Id        string
+	Pos       pixel.Vec
+	Dir       float64
+	Attacking bool
+	Stats     Stats
 }
 
 func NewZombie(x, y float64) Zombie {
@@ -23,10 +24,10 @@ func NewZombie(x, y float64) Zombie {
 }
 
 
-func (zombie* Zombie) Move(players *[]Player) {
-	closestPlayer := (*players)[0]
+func (zombie* Zombie) Move(players []Player) {
+	closestPlayer := players[0]
 
-	for _, player := range *players {
+	for _, player := range players {
 		if player.Pos.Sub(zombie.Pos).Len() < closestPlayer.Pos.Sub(zombie.Pos).Len() {
 			closestPlayer = player
 		}
@@ -38,11 +39,15 @@ func (zombie* Zombie) Move(players *[]Player) {
 	zombie.Dir = angle
 }
 
-func (zombie *Zombie) Attack(players *[]Player) {
-	for _, player := range *players {
-		if zombie.Pos.Sub(player.Pos).Len() < 1 {
+func (zombie *Zombie) Attack(players []Player) {
+	for i := range players {
+		player := &players[i]
+
+		zombie.Attacking = false
+		if zombie.Pos.Sub(player.Pos).Len() < 3 {
 			zombie.Dir = angle(zombie.Pos, player.Pos)
 			player.Stats.Health -= zombie.Stats.Power
+			zombie.Attacking = true
 			break
 		}
 	}

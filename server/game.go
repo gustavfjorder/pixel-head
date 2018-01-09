@@ -7,6 +7,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 	"strconv"
+	"math/rand"
 )
 
 type Game struct {
@@ -83,17 +84,28 @@ func (g *Game) Start() {
 			g.handleRequests()
 			g.handleZombies()
 
+			for i, player := range g.state.Players {
+				fmt.Println(player.Stats.Health)
+				if player.Stats.Health <= 0 {
+					g.state.Players = append(g.state.Players[:i], g.state.Players[i + 1:]...)
+				}
+			}
+
 			for _, space := range g.clientSpaces {
 				if _, err := space.GetP("done"); err == nil {
 					g.putToSpaces(&space)
 				}
 			}
 
-			if breakable && len(g.state.Zombies) == 0 {
+			if breakable && len(g.state.Zombies) == 0 || len(g.state.Players) == 0 {
 				break
 			}
 
 			<- t
+		}
+
+		if len(g.state.Players) == 0 {
+			break
 		}
 
 		g.currentLevel++
@@ -106,7 +118,7 @@ func (g *Game) prepareLevel(done chan bool) {
 	level := model.Levels[g.currentLevel]
 
 	for i := 0; i < level.NumberOfZombies; i++ {
-		g.state.Zombies = append(g.state.Zombies, model.NewZombie(300, 200))
+		g.state.Zombies = append(g.state.Zombies, model.NewZombie(300 + (rand.Float64() * 100), 200 + (rand.Float64() * 100)))
 	}
 
 	close(done)
@@ -119,7 +131,7 @@ func (g *Game) putToSpaces(space *Space) {
 
 	space.Put("state", g.state)
 
-	space.Put("ready")
+	space.Put("done")
 }
 
 func setupSpace(uri string) Space {
@@ -202,24 +214,23 @@ func (g *Game) handleRequests() {
 }
 
 func (g *Game) handleZombies() {
-	zombies := &g.state.Zombies
-	shots := &g.state.Shoots
+	for i := range g.state.Zombies {
+		zombie := &g.state.Zombies[i]
 
-	for i, zombie := range *zombies {
 		// Any shoots hitting the zombie
-		for i, shoot := range *shots {
+		for i, shoot := range g.state.Shoots {
 			if shoot.GetPos() == zombie.Pos {
 				zombie.Stats.Health -= shoot.Weapon.Power
-				*shots = append((*shots)[:i], (*shots)[i + 1:]...)
+				g.state.Shoots = append(g.state.Shoots[:i], g.state.Shoots[i + 1:]...)
 			}
 		}
 
 		if zombie.Stats.Health <= 0 {
-			*zombies = append((*zombies)[:i], (*zombies)[i + 1:]...)
+			g.state.Zombies = append(g.state.Zombies[:i], g.state.Zombies[i + 1:]...)
 			continue
 		}
 
-		zombie.Move(&g.state.Players)
-		zombie.Attack(&g.state.Players)
+		zombie.Move(g.state.Players)
+		zombie.Attack(g.state.Players)
 	}
 }
