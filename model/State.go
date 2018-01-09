@@ -2,7 +2,8 @@ package model
 
 
 type State struct {
-	Players []Player
-	Zombies []Zombie
-	Shoots  []Shoot
+	Timestamp int
+	Players   []Player
+	Zombies   []Zombie
+	Shoots    []Shoot
 }

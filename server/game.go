@@ -91,6 +91,8 @@ func (g *Game) Start() {
 				}
 			}
 
+			g.state.Timestamp = time.Now().Nanosecond()
+
 			for _, space := range g.clientSpaces {
 				if _, err := space.GetP("done"); err == nil {
 					g.putToSpaces(&space)
