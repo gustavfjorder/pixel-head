@@ -40,7 +40,7 @@ func (zombie* Zombie) Move(players *[]Player) {
 func (zombie *Zombie) Attack(players *[]Player) {
 	for _, player := range *players {
 		if zombie.Pos.Sub(player.Pos).Len() < 1 {
-			zombie.Pos = zombie.Pos.Rotated(angle(zombie.Pos, player.Pos))
+			zombie.Dir = angle(zombie.Pos, player.Pos)
 			player.Stats.Health -= zombie.Stats.Power
 			break
 		}
