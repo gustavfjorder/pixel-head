@@ -31,30 +31,36 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 		shotgun = ab["shotgun.png"].Sprites[0]
 		shotgunDark = ab["shotgunDark.png"].Sprites[0]
 	)
-	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(win.Bounds().Max.X/2,win.Bounds().Min.Y+abilitiesBar.Picture().Bounds().Max.Y/2)))
+	abilitiesX:=win.Bounds().Max.X/2
+	abilitiesY:=win.Bounds().Min.Y+abilitiesBar.Picture().Bounds().Max.Y/2
+	scalefactor:=pixel.V(abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*2/3)
+	scaled:=pixel.IM.ScaledXY(pixel.ZV,scalefactor)
+	knifeLocation:=pixel.Vec{abilitiesX-(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
+	handgunLocation:=pixel.Vec{abilitiesX-(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
+	rifleLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
+	shotgunLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
 
-	if me.IsAvailable(model.Knife) {
-		scalefactor:=pixel.V(abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*2/3)
-		movelocation:=pixel.V((win.Bounds().Max.X-abilitiesBar.Picture().Bounds().Max.X)-(abilitiesBar.Picture().Bounds().Max.X/4),abilitiesBar.Picture().Bounds().Max.Y+knife.Picture().Bounds().Max.Y*1.1)
-
-		knife.Draw(win, pixel.IM.Moved(movelocation).ScaledXY(win.Bounds().Center(),scalefactor))
+	if me.IsAvailable(model.Knife)|| !me.IsAvailable(model.Knife) {
+		knife.Draw(win,scaled.Moved(knifeLocation))
 	}
 
 	if me.IsAvailable(model.Handgun){
-		handgun.Draw(win, pixel.IM.Moved(pixel.V((win.Bounds().Max.X-abilitiesBar.Picture().Bounds().Max.X)-(abilitiesBar.Picture().Bounds().Max.X/4)-50,abilitiesBar.Picture().Bounds().Max.Y-525/*+handgunIcon.Bounds().Max.Y*1.1*/)).ScaledXY(win.Bounds().Center(),pixel.V(abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3)))
+		handgun.Draw(win,scaled.Moved(handgunLocation))
 	} else{
-		handgunDark.Draw(win, pixel.IM.Moved(pixel.V((win.Bounds().Max.X-abilitiesBar.Picture().Bounds().Max.X)-(abilitiesBar.Picture().Bounds().Max.X/4)-50,abilitiesBar.Picture().Bounds().Max.Y-525/*+handgunIcon.Bounds().Max.Y*1.1*/)).ScaledXY(win.Bounds().Center(),pixel.V(abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3)))
+		handgunDark.Draw(win,scaled.Moved(handgunLocation))
 	}
 
 	if me.IsAvailable(model.Rifle){
-		rifle.Draw(win, pixel.IM.Moved(pixel.V((win.Bounds().Max.X-abilitiesBar.Picture().Bounds().Max.X)-(abilitiesBar.Picture().Bounds().Max.X/4),abilitiesBar.Picture().Bounds().Max.Y-525/*+handgunIcon.Bounds().Max.Y*1.1*/)).ScaledXY(win.Bounds().Center(),pixel.V(abilitiesBar.Picture().Bounds().Max.Y/rifle.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/rifle.Picture().Bounds().Max.Y*2/3)))
+		rifle.Draw(win,scaled.Moved(rifleLocation))
 	}else{
-		rifleDark.Draw(win, pixel.IM.Moved(pixel.V((win.Bounds().Max.X-abilitiesBar.Picture().Bounds().Max.X)-(abilitiesBar.Picture().Bounds().Max.X/4)-50,abilitiesBar.Picture().Bounds().Max.Y-525/*+handgunIcon.Bounds().Max.Y*1.1*/)).ScaledXY(win.Bounds().Center(),pixel.V(abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3)))
+		rifleDark.Draw(win,scaled.Moved(rifleLocation))
 	}
 
 	if me.IsAvailable(model.Shotgun){
-		shotgun.Draw(win,pixel.IM.Moved(pixel.V(abilitiesBar.Picture().Bounds().Max.X-15500, abilitiesBar.Picture().Bounds().Max.Y/2-2)))
+		shotgun.Draw(win,scaled.Moved(shotgunLocation))
 	}else{
-		shotgunDark.Draw(win, pixel.IM.Moved(pixel.V((win.Bounds().Max.X-abilitiesBar.Picture().Bounds().Max.X)-(abilitiesBar.Picture().Bounds().Max.X/4)-50,abilitiesBar.Picture().Bounds().Max.Y-525/*+handgunIcon.Bounds().Max.Y*1.1*/)).ScaledXY(win.Bounds().Center(),pixel.V(abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/handgun.Picture().Bounds().Max.Y*2/3)))
+		shotgunDark.Draw(win,scaled.Moved(shotgunLocation))
 	}
+	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesX,abilitiesY)))
+
 }
