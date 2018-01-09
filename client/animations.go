@@ -3,14 +3,8 @@ package client
 import (
 	"errors"
 	"github.com/faiface/pixel"
-	"image"
 	_ "image/png"
-	"io/ioutil"
-	"os"
 	"time"
-	"sort"
-	"regexp"
-	"strconv"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/gustavfjorder/pixel-head/model"
 	"golang.org/x/image/colornames"
@@ -20,7 +14,7 @@ import (
 )
 
 type Animation struct {
-	prefix   string
+	Prefix   string
 	Sprites  []*pixel.Sprite
 	Cur      int
 	Tick     *time.Ticker
@@ -49,67 +43,28 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 }
 
 func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
-	fmt.Println("Changing animation")
 	if len(other.Sprites) <= 0 {
 		e = errors.New("need non empty animation")
 		return
 	}
 	if a.Blocking {
-		*a.NextAnim = other
+		fmt.Println("Changing animation on animation end")
+		a.NextAnim = &other
 		a.NextAnim.Blocking = blocking
 	} else {
+		fmt.Println("Changing animation")
 		a.Sprites = other.Sprites
 		a.Blocking = blocking
-		//a.Cur = 0
+		a.Cur = 0
 	}
 	return
 }
 
-func LoadMap(m model.Map) *imdraw.IMDraw {
-	imd := imdraw.New(nil)
-	for _, w := range m.Walls {
-		imd.Color = colornames.Black
-		imd.EndShape = imdraw.SharpEndShape
-		imd.Push(pixel.V(w.P.X, w.P.Y), pixel.V(w.Q.X, w.Q.Y))
-		imd.Line(w.Thickness)
-	}
-	return imd
-}
-
-func LoadAnimations(path string, prefix string) map[string]Animation {
-	res := make(map[string]Animation)
-	elems, err := ioutil.ReadDir(path)
-	if err != nil {
-		panic(err)
-	}
-	for _, elem := range elems {
-		if elem.IsDir() {
-			del := "."
-			if len(prefix) <= 0 {
-				del = ""
-			}
-			for k, v := range LoadAnimations(path+"/"+elem.Name(), prefix+del+elem.Name()) {
-				res[k] = v
-			}
-		} else {
-			anim, err := loadAnimation(path)
-			if err == nil {
-				anim.prefix = prefix
-				res[prefix] = anim
-			}
-			break
-		}
-	}
-	return res
-}
-
-func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Animation, currentAnims map[string]*Animation){
+func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]Animation, currentAnims map[string]*Animation){
 	center := pixel.ZV
-	state.Mutex.Lock()
-	defer state.Mutex.Unlock()
-	for _, player := range state.State.Players {
-		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.5).Moved(player.Pos)
-		movement := ""
+	for _, player := range state.Players {
+		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.3).Moved(player.Pos)
+		movement := "idle"
 		blocking := false
 		switch {
 		case player.Reload:
@@ -128,109 +83,59 @@ func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Ani
 		}
 		prefix := Prefix("survivor", player.GetWeapon().Name, movement)
 
-		v, ok := currentAnims[player.Id]
+		anim, ok := currentAnims[player.Id]
 		if !ok {
-			v2, ok := anims[prefix]
+			newAnim, ok := anims[prefix]
 			if ok {
-				v2.prefix = prefix
-				v2.Start(config.Conf.AnimationSpeed)
-				currentAnims[player.Id] = &v2
+				newAnim.Start(config.Conf.AnimationSpeed)
+				currentAnims[player.Id] = &newAnim
+				fmt.Println(newAnim.Prefix, prefix)
+				newAnim.Prefix = prefix
+			}else{
+				continue
 			}
-			v = &v2
+			anim = &newAnim
 		}
-		if v != nil && v.prefix != prefix {
-			v, found := anims[prefix]
+		if anim.Prefix != prefix {
+			newAnim, found := anims[prefix]
 			if found {
-				v.prefix = prefix
-				v.ChangeAnimation(v, blocking)
+				fmt.Println(anim.Prefix, prefix)
+				anim.Prefix = prefix
+				anim.ChangeAnimation(newAnim, blocking)
 			}
 		}
-		if len(v.Sprites) > 0 {
-			v.Next().Draw(win, transformation)
+		if len(anim.Sprites) > 0 {
+			anim.Next().Draw(win, transformation)
 		}
 	}
-	//for _, zombie := range state.State.Zombies {
-	//	v, ok := currentAnims[zombie.Id]
-	//	transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
-	//	if !ok {
-	//		v = anims[Prefix("zombie","idle")]
-	//		currentAnims[zombie.Id] = v
-	//	}
-	//	v.Next().Draw(win, transformation)
+	for _, zombie := range state.Zombies {
+		transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
+		v, ok := currentAnims[zombie.Id]
+		if !ok{
+			newanim, ok := anims[Prefix("zombie", "walk")]
+			if ok {
+				currentAnims[zombie.Id] = &newanim
+				newanim.Start(config.Conf.AnimationSpeed)
+				v = &newanim
+			}else {
+				continue
+			}
+		}
+		v.Next().Draw(win, transformation)
+	}
+	//for _, shoot := range state.State.Shoots {
+	//	fmt.Println(shoot.Weapon)
 	//}
-	for _, shoot := range state.State.Shoots {
-		fmt.Println(shoot.Weapon)
-	}
 }
 
-type ByString []os.FileInfo
 
-func (s ByString) Len() int {
-	return len(s)
-}
-
-func (s ByString) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s ByString) Less(i, j int) bool {
-	r := regexp.MustCompile("[0-9]+")
-	si, _ := strconv.Atoi(r.FindString(s[i].Name()))
-	sj, _ := strconv.Atoi(r.FindString(s[j].Name()))
-	return si < sj
-}
-
-func loadAnimation(path string) (Animation, error) {
-	elems, err := ioutil.ReadDir(path)
-	if err != nil {
-		panic(err)
+func LoadMap(m model.Map) *imdraw.IMDraw {
+	imd := imdraw.New(nil)
+	for _, w := range m.Walls {
+		imd.Color = colornames.Black
+		imd.EndShape = imdraw.SharpEndShape
+		imd.Push(pixel.V(w.P.X, w.P.Y), pixel.V(w.Q.X, w.Q.Y))
+		imd.Line(w.Thickness)
 	}
-	if len(elems) <= 0 || elems[0].IsDir() {
-		return Animation{}, errors.New("can only load files")
-	}
-	res := make([]*pixel.Sprite, len(elems))
-	sort.Sort(ByString(elems))
-	i := 0
-	for _, elem := range elems {
-		if elem.IsDir() {
-			return Animation{}, errors.New("can only load files")
-		}
-		img, err := LoadPicture(path + "/" + elem.Name())
-		if err != nil {
-			panic(err)
-		}
-		res[i] = pixel.NewSprite(img, img.Bounds())
-		i++
-
-	}
-
-	return Animation{
-		Sprites: res,
-		Cur: 0,
-		Tick: nil,
-		NextAnim: &Animation{},
-	}, nil
-}
-
-func LoadPicture(path string) (pixel.Picture, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	img, _, err := image.Decode(file)
-	if err != nil {
-		return nil, err
-	}
-	return pixel.PictureDataFromImage(img), nil
-}
-
-func Prefix(aps ...string) (res string) {
-	if len(aps) > 0 {
-		res = aps[0]
-	}
-
-	for _, ap := range aps[1:] {
-		res += "." + ap
-	}
-	return
+	return imd
 }

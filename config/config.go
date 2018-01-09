@@ -12,7 +12,7 @@ import (
 
 var Conf = Config{
 	AnimationSpeed:  30,
-	Fps:             60,
+	Fps:             1000,
 	HandleFrequency: 30,
 	LeftKey:         pixelgl.KeyA,
 	RightKey:        pixelgl.KeyD,
@@ -28,9 +28,9 @@ var Conf = Config{
 	Id:              xid.New().String(),
 	Online:          true,
 	LoungeUri:       "tcp://localhost:31414/lounge",
-
 	LocalUri:      "game",
 	AnimationPath: "client/sprites",
+	AbilityPath:   "client/images/abilities",
 }
 
 type Config struct {
@@ -53,6 +53,7 @@ type Config struct {
 	LoungeUri       string
 	LocalUri        string
 	AnimationPath   string
+	AbilityPath     string
 }
 
 func LoadJson(file string, config interface{}) {

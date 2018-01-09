@@ -5,7 +5,7 @@ import (
 	. "github.com/pspaces/gospace"
 	"github.com/gustavfjorder/pixel-head/server"
 	"strconv"
-	"github.com/gustavfjorder/pixel-head/Config"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 const MaxRooms = 10
@@ -18,9 +18,6 @@ func main() {
 
 	rooms := make([]string, 0, MaxRooms)
 	awaiting := make([]string, 0, PlayersPerRoom)
-
-	//lounge.Put("request", "a")
-	//lounge.Put("request", "b")
 
 	for len(rooms) < cap(rooms) {
 		var id string

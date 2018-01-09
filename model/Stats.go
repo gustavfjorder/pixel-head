@@ -7,22 +7,22 @@ type Stats struct {
 }
 
 const (
-	Human  = iota
-	zombie
+	HUMAN  = iota
+	ZOMBIE
 )
 
 func NewStats(being int) (s Stats) {
 	switch being {
-	case Human:
+	case HUMAN:
 		s = Stats{
 			Health:    100,
-			MoveSpeed: 5,
+			MoveSpeed: 2,
 			Power:     5,
 		}
-	case zombie:
+	case ZOMBIE:
 		s = Stats{
 			Health:    20,
-			MoveSpeed: 1,
+			MoveSpeed: 2,
 			Power:     3,
 		}
 	}
