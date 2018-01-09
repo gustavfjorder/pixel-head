@@ -5,7 +5,7 @@ import (
 	. "github.com/pspaces/gospace"
 	"github.com/gustavfjorder/pixel-head/server"
 	"strconv"
-	"github.com/gustavfjorder/pixel-head/Config"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 const MaxRooms = 10

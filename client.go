@@ -34,7 +34,7 @@ func registerModels() {
 }
 
 func run() {
-	config.LoadJson("settings.json", &config.Conf)
+	//config.LoadJson("settings.json", &config.Conf)
 	registerModels()
 
 	var (
@@ -52,7 +52,9 @@ func run() {
 		myspc            space.Space
 		servspc          space.Space
 	)
-	fmt.Println(animations)
+	for k, _ := range animations {
+		fmt.Print(k, " ")
+	}
 
 	if config.Conf.Online {
 		servspc = space.NewRemoteSpace(config.Conf.LoungeUri)
