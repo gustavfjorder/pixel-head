@@ -1,43 +1,42 @@
-package sprites
+package client
 
 import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/faiface/pixel"
-	"github.com/gustavfjorder/pixel-head/client"
 )
 var(
 	//abilities bar
-	abilitiesBar,_  = client.LoadPicture("client/sprites/abilities/abilitiesBar.png")
+	abilitiesBar,_  = LoadPicture("client/sprites/abilities/abilitiesBar.png")
 	abilitiesSprite = pixel.NewSprite(abilitiesBar,abilitiesBar.Bounds())
 
 	//knife
-	knifeIcon,_ = client.LoadPicture("client/sprites/abilities/knife.png")
+	knifeIcon,_ = LoadPicture("client/sprites/abilities/knife.png")
 	knifeSprite = pixel.NewSprite(knifeIcon,knifeIcon.Bounds())
 
 	//handgun
-	handgunIcon,_ = client.LoadPicture("client/sprites/abilities/handgun.png")
+	handgunIcon,_ = LoadPicture("client/sprites/abilities/handgun.png")
 	handgunSprite = pixel.NewSprite(handgunIcon,handgunIcon.Bounds())
 
-	handgunDarkIcon,_ = client.LoadPicture("client/sprites/abilities/handgunDark.png")
+	handgunDarkIcon,_ = LoadPicture("client/sprites/abilities/handgunDark.png")
 	handgunDarkSprite = pixel.NewSprite(handgunDarkIcon,handgunDarkIcon.Bounds())
 
 	//rifle
-	rifleIcon,_ = client.LoadPicture("client/sprites/abilities/rifle.png")
+	rifleIcon,_ = LoadPicture("client/sprites/abilities/rifle.png")
 	rifleSprite = pixel.NewSprite(rifleIcon,rifleIcon.Bounds())
 
-	rifleDarkIcon,_ = client.LoadPicture("client/sprites/abilities/rifleDark.png")
+	rifleDarkIcon,_ = LoadPicture("client/sprites/abilities/rifleDark.png")
 	rifleDarkSprite = pixel.NewSprite(rifleIcon,rifleIcon.Bounds())
 
 	//shotgun
-	shotgunIcon,_ = client.LoadPicture("client/sprites/abilities/shotgun.png")
+	shotgunIcon,_ = LoadPicture("client/sprites/abilities/shotgun.png")
 	shotgunSprite = pixel.NewSprite(shotgunIcon,shotgunIcon.Bounds())
 
-	shotgunDarkIcon,_ = client.LoadPicture("client/sprites/abilities/shotgunDark.png")
+	shotgunDarkIcon,_ = LoadPicture("client/sprites/abilities/shotgunDark.png")
 	shotgunDarkSprite = pixel.NewSprite(shotgunIcon,shotgunIcon.Bounds())
 )
 
-func drawAbilities(win *pixelgl.Window, me model.Player){
+func DrawAbilities(win *pixelgl.Window, me model.Player){
 	abilitiesSprite.Draw(win, pixel.IM.Moved(pixel.V(win.Bounds().Max.X/2,win.Bounds().Min.Y+abilitiesBar.Bounds().Max.Y/2)))
 
 	if me.IsAvailable(model.Knife) {
