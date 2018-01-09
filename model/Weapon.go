@@ -82,7 +82,7 @@ func (weapon *Weapon) RefillMag() {
 	weapon.Bullets -= Weapons[weapon.Id].Magazine
 }
 
-func (weapon *Weapon) GenerateShoots(timestamp time.Time, player Player) []Shoot {
+func (weapon *Weapon) GenerateShoots(timestamp int64, player Player) []Shoot {
 	shotsPerSideOfDirection := int(math.Floor(float64(weapon.BulletsPerShot / 2)))
 	angle := -(shotsPerSideOfDirection * weapon.BulletsPerShot)
 

@@ -51,11 +51,9 @@ func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
 		return
 	}
 	if a.Blocking {
-		fmt.Println("Changing animation on animation end")
 		a.NextAnim = &other
 		a.NextAnim.Blocking = blocking
 	} else {
-		fmt.Println("Changing animation")
 		a.Sprites = other.Sprites
 		a.Blocking = blocking
 		a.Cur = 0

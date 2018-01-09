@@ -103,18 +103,15 @@ func run() {
 	win.SetSmooth(true)
 	for !win.Closed() {
 		//Handle controls -> send request
-		oldwep := r.CurrentWep
 		client.HandleControls(*win, &r)
-		if r.Move || r.Melee || r.Reload || r.Shoot || oldwep != r.CurrentWep {
-			servspc.Put(r)
-		}
+		myspc.Put(r)
+
 
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 		imd.Draw(win)
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		client.DrawAbilities(win, me)
-		//fmt.Println(activeAnimations)
 		win.Update()
 
 		//Count FPS
