@@ -38,6 +38,7 @@ var(
 )
 
 func drawAbilities(win *pixelgl.Window, me model.Player){
+	abilitiesSprite.Draw(win, pixel.IM.Moved(pixel.V(win.Bounds().Max.X/2,win.Bounds().Min.Y+abilitiesBar.Bounds().Max.Y/2)))
 
 	if me.IsAvailable(model.Knife) {
 		scalefactor:=pixel.V(abilitiesBar.Bounds().Max.Y/knifeIcon.Bounds().Max.Y*2/3,abilitiesBar.Bounds().Max.Y/knifeIcon.Bounds().Max.Y*2/3)
