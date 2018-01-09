@@ -25,7 +25,7 @@ func NewPlayer(id string) Player {
 		Dir:        0,
 		Weapon:     Handgun,
 		WeaponList: weaponList,
-		Stats:      NewStats(Human),
+		Stats:      NewStats(HUMAN),
 	}
 }
 

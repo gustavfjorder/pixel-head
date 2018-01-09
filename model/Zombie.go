@@ -6,19 +6,19 @@ import (
 	"github.com/rs/xid"
 )
 
-type Zombie struct{
-	Id string
-	Pos pixel.Vec
-	Dir float64
+type Zombie struct {
+	Id    string
+	Pos   pixel.Vec
+	Dir   float64
 	Stats Stats
 }
 
-func NewZombie() Zombie {
+func NewZombie(x, y float64) Zombie {
 	return Zombie{
 		Id:         xid.New().String(),
-		Pos:        pixel.V(350, 200),
+		Pos:        pixel.V(x, y),
 		Dir:        0,
-		Stats:      NewStats(zombie),
+		Stats:      NewStats(ZOMBIE),
 	}
 }
 
@@ -32,9 +32,10 @@ func (zombie* Zombie) Move(players *[]Player) {
 		}
 	}
 
-	move := pixel.V(zombie.Stats.MoveSpeed, 0).Rotated(angle(zombie.Pos, closestPlayer.Pos))
+	angle := angle(zombie.Pos, closestPlayer.Pos)
 
-	zombie.Pos = zombie.Pos.Add(move)
+	zombie.Pos = zombie.Pos.Add(pixel.V(zombie.Stats.MoveSpeed, 0).Rotated(angle))
+	zombie.Dir = angle
 }
 
 func (zombie *Zombie) Attack(players *[]Player) {
@@ -46,7 +47,6 @@ func (zombie *Zombie) Attack(players *[]Player) {
 		}
 	}
 }
-
 
 func angle(this pixel.Vec, other pixel.Vec) float64 {
 	return math.Atan2(other.Y - this.Y, other.X - this.X)

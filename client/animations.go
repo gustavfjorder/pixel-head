@@ -63,7 +63,7 @@ func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
 func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]Animation, currentAnims map[string]*Animation){
 	center := pixel.ZV
 	for _, player := range state.Players {
-		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.5).Moved(player.Pos)
+		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.3).Moved(player.Pos)
 		movement := "idle"
 		blocking := false
 		switch {
@@ -91,6 +91,8 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 				currentAnims[player.Id] = &newAnim
 				fmt.Println(newAnim.Prefix, prefix)
 				newAnim.Prefix = prefix
+			}else{
+				continue
 			}
 			anim = &newAnim
 		}
@@ -106,19 +108,26 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			anim.Next().Draw(win, transformation)
 		}
 	}
-	//for _, zombie := range state.State.Zombies {
-	//	v, ok := currentAnims[zombie.Id]
-	//	transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
-	//	if !ok {
-	//		v = anims[Prefix("zombie","idle")]
-	//		currentAnims[zombie.Id] = v
-	//	}
-	//	v.Next().Draw(win, transformation)
-	//}
+	for _, zombie := range state.Zombies {
+		transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
+		v, ok := currentAnims[zombie.Id]
+		if !ok{
+			newanim, ok := anims[Prefix("zombie", "walk")]
+			if ok {
+				currentAnims[zombie.Id] = &newanim
+				newanim.Start(config.Conf.AnimationSpeed)
+				v = &newanim
+			}else {
+				continue
+			}
+		}
+		v.Next().Draw(win, transformation)
+	}
 	//for _, shoot := range state.State.Shoots {
 	//	fmt.Println(shoot.Weapon)
 	//}
 }
+
 
 func LoadMap(m model.Map) *imdraw.IMDraw {
 	imd := imdraw.New(nil)

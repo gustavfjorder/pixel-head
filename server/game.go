@@ -106,7 +106,7 @@ func (g *Game) prepareLevel(done chan bool) {
 	level := model.Levels[g.currentLevel]
 
 	for i := 0; i < level.NumberOfZombies; i++ {
-		g.state.Zombies = append(g.state.Zombies, model.NewZombie())
+		g.state.Zombies = append(g.state.Zombies, model.NewZombie(300, 200))
 	}
 
 	close(done)
@@ -180,7 +180,7 @@ func (g *Game) handleRequests() {
 			fmt.Println("Handling move request from:", player.Pos)
 			// todo: check if move is doable in map
 			player.Move(request.Dir)
-			fmt.Println("Moved to:",player.Pos)
+			fmt.Println("Moved to:", player.Pos)
 		}
 
 		player.Reload = false
