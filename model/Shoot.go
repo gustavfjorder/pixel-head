@@ -5,18 +5,15 @@ import (
 	"time"
 )
 
-type Shoot struct{
-	Start pixel.Vec
-	Angle float64
-	StartTime time.Time
-	Weapon *Weapon
+type Shoot struct {
+	Start     pixel.Vec
+	Angle     float64
+	StartTime int64
+	Weapon    int
 }
 
-func (s Shoot) GetPos() (v pixel.Vec) {
-	dt := time.Now().Sub(s.StartTime).Seconds() / 1000
-	newPos := pixel.V(s.Weapon.Speed,0).Scaled(dt).Rotated(s.Angle)
-
-	return s.Start.Add(newPos)
+func (s Shoot) GetPos(t int64) (v pixel.Vec) {
+	dt := float64((t - s.StartTime)) / float64(time.Second.Nanoseconds())
+	delta := pixel.V(Weapons[s.Weapon].Speed, 0).Scaled(float64(dt)).Rotated(s.Angle)
+	return s.Start.Add(delta)
 }
-
-

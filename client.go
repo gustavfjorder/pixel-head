@@ -53,7 +53,14 @@ func run() {
 		servspc          space.Space
 		me               = model.Player{Id: config.Conf.Id}
 	)
-	for k, _ := range animations {
+	bullet, err := client.LoadAnimation(config.Conf.BulletPath)
+	if err != nil{
+		panic(err)
+	}
+	bullet.Start(config.Conf.AnimationSpeed)
+	animations["bullet"] = bullet
+
+	for k := range animations {
 		fmt.Print(k, " ")
 	}
 
@@ -89,6 +96,7 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
+	myspc.Put("joined")
 
 	go client.HandleEvents(myspc, state, &me)
 

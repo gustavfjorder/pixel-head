@@ -34,7 +34,7 @@ func Load(path string, prefix string, op int) map[string]Animation {
 			}
 		} else {
 			if op == ANIM {
-				anim, err := loadAnimation(path)
+				anim, err := LoadAnimation(path)
 				if err == nil {
 					anim.Prefix = prefix
 					res[prefix] = anim
@@ -70,7 +70,7 @@ func (s ByString) Less(i, j int) bool {
 	return si < sj
 }
 
-func loadAnimation(path string) (Animation, error) {
+func LoadAnimation(path string) (Animation, error) {
 	elems, err := ioutil.ReadDir(path)
 	if err != nil {
 		panic(err)
@@ -91,6 +91,7 @@ func loadAnimation(path string) (Animation, error) {
 		}
 		res[i] = pixel.NewSprite(img, img.Bounds())
 		i++
+
 	}
 	return Animation{
 		Sprites:  res,

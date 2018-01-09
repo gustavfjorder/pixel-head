@@ -19,6 +19,8 @@ func NewPlayer(id string) Player {
 	weaponList := make([]Weapon, len(Weapons))
 	weaponList[Knife] = Weapons[Knife]
 	weaponList[Handgun] = Weapons[Handgun]
+	weaponList[Rifle] = Weapons[Rifle]
+	weaponList[Shotgun] = Weapons[Shotgun]
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),

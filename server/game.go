@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"math/rand"
+	"go/types"
 )
 
 type Game struct {
@@ -22,7 +23,6 @@ func NewGame(uri string, clientUris []string) Game {
 	clientSpaces := make([]Space, len(clientUris))
 	for i, clientUri := range clientUris {
 		clientSpaces[i] = NewSpace(clientUri)
-		clientSpaces[i].Put("done")
 	}
 
 	return Game{
@@ -49,10 +49,12 @@ func (g *Game) Start() {
 
 	for _, space := range g.clientSpaces {
 		space.Put("map", g.currentMap)
-		space.Put("ready")
 	}
 
-	time.Sleep(time.Second * 2)
+	for _, space := range g.clientSpaces {
+		space.Get("joined")
+	}
+
 
 	fmt.Println("Starting game loop")
 	t := time.Tick(time.Second / 30)
@@ -61,7 +63,7 @@ func (g *Game) Start() {
 
 		levelPrepared := make(chan bool)
 
-		duration := time.Second * 10
+		duration := time.Second * 1
 		if g.currentLevel == 0 {
 			duration = 0
 		}
@@ -81,8 +83,11 @@ func (g *Game) Start() {
 			default:
 			}
 
+			g.state.Timestamp = time.Now().UnixNano()
+
 			g.handleRequests()
 			g.handleZombies()
+			g.handleShots()
 
 			for i, player := range g.state.Players {
 				fmt.Println(player.Stats.Health)
@@ -91,12 +96,9 @@ func (g *Game) Start() {
 				}
 			}
 
-			g.state.Timestamp = time.Now().Nanosecond()
-
 			for _, space := range g.clientSpaces {
-				if _, err := space.GetP("done"); err == nil {
-					g.putToSpaces(&space)
-				}
+				space.GetP("state", &model.State{})
+				g.putToSpaces(&space)
 			}
 
 			if breakable && len(g.state.Zombies) == 0 || len(g.state.Players) == 0 {
@@ -112,7 +114,6 @@ func (g *Game) Start() {
 
 		g.currentLevel++
 
-		<- t
 	}
 }
 
@@ -206,7 +207,7 @@ func (g *Game) handleRequests() {
 			player.GetWeapon().RefillMag()
 		} else if request.Shoot {
 			player.Shoot = true
-			playerShoots := player.GetWeapon().GenerateShoots(request.Timestamp, player.Pos)
+			playerShoots := player.GetWeapon().GenerateShoots(request.Timestamp, *player)
 			g.state.Shoots = append(g.state.Shoots, playerShoots...)
 		} else if request.Melee {
 			player.Melee = true
@@ -216,23 +217,42 @@ func (g *Game) handleRequests() {
 }
 
 func (g *Game) handleZombies() {
-	for i := range g.state.Zombies {
+	for i := len(g.state.Zombies) - 1; i >= 0; i-- {
 		zombie := &g.state.Zombies[i]
-
 		// Any shoots hitting the zombie
-		for i, shoot := range g.state.Shoots {
-			if shoot.GetPos() == zombie.Pos {
-				zombie.Stats.Health -= shoot.Weapon.Power
-				g.state.Shoots = append(g.state.Shoots[:i], g.state.Shoots[i + 1:]...)
+		for j := len(g.state.Shoots) - 1; j >= 0 ; j-- {
+			shoot := g.state.Shoots[j]
+			if shoot.GetPos(g.state.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
+				zombie.Stats.Health -= model.Weapons[shoot.Weapon].Power
+				g.state.Shoots[j] = g.state.Shoots[len(g.state.Shoots)-1]
+				g.state.Shoots = g.state.Shoots[:len(g.state.Shoots)-1]
 			}
 		}
 
 		if zombie.Stats.Health <= 0 {
-			g.state.Zombies = append(g.state.Zombies[:i], g.state.Zombies[i + 1:]...)
+			g.state.Zombies[i] = g.state.Zombies[len(g.state.Zombies) - 1]
+			g.state.Zombies = g.state.Zombies[:len(g.state.Zombies) - 1]
 			continue
 		}
 
 		zombie.Move(g.state.Players)
 		zombie.Attack(g.state.Players)
+	}
+}
+
+func remove(arr []types.Type, i int) []types.Type{
+	arr[i] = arr[len(arr) - 1]
+	return arr[:len(arr) - 1]
+}
+
+func (g *Game) handleShots() {
+	for i := len(g.state.Shoots) - 1; i >= 0 ; i-- {
+		shot := g.state.Shoots[i]
+		fmt.Println(shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len())
+		if shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len() > model.Weapons[shot.Weapon].Range{
+			g.state.Shoots[i] = g.state.Shoots[len(g.state.Shoots) - 1]
+			g.state.Shoots = g.state.Shoots[:len(g.state.Shoots) - 1]
+			continue
+		}
 	}
 }

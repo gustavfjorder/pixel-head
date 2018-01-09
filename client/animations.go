@@ -11,6 +11,9 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"fmt"
 	"github.com/gustavfjorder/pixel-head/config"
+	"math/rand"
+	"strconv"
+	"math"
 )
 
 type Animation struct {
@@ -62,6 +65,44 @@ func (a *Animation) ChangeAnimation(other Animation, blocking bool) (e error) {
 
 func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]Animation, currentAnims map[string]*Animation){
 	center := pixel.ZV
+
+	bullet := anims["bullet"]
+	for _, shot := range state.Shoots {
+		p := shot.GetPos(state.Timestamp)
+		bullet.Next().Draw(win, pixel.IM.Scaled(pixel.ZV, 0.02).Rotated(pixel.ZV,shot.Angle - math.Pi/2).Moved(p))
+	}
+
+	for _, zombie := range state.Zombies {
+		transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
+		v, ok := currentAnims[zombie.Id]
+		prefix := Prefix("zombie", "walk")
+		if !ok{
+			newanim, ok := anims[prefix]
+			if ok {
+				currentAnims[zombie.Id] = &newanim
+				newanim.Start(config.Conf.AnimationSpeed)
+				v = &newanim
+			}else {
+				fmt.Println("Did not find animation:",prefix)
+				continue
+			}
+		}
+		if zombie.Attacking {
+			n := rand.Int()%3 + 1
+			prefix = Prefix("zombie", "attack0"+strconv.Itoa(n))
+		}
+
+		if prefix != v.Prefix {
+			if newanim, ok := anims[prefix]; ok{
+				currentAnims[zombie.Id].ChangeAnimation(newanim, true)
+				currentAnims[zombie.Id].Prefix = prefix
+			}
+
+		}
+
+		v.Next().Draw(win, transformation)
+	}
+
 	for _, player := range state.Players {
 		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.3).Moved(player.Pos)
 		movement := "idle"
@@ -108,24 +149,6 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			anim.Next().Draw(win, transformation)
 		}
 	}
-	for _, zombie := range state.Zombies {
-		transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
-		v, ok := currentAnims[zombie.Id]
-		if !ok{
-			newanim, ok := anims[Prefix("zombie", "walk")]
-			if ok {
-				currentAnims[zombie.Id] = &newanim
-				newanim.Start(config.Conf.AnimationSpeed)
-				v = &newanim
-			}else {
-				continue
-			}
-		}
-		v.Next().Draw(win, transformation)
-	}
-	//for _, shoot := range state.State.Shoots {
-	//	fmt.Println(shoot.Weapon)
-	//}
 }
 
 

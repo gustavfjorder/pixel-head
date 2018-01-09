@@ -44,7 +44,7 @@ func (zombie *Zombie) Attack(players []Player) {
 		player := &players[i]
 
 		zombie.Attacking = false
-		if zombie.Pos.Sub(player.Pos).Len() < 3 {
+		if zombie.Pos.Sub(player.Pos).Len() < zombie.GetRange() {
 			zombie.Dir = angle(zombie.Pos, player.Pos)
 			player.Stats.Health -= zombie.Stats.Power
 			zombie.Attacking = true
@@ -55,4 +55,12 @@ func (zombie *Zombie) Attack(players []Player) {
 
 func angle(this pixel.Vec, other pixel.Vec) float64 {
 	return math.Atan2(other.Y - this.Y, other.X - this.X)
+}
+
+func (zombie Zombie) GetRange() float64{
+	return 50
+}
+
+func (zombie Zombie) GetHitbox() float64 {
+	return 50
 }
