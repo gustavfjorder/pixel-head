@@ -5,12 +5,11 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/config"
-	"fmt"
 )
+
 var ab = Load(config.Conf.AbilityPath, "", IMG)
 
 func DrawAbilities(win *pixelgl.Window, me model.Player){
-	fmt.Print(ab)
 	var(
 		//abilities bar
 		abilitiesBar = ab["abilitiesBar.png"].Sprites[0]
