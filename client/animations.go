@@ -37,7 +37,6 @@ func (a *Animation) Next() (s *pixel.Sprite) {
 	select {
 	case <-a.Tick.C:
 		a.Cur = (a.Cur + 1) % len(a.Sprites)
-		fmt.Println(len(a.Sprites), a.Cur, len(a.Sprites))
 		if a.Cur <= 0 && a.NextAnim != nil && len(a.NextAnim.Sprites) > 0 {
 			a.Blocking = a.NextAnim.Blocking
 			a.Sprites = a.NextAnim.Sprites
@@ -128,18 +127,11 @@ func HandleAnimations(win *pixelgl.Window, state StateLock, anims map[string]Ani
 			movement = "idle"
 		}
 		prefix := Prefix("survivor", player.GetWeapon().Name, movement)
-		//fmt.Println("survivor", player.Weapon.Name, movement)
-		fmt.Println(player.GetWeapon())
-		fmt.Println(prefix)
-
 
 		v, ok := currentAnims[player.Id]
-		fmt.Println("first", v, ok)
 		if !ok {
 			v2, ok := anims[prefix]
-			fmt.Println("second", v2, ok)
 			if ok {
-				//fmt.Println("Starter")
 				v2.prefix = prefix
 				v2.Start(config.Conf.AnimationSpeed)
 				currentAnims[player.Id] = &v2
@@ -210,7 +202,7 @@ func loadAnimation(path string) (Animation, error) {
 		i++
 
 	}
-	fmt.Println("Returning animation")
+
 	return Animation{
 		Sprites: res,
 		Cur: 0,

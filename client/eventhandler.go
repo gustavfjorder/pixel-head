@@ -4,7 +4,6 @@ import (
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/model"
 	"sync"
-	"fmt"
 )
 
 type StateLock struct {
@@ -14,7 +13,6 @@ type StateLock struct {
 
 func HandleEvents(spc space.Space, stateLock *StateLock) {
 	//Handle loop
-	fmt.Println("Handling events")
 	for {
 		state := getState(spc, stateLock.State)
 		stateLock.Mutex.Lock()
