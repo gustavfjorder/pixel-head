@@ -10,17 +10,17 @@ type Map struct {
 }
 
 type Wall struct {
-	Line
+	Segment
 	Thickness float64
 }
 
 var MapTemplates = map[string]Map{
 	"Test1": {
-		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
+		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(500, 100)),
 	},
 }
 
-func (w Wall) Intersect(l Line) bool {
+func (w Wall) Intersect(l Segment) bool {
 	var (
 		angle = w.P.Angle(w.Q)
 		v1    = pixel.V(w.Thickness/2, 0).Rotated(angle + math.Pi/2)

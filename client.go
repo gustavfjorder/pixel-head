@@ -24,11 +24,11 @@ func registerModels() {
 	gob.Register([]model.Shoot{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
-	gob.Register(model.Line{})
+	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
-	gob.Register(model.Line{})
+	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 }
@@ -42,7 +42,7 @@ func run() {
 		frames           = 0
 		second           = time.Tick(time.Second)
 		fps              = time.Tick(time.Second / config.Conf.Fps)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1024, 800),}
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 1000),}
 		r                = model.Request{PlayerId: config.Conf.Id}
 		GameUri          string
 		ClientUri        string

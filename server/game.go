@@ -69,7 +69,7 @@ func (g *Game) Start() {
 
 		levelPrepared := make(chan bool)
 
-		duration := time.Second * 1
+		duration := time.Second * 10
 		if g.currentLevel == 0 {
 			duration = 0
 		}
@@ -82,7 +82,6 @@ func (g *Game) Start() {
 		breakable := false
 
 		for {
-			fmt.Println("Game looooooping")
 			select {
 			case <-levelPrepared:
 				breakable = true
@@ -96,7 +95,6 @@ func (g *Game) Start() {
 			g.handleShots()
 
 			for i, player := range g.state.Players {
-				fmt.Println(player.Stats.Health)
 				if player.Stats.Health <= 0 {
 					g.state.Players = append(g.state.Players[:i], g.state.Players[i+1:]...)
 				}
@@ -144,7 +142,7 @@ func setupSpace(uri string) Space {
 	gob.Register([]model.Shoot{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
-	gob.Register(model.Line{})
+	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 
@@ -160,7 +158,7 @@ func setupSpace(uri string) Space {
 	space.QueryP(&[]model.Shoot{})
 	space.QueryP(&model.Map{})
 	space.QueryP(&model.Wall{})
-	space.QueryP(&model.Line{})
+	space.QueryP(&model.Segment{})
 	space.QueryP(&model.Point{})
 	space.QueryP(&model.State{})
 
@@ -194,10 +192,8 @@ func (g *Game) handleRequests() {
 		player.ChangeWeapon(request.CurrentWep)
 
 		if request.Move {
-			fmt.Println("Handling move request from:", player.Pos)
 			// todo: check if move is doable in map
-			player.Move(request.Dir)
-			fmt.Println("Moved to:", player.Pos)
+			player.Move(request.Dir, g.currentMap)
 		}
 
 		player.Reload = false
@@ -245,7 +241,6 @@ func (g *Game) handleZombies() {
 func (g *Game) handleShots() {
 	for i := len(g.state.Shoots) - 1; i >= 0; i-- {
 		shot := g.state.Shoots[i]
-		fmt.Println(shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len())
 		if shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len() > model.Weapons[shot.Weapon].Range {
 			g.state.Shoots[i] = g.state.Shoots[len(g.state.Shoots)-1]
 			g.state.Shoots = g.state.Shoots[:len(g.state.Shoots)-1]

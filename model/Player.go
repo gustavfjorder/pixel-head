@@ -1,6 +1,10 @@
 package model
 
-import "github.com/faiface/pixel"
+import (
+	"github.com/faiface/pixel"
+	"math"
+	"fmt"
+)
 
 type Player struct {
 	Id         string
@@ -31,9 +35,18 @@ func NewPlayer(id string) Player {
 	}
 }
 
-func (player *Player) Move(dir float64) {
-	player.Dir = dir
-	player.Pos = player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(dir))
+func (player *Player) Move(dir float64, m Map) {
+	if dir != math.NaN() {
+		newpos := player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(dir))
+		for _, wall := range m.Walls {
+			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))){
+				fmt.Println("Invalid move")
+				return
+			}
+		}
+		player.Dir = dir
+		player.Pos = newpos
+	}
 }
 
 func (player *Player) NewWeapon(weapon Weapon) {
