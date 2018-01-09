@@ -94,9 +94,12 @@ func run() {
 	win.SetSmooth(true)
 	for !win.Closed() {
 		//Handle controls -> send request
-
+		oldwep := r.CurrentWep
 		client.HandleControls(*win, &r)
-		servspc.Put(r)
+		if r.Move || r.Melee || r.Reload || r.Shoot || oldwep != r.CurrentWep {
+			servspc.Put(r)
+		}
+
 
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
