@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
+	"strconv"
 )
 
 type Game struct {
@@ -13,6 +14,7 @@ type Game struct {
 	clientSpaces []Space
 	state        *model.State
 	currentMap   model.Map
+	currentLevel int
 }
 
 func NewGame(uri string, clientUris []string) Game {
@@ -50,27 +52,65 @@ func (g *Game) Start() {
 		space.Put("map", g.currentMap)
 	}
 
-	t := time.Tick(time.Second / 20)
+	time.Sleep(time.Second * 2)
 
 	fmt.Println("Starting game loop")
+	t := time.Tick(time.Second / 30)
+	for g.currentLevel < len(model.Levels) {
+		fmt.Println("Starting level " + strconv.Itoa(g.currentLevel))
 
-	g.state.Zombies = append(g.state.Zombies, model.NewZombie())
+		levelPrepared := make(chan bool)
 
-	for {
-		//g.space.Get("loop_lock")
+		duration := time.Second * 10
+		if g.currentLevel == 0 {
+			duration = 0
+		}
+		time.AfterFunc(duration, func() {
+			g.prepareLevel(levelPrepared)
+		})
 
-		g.handleRequests()
-		g.handleZombies()
+		fmt.Println("after prepare")
 
-		for _, space := range g.clientSpaces {
-			if _, err := space.GetP("done"); err == nil {
-				g.putToSpaces(&space)
+		breakable := false
+
+		for {
+			fmt.Println("Game looooooping")
+			select {
+			case <- levelPrepared:
+				breakable = true
+			default:
 			}
+
+			g.handleRequests()
+			g.handleZombies()
+
+			for _, space := range g.clientSpaces {
+				if _, err := space.GetP("done"); err == nil {
+					g.putToSpaces(&space)
+				}
+			}
+
+			if breakable && len(g.state.Zombies) == 0 {
+				break
+			}
+
+			<- t
 		}
 
-		//g.space.Put("loop_lock")
+		g.currentLevel++
+
 		<- t
 	}
+}
+
+func (g *Game) prepareLevel(done chan bool) {
+	level := model.Levels[g.currentLevel]
+
+	for i := 0; i < level.NumberOfZombies; i++ {
+		g.state.Zombies = append(g.state.Zombies, model.NewZombie())
+	}
+
+	close(done)
 }
 
 func (g *Game) putToSpaces(space *Space) {
