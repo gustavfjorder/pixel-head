@@ -30,6 +30,7 @@ func registerModels() {
 	gob.Register(model.Wall{})
 	gob.Register(model.Line{})
 	gob.Register(model.Point{})
+	gob.Register(model.State{})
 }
 
 func run() {

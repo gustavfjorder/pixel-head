@@ -10,8 +10,9 @@ import (
 
 type Game struct {
 	space        Space
-	memory       Memory
 	clientSpaces []Space
+	state        *model.State
+	currentMap   model.Map
 }
 
 func NewGame(uri string, clientUris []string) Game {
@@ -23,8 +24,8 @@ func NewGame(uri string, clientUris []string) Game {
 
 	return Game{
 		space:        setupSpace(uri),
-		memory:       NewMemory(),
 		clientSpaces: clientSpaces,
+		state:        &model.State{},
 	}
 }
 
@@ -35,11 +36,7 @@ func (g *Game) AddPlayers(playerIds []string) {
 }
 
 func (g *Game) AddPlayer(id string) {
-	players := g.memory.GetW("players", make([]model.Player, 0)).([]model.Player)
-
-	players = append(players, model.NewPlayer(id))
-
-	g.memory.Update("players", players)
+	g.state.Players = append(g.state.Players, model.NewPlayer(id))
 }
 
 func (g *Game) Start() {
@@ -47,13 +44,18 @@ func (g *Game) Start() {
 	//fmt.Println("Starting game on uri '" + uri + "'")
 	//fmt.Println("Players in game:", playerIds)
 
+	g.currentMap = model.MapTemplates["Test1"]
+
 	for _, space := range g.clientSpaces {
-		space.Put("map", model.MapTemplates["Test1"])
+		space.Put("map", g.currentMap)
 	}
 
-	t := time.Tick(time.Second / 30)
+	t := time.Tick(time.Second / 20)
 
 	fmt.Println("Starting game loop")
+
+	g.state.Zombies = append(g.state.Zombies, model.NewZombie())
+
 	for {
 		//g.space.Get("loop_lock")
 
@@ -62,7 +64,7 @@ func (g *Game) Start() {
 
 		for _, space := range g.clientSpaces {
 			if _, err := space.GetP("done"); err == nil {
-				go g.putToSpaces(&space)
+				g.putToSpaces(&space)
 			}
 		}
 
@@ -76,9 +78,7 @@ func (g *Game) putToSpaces(space *Space) {
 
 	fmt.Println("Putting to client space")
 
-	space.Put("players", g.memory.GetW("players").([]model.Player))
-	space.Put("zombies", g.memory.GetW("zombies",  make([]model.Zombie, 0)).([]model.Zombie))
-	space.Put("shoots", g.memory.GetW("shots", make([]model.Shoot, 0)).([]model.Shoot))
+	space.Put("state", g.state)
 
 	space.Put("ready")
 }
@@ -96,6 +96,7 @@ func setupSpace(uri string) Space {
 	gob.Register(model.Wall{})
 	gob.Register(model.Line{})
 	gob.Register(model.Point{})
+	gob.Register(model.State{})
 
 	space := NewSpace(uri)
 
@@ -111,6 +112,7 @@ func setupSpace(uri string) Space {
 	space.QueryP(&model.Wall{})
 	space.QueryP(&model.Line{})
 	space.QueryP(&model.Point{})
+	space.QueryP(&model.State{})
 
 	space.Put("loop_lock")
 
@@ -121,29 +123,27 @@ func (g *Game) handleRequests() {
 	// Load incoming requests
 	rTuples, _ := g.space.GetAll(&model.Request{})
 
-	players := g.memory.GetW("players").([]model.Player)
+	players := g.state.Players
 
 	for _, rTuple := range rTuples {
 		request := rTuple.GetFieldAt(0).(model.Request)
 		fmt.Println("Handling request:", request)
 
 		// Load player
-		//player := g.memory.GetW("player." + request.PlayerId).(model.Player)
-		var player model.Player
+		var player *model.Player
 		for i, p := range players {
 			if p.Id == request.PlayerId {
-				player = players[i]
-				players = append(players[:i], players[i + 1:]...)
+				player = &(players)[i]
 				break
 			}
 		}
 
 		// Change weapon
-		player.Weapon = request.CurrentWep
+		player.ChangeWeapon(request.CurrentWep)
 
 		if request.Move {
 			// todo: check if move is doable in map
-			player = player.Move(request.Dir)
+			player.Move(request.Dir)
 		}
 
 		if request.Reload {
@@ -152,51 +152,33 @@ func (g *Game) handleRequests() {
 		} else if request.Shoot {
 			player.Shoot = true
 			playerShoots := player.GetWeapon().GenerateShoots(request.Timestamp, player.Pos)
-			g.memory.PutToArray("shots", playerShoots)
+			g.state.Shoots = append(g.state.Shoots, playerShoots...)
 		} else if request.Melee {
 			player.Melee = true
 			// todo: create melee attack
 		}
-
-		//g.memory.Update("player." + request.PlayerId, player)
-
-		players = append(players, player)
 	}
-
-	g.memory.Update("players", players)
 }
 
 func (g *Game) handleZombies() {
-	zombies := g.memory.GetW("zombies", make([]model.Zombie, 0)).([]model.Zombie)
+	zombies := &g.state.Zombies
+	shots := &g.state.Shoots
 
-	shots := g.memory.GetW("shots", make([]model.Shoot, 0)).([]model.Shoot)
-
-	for i, zombie := range zombies {
+	for i, zombie := range *zombies {
 		// Any shoots hitting the zombie
-		for i, shoot := range shots {
+		for i, shoot := range *shots {
 			if shoot.GetPos() == zombie.Pos {
 				zombie.Stats.Health -= shoot.Weapon.Power
-				shots = append(shots[:i], shots[i + 1:]...)
+				*shots = append((*shots)[:i], (*shots)[i + 1:]...)
 			}
 		}
 
 		if zombie.Stats.Health <= 0 {
-			zombies = append(zombies[:i], zombies[i + 1:]...)
+			*zombies = append((*zombies)[:i], (*zombies)[i + 1:]...)
 			continue
 		}
 
-		players := g.memory.GetW("players").([]model.Player)
-
-		zombie.Move(players)
-		zombie.Attack(players)
+		zombie.Move(&g.state.Players)
+		zombie.Attack(&g.state.Players)
 	}
-
-	g.memory.Update("zombies", zombies)
-	g.memory.Update("shots", shots)
-}
-
-func (g Game) players() []model.Player {
-	players, _ := g.memory.Get("players")
-
-	return players.([]model.Player)
 }

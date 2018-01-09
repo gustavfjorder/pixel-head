@@ -29,10 +29,9 @@ func NewPlayer(id string) Player {
 	}
 }
 
-func (player Player) Move(dir float64) (Player) {
+func (player *Player) Move(dir float64) {
 	player.Dir = dir
 	player.Pos = player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(dir))
-	return player
 }
 
 func (player *Player) NewWeapon(weapon Weapon) {
@@ -41,4 +40,13 @@ func (player *Player) NewWeapon(weapon Weapon) {
 
 func (player *Player) GetWeapon() *Weapon {
 	return &player.WeaponList[player.Weapon]
+}
+
+func (player *Player) ChangeWeapon(weapon int) {
+	for i := range player.WeaponList {
+		if i == weapon {
+			player.Weapon = weapon
+			break
+		}
+	}
 }

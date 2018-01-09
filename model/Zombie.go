@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/faiface/pixel"
 	"math"
+	"github.com/rs/xid"
 )
 
 type Zombie struct{
@@ -12,11 +13,20 @@ type Zombie struct{
 	Stats Stats
 }
 
+func NewZombie() Zombie {
+	return Zombie{
+		Id:         xid.New().String(),
+		Pos:        pixel.V(350, 200),
+		Dir:        0,
+		Stats:      NewStats(zombie),
+	}
+}
 
-func (zombie* Zombie) Move(players []Player) {
-	closestPlayer := players[0]
 
-	for _, player := range players {
+func (zombie* Zombie) Move(players *[]Player) {
+	closestPlayer := (*players)[0]
+
+	for _, player := range *players {
 		if player.Pos.Sub(zombie.Pos).Len() < closestPlayer.Pos.Sub(zombie.Pos).Len() {
 			closestPlayer = player
 		}
@@ -27,8 +37,8 @@ func (zombie* Zombie) Move(players []Player) {
 	zombie.Pos = zombie.Pos.Add(move)
 }
 
-func (zombie *Zombie) Attack(players []Player) {
-	for _, player := range players {
+func (zombie *Zombie) Attack(players *[]Player) {
+	for _, player := range *players {
 		if zombie.Pos.Sub(player.Pos).Len() < 1 {
 			zombie.Pos = zombie.Pos.Rotated(angle(zombie.Pos, player.Pos))
 			player.Stats.Health -= zombie.Stats.Power
