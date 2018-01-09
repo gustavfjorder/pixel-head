@@ -42,3 +42,7 @@ func (player *Player) NewWeapon(weapon Weapon) {
 func (player *Player) GetWeapon() *Weapon {
 	return &player.WeaponList[player.Weapon]
 }
+
+func (player *Player) IsAvailable(weapon int) bool {
+	return player.WeaponList[weapon]==Weapon{}
+}
