@@ -14,6 +14,6 @@ type Shoot struct {
 
 func (s Shoot) GetPos(t int64) (v pixel.Vec) {
 	dt := float64((t - s.StartTime)) / float64(time.Second.Nanoseconds())
-	delta := pixel.V(Weapons[s.Weapon].Speed, 0).Scaled(float64(dt)).Rotated(s.Angle)
+	delta := pixel.V(GetWeaponRef(s.Weapon).GetProjectileSpeed(), 0).Scaled(float64(dt)).Rotated(s.Angle)
 	return s.Start.Add(delta)
 }

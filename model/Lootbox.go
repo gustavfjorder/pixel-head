@@ -17,17 +17,17 @@ func NewLootbox(id string, x float64, y float64, randPos bool, weapon int) Lootb
 			Id: id,
 			//todo: multiply random numbers by map bounds
 			Pos: pixel.V(rand.Float64(),rand.Float64()),
-			Weapon: Weapons[weapon],
+			Weapon: NewWeapon(weapon),
 		}
 	}
 	return Lootbox{
 		Id: id,
 		Pos: pixel.V(x,y),
-		Weapon: Weapons[weapon],
+		Weapon: NewWeapon(weapon),
 	}
 }
 
 func (player *Player) PickupLootbox(lootbox Lootbox){
-	player.WeaponList[lootbox.Weapon.Id].Bullets+=lootbox.Weapon.Magazine
+	player.WeaponList[lootbox.Weapon.Id].Bullets+=lootbox.Weapon.MagazineCurrent
 }
 

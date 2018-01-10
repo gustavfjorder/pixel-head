@@ -7,17 +7,13 @@ import (
 
 type Request struct {
 	Timestamp int64
-	PlayerId string
-	CurrentWep int
-	Dir float64
-	Move bool
-	Shoot bool
-	Melee bool
-	Reload bool
-}
-
-func (r Request) WeaponName() string{
-	return Weapons[r.CurrentWep].Name
+	PlayerId  string
+	Weapon    int
+	Dir       float64
+	Move      bool
+	Shoot     bool
+	Melee     bool
+	Reload    bool
 }
 
 func (r Request) GetRotation() pixel.Matrix {
@@ -48,9 +44,9 @@ func (this Request) Merge(other Request) (merged Request) {
 		merged.Melee = true
 	}
 	if this.Timestamp > other.Timestamp {
-		merged.CurrentWep = this.CurrentWep
+		merged.Weapon = this.Weapon
 	}else{
-		merged.CurrentWep = other.CurrentWep
+		merged.Weapon = other.Weapon
 	}
 	return merged
 }

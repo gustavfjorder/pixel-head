@@ -40,17 +40,17 @@ func HandleControls(win pixelgl.Window, r *model.Request) {
 	}
 	switch {
 	case win.JustPressed(Conf.KnifeKey):
-		r.CurrentWep = model.KNIFE
+		r.Weapon = model.KNIFE
 	case win.JustPressed(Conf.RifleKey):
-		r.CurrentWep = model.RIFLE
+		r.Weapon = model.RIFLE
 	case win.JustPressed(Conf.ShotgunKey):
-		r.CurrentWep = model.SHOTGUN
+		r.Weapon = model.SHOTGUN
 	case win.JustPressed(Conf.HandgunKey):
-		r.CurrentWep = model.HANDGUN
+		r.Weapon = model.HANDGUN
 	}
 
 
-	if win.Pressed(Conf.ReloadKey) && r.CurrentWep != model.KNIFE {
+	if win.Pressed(Conf.ReloadKey) && r.Weapon != model.KNIFE {
 		r.Reload = true
 	} else if win.Pressed(Conf.ShootKey) {
 		r.Shoot = true

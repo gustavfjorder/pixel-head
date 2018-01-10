@@ -7,24 +7,22 @@ import (
 )
 
 type Player struct {
-	Id         string
-	Pos        pixel.Vec
-	Dir        float64
-	Weapon     int
-	WeaponList []Weapon
-	Reload     bool
-	Shoot      bool
-	Melee      bool
-	Moved      bool
+	Id          string
+	Pos         pixel.Vec
+	Dir         float64
+	Weapon      int
+	WeaponList  []Weapon
+	Reload      bool
+	Shoot       bool
+	Melee       bool
+	Moved       bool
+	ActionDelay int
 	Stats
 }
 
 func NewPlayer(id string) Player {
-	weaponList := make([]Weapon, len(Weapons))
-	weaponList[KNIFE] = Weapons[KNIFE]
-	weaponList[HANDGUN] = Weapons[HANDGUN]
-	weaponList[RIFLE] = Weapons[RIFLE]
-	weaponList[SHOTGUN] = Weapons[SHOTGUN]
+	weaponList := make([]Weapon, 0)
+	weaponList = append(weaponList, NewWeapon(KNIFE), NewWeapon(HANDGUN), NewWeapon(SHOTGUN), NewWeapon(RIFLE))
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),
@@ -39,7 +37,7 @@ func (player *Player) Move(dir float64, m Map) {
 	if dir != math.NaN() {
 		newpos := player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(dir))
 		for _, wall := range m.Walls {
-			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))){
+			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
 				fmt.Println("Invalid move")
 				return
 			}
@@ -50,22 +48,29 @@ func (player *Player) Move(dir float64, m Map) {
 }
 
 func (player *Player) NewWeapon(weapon Weapon) {
-	player.WeaponList[weapon.Id] = weapon
+	if !player.IsAvailable(weapon.Id){
+		player.WeaponList = append(player.WeaponList, weapon)
+	}
 }
 
 func (player Player) GetWeapon() *Weapon {
 	return &player.WeaponList[player.Weapon]
 }
 
-func (player *Player) ChangeWeapon(weapon int) {
-	for i := range player.WeaponList {
-		if i == weapon {
-			player.Weapon = weapon
+func (player *Player) ChangeWeapon(weaponNum int) {
+	for i, weapon := range player.WeaponList {
+		if weapon.Id == weaponNum {
+			player.Weapon = i
 			break
 		}
 	}
 }
 
-func (player *Player) IsAvailable(weapon int) bool{
-	return weapon < len(player.WeaponList) && player.WeaponList[weapon] != (Weapon{})
+func (player *Player) IsAvailable(weaponNum int) bool {
+	for _, weapon := range player.WeaponList {
+		if weapon.Id == weaponNum {
+			return true
+		}
+	}
+	return false
 }

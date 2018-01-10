@@ -46,31 +46,31 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 	rifleLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
 	shotgunLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
 	myWep:=me.Weapon
-	if myWep != model.Knife {
+	if myWep != model.KNIFE {
 		knife.Draw(win,scaled.Moved(knifeLocation))
 	} else{
 		knifeSelected.Draw(win,scaled.Moved(knifeLocation))
 	}
 
-	if me.IsAvailable(model.Handgun) {
+	if me.IsAvailable(model.HANDGUN) {
 		handgunDark.Draw(win, scaled.Moved(handgunLocation))
-	} else if me.Weapon==model.Handgun{
+	} else if me.Weapon==model.HANDGUN{
 		handgunSelected.Draw(win,scaled.Moved(handgunLocation))
 	} else {
 		handgun.Draw(win,scaled.Moved(handgunLocation))
 	}
 
-	if !me.IsAvailable(model.Rifle){
+	if !me.IsAvailable(model.RIFLE){
 		rifleDark.Draw(win,scaled.Moved(rifleLocation))
-	}else if myWep==model.Rifle{
+	}else if myWep==model.RIFLE{
 		rifleSelected.Draw(win,scaled.Moved(rifleLocation))
 	}else{
 		rifle.Draw(win,scaled.Moved(rifleLocation))
 	}
 
-	if !me.IsAvailable(model.Shotgun){
+	if !me.IsAvailable(model.SHOTGUN){
 		shotgunDark.Draw(win,scaled.Moved(shotgunLocation))
-	}else if myWep==model.Shotgun{
+	}else if myWep==model.SHOTGUN{
 		shotgunSelected.Draw(win,scaled.Moved(shotgunLocation))
 	}else{
 		shotgun.Draw(win,scaled.Moved(shotgunLocation))

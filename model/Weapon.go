@@ -8,88 +8,46 @@ import (
 )
 
 type Weapon struct {
-	Id             int
-	Name           string
-	Power          int
-	Range          float64
-	Speed          float64
-	Magazine       int
-	Capacity       int
-	Bullets        int
-	BulletsPerShot int
-	Spread         int
+	Id               int
+	MagazineCurrent  int
+	Bullets          int
 }
 
 const (
-	KNIFE            = iota
+	KNIFE   = iota
 	RIFLE
 	SHOTGUN
 	HANDGUN
 )
 
-var Weapons = map[int]Weapon{
-	RIFLE:
-	{
-		Id:             RIFLE,
-		Name:           "rifle",
-		Power:          10,
-		Range:          300,
-		Speed:          1000,
-		Magazine:       30,
-		Capacity:       150,
-		Bullets:        0,
-		BulletsPerShot: 1,
-	},
-	KNIFE:
-	{
-		Id:       KNIFE,
-		Name:     "knife",
-		Power:    100,
-		Range:    20,
-		Speed:    1000,
-		Magazine: -1,
-		Capacity: -1,
-		Bullets:  -1,
-	},
-	SHOTGUN:
-	{
-		Id:             SHOTGUN,
-		Name:           "shotgun",
-		Power:          5,
-		Range:          300,
-		Speed:          1000,
-		Magazine:       3,
-		Capacity:       24,
-		Bullets:        0,
-		BulletsPerShot: 5,
-		Spread:         5,
-	},
-	HANDGUN:
-	{
-		Id:             HANDGUN,
-		Name:           "handgun",
-		Power:          5,
-		Range:          300,
-		Speed:          1000,
-		Magazine:       10,
-		Capacity:       50,
-		Bullets:        0,
-		BulletsPerShot: 1,
-	},
+func NewWeapon(weaponNum int) (weapon Weapon){
+	weapon.Id = weaponNum
+	weapon.MagazineCurrent = weapon.GetMagazineCapacity()
+	weapon.Bullets = weapon.GetCapacity()
+	return weapon
 }
 
-func (weapon *Weapon) RefillMag() {
-	weapon.Magazine = Weapons[weapon.Id].Magazine
-	weapon.Bullets -= Weapons[weapon.Id].Magazine
+func GetWeaponRef(weaponNum int) (Weapon) {
+	return Weapon{Id:weaponNum}
+}
+
+//Returns true if the magazine was reloaded
+func (weapon *Weapon) RefillMag() bool {
+	if weapon.MagazineCurrent >= weapon.GetMagazineCapacity(){
+		return false
+	}
+	dBullet := minInt(weapon.GetMagazineCapacity(), weapon.Bullets)
+	weapon.MagazineCurrent = dBullet
+	weapon.Bullets -= dBullet
+	return dBullet > 0
 }
 
 func (weapon *Weapon) GenerateShoots(timestamp int64, player Player) []Shoot {
-	shotsPerSideOfDirection := int(math.Floor(float64(weapon.BulletsPerShot / 2)))
-	angle := -(shotsPerSideOfDirection * weapon.BulletsPerShot)
+	shotsPerSideOfDirection := int(math.Floor(float64(weapon.GetBulletsPerShot() / 2)))
+	angle := -(shotsPerSideOfDirection * weapon.GetBulletsPerShot())
+	shoots := make([]Shoot, int(math.Min(float64(weapon.GetBulletsPerShot()), float64(weapon.MagazineCurrent))))
 
-	shoots := make([]Shoot, weapon.BulletsPerShot)
-
-	for i := 0; i < weapon.BulletsPerShot; i++ {
+	for i := 0; i < weapon.GetBulletsPerShot() && weapon.MagazineCurrent > 0; i++ {
 		shoots[i] = Shoot{
 			Start:     player.Pos.Add(pixel.V(config.GUNPOSX, config.GUNPOSY).Rotated(player.Dir - math.Pi/2)),
 			Angle:     player.Dir + (float64(angle) * (math.Pi / 180)),
@@ -97,9 +55,127 @@ func (weapon *Weapon) GenerateShoots(timestamp int64, player Player) []Shoot {
 			Weapon:    weapon.Id,
 		}
 
-		angle += weapon.Spread
-		weapon.Magazine--
+		angle += weapon.GetSpread()
+		weapon.MagazineCurrent--
 	}
 
 	return shoots
+}
+
+func (weapon Weapon) GetReloadSpeed() int {
+	switch weapon.Id {
+	case RIFLE:
+		return 10
+	case HANDGUN:
+		return 20
+	case SHOTGUN:
+		return 30
+	default:
+		return 0
+	}
+}
+
+func (weapon Weapon) GetShootDelay() int {
+	switch weapon.Id {
+	case RIFLE:
+		return 5
+	case HANDGUN:
+		return 20
+	case SHOTGUN:
+		return 20
+	default:
+		return 30
+	}
+}
+
+func (weapon Weapon) GetMagazineCapacity() int {
+	switch weapon.Id {
+	case RIFLE:
+		return 30
+	case HANDGUN:
+		return 10
+	case SHOTGUN:
+		return 20
+	default:
+		return 0
+	}
+}
+
+func (weapon Weapon) GetPower() int{
+	switch weapon.Id {
+	case RIFLE:
+		return 10
+	case HANDGUN:
+		return 10
+	case SHOTGUN:
+		return 5
+	case KNIFE:
+		return 100
+	default:
+		return 0
+	}
+}
+
+func (weapon Weapon) GetRange() float64 {
+	switch weapon.Id {
+	case RIFLE:
+		return 500
+	case HANDGUN:
+		return 500
+	case SHOTGUN:
+		return 300
+	case KNIFE:
+		return 100
+	default:
+		return 0
+
+	}
+}
+
+func (weapon Weapon) GetProjectileSpeed() float64 {
+	switch weapon.Id {
+	default:
+		return 1000
+	}
+}
+
+func (weapon Weapon) GetBulletsPerShot() int {
+	switch weapon.Id {
+	case SHOTGUN:
+		return 5
+	default:
+		return 1
+	}
+}
+
+func (weapon Weapon) GetSpread() int {
+	switch weapon.Id {
+	case SHOTGUN:
+		return 5
+	default:
+		return 0
+
+	}
+}
+
+func (weapon Weapon) GetCapacity() int {
+	switch weapon.Id {
+	default:
+		return 150
+	}
+}
+
+func (weapon Weapon) GetName() string {
+	switch weapon.Id {
+	case RIFLE:
+		return "rifle"
+	case HANDGUN:
+		return "handgun"
+	case SHOTGUN:
+		return "shotgun"
+	case KNIFE:
+		return "knife"
+	default:
+		return "none"
+	}
 }
