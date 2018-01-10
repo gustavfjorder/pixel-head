@@ -16,7 +16,7 @@ type Wall struct {
 
 var MapTemplates = map[string]Map{
 	"Test1": {
-		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(500, 100)),
+		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
 	},
 }
 

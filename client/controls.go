@@ -41,6 +41,7 @@ func HandleControls(win pixelgl.Window, r *model.Request) {
 	switch {
 	case win.JustPressed(Conf.KnifeKey):
 		r.CurrentWep = model.KNIFE
+
 	case win.JustPressed(Conf.RifleKey):
 		r.CurrentWep = model.RIFLE
 	case win.JustPressed(Conf.ShotgunKey):

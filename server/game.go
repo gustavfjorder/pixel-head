@@ -125,7 +125,8 @@ func (g *Game) prepareLevel(done chan bool) {
 	level := model.Levels[g.currentLevel]
 
 	for i := 0; i < level.NumberOfZombies; i++ {
-		g.state.Zombies = append(g.state.Zombies, model.NewZombie(300+(rand.Float64()*100), 200+(rand.Float64()*100)))
+
+		g.state.Zombies = append(g.state.Zombies, model.NewZombie(rand.Float64()*900+100, rand.Float64()*900+100))
 	}
 
 	close(done)

@@ -24,7 +24,7 @@ func NewPlayer(id string) Player {
 	weaponList[KNIFE] = Weapons[KNIFE]
 	weaponList[HANDGUN] = Weapons[HANDGUN]
 	weaponList[RIFLE] = Weapons[RIFLE]
-	weaponList[SHOTGUN] = Weapons[SHOTGUN]
+	//weaponList[SHOTGUN] = Weapons[SHOTGUN]
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),
