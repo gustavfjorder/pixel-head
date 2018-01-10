@@ -31,16 +31,18 @@ func (a *Animation) Start(s time.Duration) {
 
 func (a *Animation) Next() (s *pixel.Sprite) {
 	s = a.Sprites[a.Cur]
-	select {
-	case <-a.Tick.C:
-		a.Cur = (a.Cur + 1) % len(a.Sprites)
-		if a.Cur <= 0 && a.NextAnim != nil && len(a.NextAnim.Sprites) > 0 {
-			a.Blocking = a.NextAnim.Blocking
-			a.Sprites = a.NextAnim.Sprites
-			*a.NextAnim = Animation{}
+	if len(a.Sprites) > 1 {
+		select {
+		case <-a.Tick.C:
+			a.Cur = (a.Cur + 1) % len(a.Sprites)
+			if a.Cur <= 0 && a.NextAnim != nil && len(a.NextAnim.Sprites) > 0 {
+				a.Blocking = a.NextAnim.Blocking
+				a.Sprites = a.NextAnim.Sprites
+				*a.NextAnim = Animation{}
+			}
+		default:
+			break
 		}
-	default:
-		break
 	}
 	return
 }
@@ -67,7 +69,7 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 	bullet := anims["bullet"]
 	for _, shot := range state.Shoots {
 		p := shot.GetPos(state.Timestamp)
-		transformation := pixel.IM.Scaled(pixel.ZV, config.BULLET_SCALE).Rotated(pixel.ZV,shot.Angle - math.Pi/2).Moved(p)
+		transformation := pixel.IM.Scaled(pixel.ZV, config.BulletScale).Rotated(pixel.ZV,shot.Angle - math.Pi/2).Moved(p)
 		bullet.Next().Draw(win, transformation)
 	}
 
@@ -98,7 +100,7 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 
 		}
 		if len(v.Sprites) > 0 {
-			transformation := pixel.IM.Scaled(center, config.ZOMBIE_SCALE).Rotated(center, zombie.Dir).Moved(zombie.Pos)
+			transformation := pixel.IM.Scaled(center, config.ZombieScale).Rotated(center, zombie.Dir).Moved(zombie.Pos)
 			v.Next().Draw(win, transformation)
 		}
 	}
@@ -129,7 +131,6 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			if ok {
 				newAnim.Start(config.Conf.AnimationSpeed)
 				currentAnims[player.Id] = &newAnim
-				fmt.Println(newAnim.Prefix, prefix)
 				newAnim.Prefix = prefix
 			}else{
 				continue
@@ -139,13 +140,12 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 		if anim.Prefix != prefix {
 			newAnim, found := anims[prefix]
 			if found {
-				fmt.Println(anim.Prefix, prefix)
 				anim.Prefix = prefix
 				anim.ChangeAnimation(newAnim, blocking)
 			}
 		}
 		if len(anim.Sprites) > 0 {
-			transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, config.HUMAN_SCALE).Moved(player.Pos)
+			transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, config.HumanScale).Moved(player.Pos)
 			anim.Next().Draw(win, transformation)
 		}
 	}

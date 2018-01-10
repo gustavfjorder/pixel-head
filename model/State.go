@@ -1,7 +1,9 @@
 package model
 
+import "time"
+
 type State struct {
-	Timestamp int64
+	Timestamp time.Duration
 	Players   []Player
 	Zombies   []Zombie
 	Shoots    []Shoot

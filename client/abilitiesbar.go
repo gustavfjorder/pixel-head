@@ -90,17 +90,17 @@ func DrawHealthbar(win *pixelgl.Window, me *model.Player) {
 		healthBarFrame   = hp["healthbarframe.png"].Sprites[0]
 
 		//scalefactor on x and y axis so health width = ability width and health height is half of ability height
-		x_scalefactor = ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.X / healthBarFrame.Picture().Bounds().Max.X
-		y_scalefactor = ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y / healthBarFrame.Picture().Bounds().Max.Y / 2
+		xScalefactor = ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.X / healthBarFrame.Picture().Bounds().Max.X
+		yScalefactor = ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y / healthBarFrame.Picture().Bounds().Max.Y / 2
 
 		//frame and background are scaled to have same width as ability bar
 		// health is scaled according to the health of the player
-		scaled         = pixel.IM.ScaledXY(pixel.ZV, pixel.V(x_scalefactor, y_scalefactor))
-		healthscaled   = pixel.IM.ScaledXY(pixel.ZV, pixel.V(x_scalefactor*float64(me.Health)/me.GetMaxHealth(), y_scalefactor))
+		scaled         = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor, yScalefactor))
+		healthscaled   = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor*float64(me.Health)/me.GetMaxHealth(), yScalefactor))
 		frameLocation  = pixel.Vec{win.Bounds().Max.X / 2, win.Bounds().Min.Y + ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
 		healthfraction = float64((me.GetMaxHealth() - float64(me.Health)) / (0.0001 + me.GetMaxHealth()))
 		healthLocation = pixel.Vec{
-			win.Bounds().Max.X/2 + (healthgraphic.Picture().Bounds().Max.X/2*x_scalefactor)*healthfraction - 2,
+			win.Bounds().Max.X/2 + (healthgraphic.Picture().Bounds().Max.X/2*xScalefactor)*healthfraction - 2,
 			win.Bounds().Min.Y + ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
 	)
 	//draw background, health and frame

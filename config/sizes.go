@@ -2,30 +2,30 @@ package config
 
 const (
 	//Human sprite settings
-	HUMAN_WIDTH = 40.0
+	HumanWidth = 40.0
 
 	//Zombie sprite settings
-	ZOMBIE_WIDTH = 30.0
+	ZombieWidth = 30.0
 
-	BULLET_WIDTH = 3.0
+	BulletWidth = 3.0
 
 	//Don't touch below this point
-	HUMAN_PIC_WIDTH         = 148.0
-	HUMAN_HEIGHT_WIDTH_FRAC = 228.0 / 123.0
-	HUMAN_SCALE             = HUMAN_WIDTH / HUMAN_PIC_WIDTH
-	HUMAN_HEIGHT            = HUMAN_WIDTH * HUMAN_HEIGHT_WIDTH_FRAC
+	HumanPicWidth        = 148.0
+	HumanHeightWidthFrac = 228.0 / 123.0
+	HumanScale           = HumanWidth / HumanPicWidth
+	HumaneHeight         = HumanWidth * HumanHeightWidthFrac
 
-	ZOMBIE_PIC_WIDTH         = 31.0
-	ZOMBIE_HEIGHT_WIDTH_FRAC = 72.0 / 31.0
-	ZOMBIE_SCALE             = ZOMBIE_WIDTH / ZOMBIE_PIC_WIDTH
-	ZOMBIE_HEIGHT            = ZOMBIE_WIDTH * ZOMBIE_HEIGHT_WIDTH_FRAC
+	ZombiePicWidth        = 31.0
+	ZombieHeightWidthFrac = 72.0 / 31.0
+	ZombieScale           = ZombieWidth / ZombiePicWidth
+	ZombieHeight          = ZombieWidth * ZombieHeightWidthFrac
 
-	BULLET_PIC_WIDTH         = 192.0
-	BULLET_HEIGHT_WIDTH_FRAC = 511.0 / 192.0
-	BULLET_SCALE             = BULLET_WIDTH / BULLET_PIC_WIDTH
-	BULLET_HEIGHT            = BULLET_WIDTH * BULLET_HEIGHT_WIDTH_FRAC
+	BulletPicWidth        = 192.0
+	BulletHeightWidthFrac = 511.0 / 192.0
+	BulletScale           = BulletWidth / BulletPicWidth
+	BulletHeight          = BulletWidth * BulletHeightWidthFrac
 
 	//Made to fit with shotgun/rifle
-	GUNPOSX = HUMAN_WIDTH * 0.34
-	GUNPOSY = HUMAN_HEIGHT * 0.5
+	GunPosX = HumanWidth * 0.34
+	GunPosY = HumaneHeight * 0.5
 )

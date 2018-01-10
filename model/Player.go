@@ -4,21 +4,22 @@ import (
 	"github.com/faiface/pixel"
 	"math"
 	"fmt"
+	"time"
 )
 
 type Player struct {
-	Id             string
-	Pos            pixel.Vec
-	Dir            float64
-	Weapon         int
-	WeaponList     []Weapon
-	Reload         bool
-	Shoot          bool
-	Melee          bool
-	Moved          bool
-	ActionDelay    int
-	TurnDelay      int
+	Id         string
+	Pos        pixel.Vec
+	Dir        float64
+	Weapon     int
+	WeaponList []Weapon
+	Reload     bool
+	Shoot      bool
+	Melee      bool
+	Moved      bool
 	Stats
+	ActionDelay time.Duration
+	TurnDelay time.Duration
 }
 
 func NewPlayer(id string) Player {
@@ -35,14 +36,14 @@ func NewPlayer(id string) Player {
 	}
 }
 
-func (player *Player) Move(dir float64, m Map) {
+func (player *Player) Move(dir float64, g *Game) {
 	if dir != math.NaN() {
-		if player.TurnDelay <= 0 {
+		if player.TurnDelay < g.State.Timestamp {
 			player.Dir = dir
-			player.TurnDelay = player.GetTurnSpeed()
+			player.TurnDelay = player.GetTurnDelay() + g.State.Timestamp
 		}
 		newpos := player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(player.Dir))
-		for _, wall := range m.Walls {
+		for _, wall := range g.CurrentMap.Walls {
 			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
 				fmt.Println("Invalid move")
 				return
@@ -89,6 +90,6 @@ func (player *Player) IsAvailable(weaponNum int) bool {
 	return false
 }
 
-func (player Player) GetTurnSpeed() int {
-	return 4
+func (player Player) GetTurnDelay() time.Duration {
+	return time.Second / 15
 }

@@ -19,14 +19,11 @@ func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
 			continue
 		}
 
-		fmt.Println("Got state:",state)
-
 		spc.Put("done")
 
 		for _,p := range state.Players{
 			if config.Conf.Id == p.Id {
 				*me = p
-				fmt.Print("Setting id 123")
 			}
 		}
 

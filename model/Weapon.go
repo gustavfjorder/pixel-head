@@ -42,16 +42,16 @@ func (weapon *Weapon) RefillMag() bool {
 	return dBullet > 0
 }
 
-func (weapon *Weapon) GenerateShoots(timestamp int64, player Player) []Shoot {
+func (weapon *Weapon) GenerateShoots(timestamp time.Duration, player Player) []Shoot {
 	shotsPerSideOfDirection := int(math.Floor(float64(weapon.GetBulletsPerShot() / 2)))
 	angle := -(shotsPerSideOfDirection * weapon.GetBulletsPerShot())
 	shoots := make([]Shoot, int(math.Min(float64(weapon.GetBulletsPerShot()), float64(weapon.MagazineCurrent))))
 
 	for i := 0; i < weapon.GetBulletsPerShot() && weapon.MagazineCurrent > 0; i++ {
 		shoots[i] = Shoot{
-			Start:     player.Pos.Add(pixel.V(config.GUNPOSX, config.GUNPOSY).Rotated(player.Dir - math.Pi/2)),
+			Start:     player.Pos.Add(pixel.V(config.GunPosX, config.GunPosY).Rotated(player.Dir - math.Pi/2)),
 			Angle:     player.Dir + (float64(angle) * (math.Pi / 180)),
-			StartTime: time.Now().UnixNano(),
+			StartTime: timestamp,
 			Weapon:    weapon.Id,
 		}
 
@@ -62,29 +62,29 @@ func (weapon *Weapon) GenerateShoots(timestamp int64, player Player) []Shoot {
 	return shoots
 }
 
-func (weapon Weapon) GetReloadSpeed() int {
+func (weapon Weapon) GetReloadSpeed() time.Duration {
 	switch weapon.Id {
 	case RIFLE:
-		return 10
+		return time.Second / 2
 	case HANDGUN:
-		return 10
+		return time.Second / 2
 	case SHOTGUN:
-		return 10
+		return time.Second / 2
 	default:
-		return 0
+		return time.Second / 2
 	}
 }
 
-func (weapon Weapon) GetShootDelay() int {
+func (weapon Weapon) GetShootDelay() time.Duration {
 	switch weapon.Id {
 	case RIFLE:
-		return 2
+		return time.Second / 5
 	case HANDGUN:
-		return 10
+		return time.Second / 2
 	case SHOTGUN:
-		return 10
+		return time.Second / 2
 	default:
-		return 30
+		return 0
 	}
 }
 

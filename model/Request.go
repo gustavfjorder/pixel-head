@@ -16,35 +16,35 @@ type Request struct {
 	Reload    bool
 }
 
-func (r Request) GetRotation() pixel.Matrix {
-	return pixel.IM.Rotated(pixel.V(0,0), r.Dir)
+func (request Request) GetRotation() pixel.Matrix {
+	return pixel.IM.Rotated(pixel.V(0,0), request.Dir)
 }
 
-func (this Request) Merge(other Request) (merged Request) {
-	merged.Move = this.Move || other.Move
-	merged.PlayerId = this.PlayerId
+func (request Request) Merge(other Request) (merged Request) {
+	merged.Move = request.Move || other.Move
+	merged.PlayerId = request.PlayerId
 	switch { // Handles direction
-	case this.Dir == math.NaN():
+	case request.Dir == math.NaN():
 		merged.Dir = other.Dir
 	case other.Dir == math.NaN():
-		merged.Dir = this.Dir
+		merged.Dir = request.Dir
 	default:
-		if this.Timestamp > other.Timestamp {
-			merged.Dir = this.Dir
+		if request.Timestamp > other.Timestamp {
+			merged.Dir = request.Dir
 		}else {
 			merged.Dir = other.Dir
 		}
 	}
 	switch {
-	case this.Reload || other.Reload:
+	case request.Reload || other.Reload:
 		merged.Reload = true
-	case this.Shoot || other.Shoot:
+	case request.Shoot || other.Shoot:
 		merged.Shoot = true
-	case this.Melee || other.Melee:
+	case request.Melee || other.Melee:
 		merged.Melee = true
 	}
-	if this.Timestamp > other.Timestamp {
-		merged.Weapon = this.Weapon
+	if request.Timestamp > other.Timestamp {
+		merged.Weapon = request.Weapon
 	}else{
 		merged.Weapon = other.Weapon
 	}
