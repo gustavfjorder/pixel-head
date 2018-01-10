@@ -67,9 +67,9 @@ func (weapon Weapon) GetReloadSpeed() int {
 	case RIFLE:
 		return 10
 	case HANDGUN:
-		return 20
+		return 10
 	case SHOTGUN:
-		return 30
+		return 10
 	default:
 		return 0
 	}
@@ -80,9 +80,9 @@ func (weapon Weapon) GetShootDelay() int {
 	case RIFLE:
 		return 2
 	case HANDGUN:
-		return 20
+		return 10
 	case SHOTGUN:
-		return 20
+		return 10
 	default:
 		return 30
 	}

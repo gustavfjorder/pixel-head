@@ -7,24 +7,24 @@ import (
 )
 
 type Player struct {
-	Id          string
-	Pos         pixel.Vec
-	Dir         float64
-	Weapon      int
-	WeaponList  []Weapon
-	Reload      bool
-	Shoot       bool
-	Melee       bool
-	Moved       bool
-	ActionDelay int
-	TurnDelay   int
+	Id             string
+	Pos            pixel.Vec
+	Dir            float64
+	Weapon         int
+	WeaponList     []Weapon
+	Reload         bool
+	Shoot          bool
+	Melee          bool
+	Moved          bool
+	ActionDelay    int
+	TurnDelay      int
 	Stats
 }
 
 func NewPlayer(id string) Player {
 
 	weaponList := make([]Weapon, 0)
-	weaponList = append(weaponList, NewWeapon(KNIFE), NewWeapon(HANDGUN), NewWeapon(SHOTGUN), NewWeapon(RIFLE))
+	weaponList = append(weaponList, NewWeapon(KNIFE), NewWeapon(HANDGUN), NewWeapon(SHOTGUN))
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),
@@ -89,6 +89,6 @@ func (player *Player) IsAvailable(weaponNum int) bool {
 	return false
 }
 
-func (player Player) GetTurnSpeed() int{
+func (player Player) GetTurnSpeed() int {
 	return 4
 }

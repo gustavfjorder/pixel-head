@@ -168,7 +168,7 @@ func setupSpace(uri string) Space {
 
 func (g *Game) handleRequests() {
 	// Load incoming requests
-	requests:= make([]model.Request, len(g.clientSpaces))
+	requests := make([]model.Request, len(g.clientSpaces))
 	for i, space := range g.clientSpaces {
 		rtuples, _ := space.GetAll(&model.Request{})
 		for _, rtuple := range rtuples {
@@ -188,11 +188,11 @@ func (g *Game) handleRequests() {
 				break
 			}
 		}
+		player.ActionDelay--
+		player.TurnDelay--
 		player.Reload = false
 		player.Shoot = false
 		player.Melee = false
-		player.ActionDelay--
-		player.TurnDelay--
 
 		if request.Move {
 			// todo: check if move is doable in map
@@ -206,7 +206,7 @@ func (g *Game) handleRequests() {
 		case player.GetWeapon().Id != request.Weapon && player.IsAvailable(request.Weapon):
 			player.ChangeWeapon(request.Weapon)
 		case request.Reload && player.GetWeapon().RefillMag():
-			player.Reload= true
+			player.Reload = true
 			player.ActionDelay = player.GetWeapon().GetReloadSpeed()
 		case request.Shoot && player.GetWeapon().MagazineCurrent > 0:
 			playerShoots := player.GetWeapon().GenerateShoots(g.state.Timestamp, *player)
