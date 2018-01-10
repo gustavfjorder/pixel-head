@@ -42,7 +42,7 @@ func run() {
 		frames           = 0
 		second           = time.Tick(time.Second)
 		fps              = time.Tick(time.Second / config.Conf.Fps)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 1000),}
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
 		r                = model.Request{PlayerId: config.Conf.Id}
 		GameUri          string
 		ClientUri        string
@@ -51,7 +51,7 @@ func run() {
 		activeAnimations = make(map[string]*client.Animation)
 		myspc            space.Space
 		servspc          space.Space
-		me               = model.Player{Id: config.Conf.Id}
+		me                model.Player
 	)
 	bullet, err := client.LoadAnimation(config.Conf.BulletPath)
 	if err != nil{
@@ -111,7 +111,7 @@ func run() {
 		win.Clear(colornames.Darkolivegreen)
 		imd.Draw(win)
 		client.HandleAnimations(win, *state, animations, activeAnimations)
-		client.DrawAbilities(win, me)
+		client.DrawAbilities(win, &me)
 
 		win.Update()
 
