@@ -67,11 +67,11 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 	bullet := anims["bullet"]
 	for _, shot := range state.Shoots {
 		p := shot.GetPos(state.Timestamp)
-		bullet.Next().Draw(win, pixel.IM.Scaled(pixel.ZV, 0.02).Rotated(pixel.ZV,shot.Angle - math.Pi/2).Moved(p))
+		transformation := pixel.IM.Scaled(pixel.ZV, config.BULLET_SCALE).Rotated(pixel.ZV,shot.Angle - math.Pi/2).Moved(p)
+		bullet.Next().Draw(win, transformation)
 	}
 
 	for _, zombie := range state.Zombies {
-		transformation := pixel.IM.Rotated(center, zombie.Dir).Moved(zombie.Pos)
 		v, ok := currentAnims[zombie.Id]
 		prefix := Prefix("zombie", "walk")
 		if !ok{
@@ -97,12 +97,13 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			}
 
 		}
-
-		v.Next().Draw(win, transformation)
+		if len(v.Sprites) > 0 {
+			transformation := pixel.IM.Scaled(center, config.ZOMBIE_SCALE).Rotated(center, zombie.Dir).Moved(zombie.Pos)
+			v.Next().Draw(win, transformation)
+		}
 	}
 
 	for _, player := range state.Players {
-		transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, 0.3).Moved(player.Pos)
 		movement := "idle"
 		blocking := false
 		switch {
@@ -144,6 +145,7 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			}
 		}
 		if len(anim.Sprites) > 0 {
+			transformation := pixel.IM.Rotated(center, player.Dir).Scaled(center, config.HUMAN_SCALE).Moved(player.Pos)
 			anim.Next().Draw(win, transformation)
 		}
 	}

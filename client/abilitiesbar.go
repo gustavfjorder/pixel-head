@@ -40,23 +40,23 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 	rifleLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
 	shotgunLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
 
-	if me.IsAvailable(model.Knife)|| !me.IsAvailable(model.Knife) {
+	if me.IsAvailable(model.KNIFE)|| !me.IsAvailable(model.KNIFE) {
 		knife.Draw(win,scaled.Moved(knifeLocation))
 	}
 
-	if me.IsAvailable(model.Handgun){
+	if me.IsAvailable(model.HANDGUN){
 		handgun.Draw(win,scaled.Moved(handgunLocation))
 	} else{
 		handgunDark.Draw(win,scaled.Moved(handgunLocation))
 	}
 
-	if me.IsAvailable(model.Rifle){
+	if me.IsAvailable(model.RIFLE){
 		rifle.Draw(win,scaled.Moved(rifleLocation))
 	}else{
 		rifleDark.Draw(win,scaled.Moved(rifleLocation))
 	}
 
-	if me.IsAvailable(model.Shotgun){
+	if me.IsAvailable(model.SHOTGUN){
 		shotgun.Draw(win,scaled.Moved(shotgunLocation))
 	}else{
 		shotgunDark.Draw(win,scaled.Moved(shotgunLocation))

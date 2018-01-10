@@ -89,6 +89,7 @@ func LoadAnimation(path string) (Animation, error) {
 		if err != nil {
 			panic(err)
 		}
+
 		res[i] = pixel.NewSprite(img, img.Bounds())
 		i++
 
