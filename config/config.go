@@ -32,6 +32,7 @@ var Conf = Config{
 	AnimationPath:   "client/sprites",
 	AbilityPath:     "client/images/abilities",
 	BulletPath:      "client/images/bullet",
+	HealthPath:      "client/images/health",
 }
 
 type Config struct {
@@ -56,6 +57,7 @@ type Config struct {
 	AnimationPath   string
 	AbilityPath     string
 	BulletPath      string
+	HealthPath	    string
 }
 
 func LoadJson(file string, config interface{}) {

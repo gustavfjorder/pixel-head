@@ -4,6 +4,7 @@ type Stats struct {
 	Health    int
 	MoveSpeed float64
 	Power     int
+	Being	  int
 }
 
 const (
@@ -26,5 +27,16 @@ func NewStats(being int) (s Stats) {
 			Power:     3,
 		}
 	}
+	s.Being=being
 	return
+}
+
+func (s Stats) GetMaxHealth() float64{
+	switch s.Being {
+	case HUMAN:
+		return 100
+	case ZOMBIE:
+		return 20
+	}
+	return 0
 }

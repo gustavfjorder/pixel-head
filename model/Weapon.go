@@ -78,7 +78,7 @@ func (weapon Weapon) GetReloadSpeed() int {
 func (weapon Weapon) GetShootDelay() int {
 	switch weapon.Id {
 	case RIFLE:
-		return 5
+		return 2
 	case HANDGUN:
 		return 20
 	case SHOTGUN:
