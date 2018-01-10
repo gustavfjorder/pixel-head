@@ -17,6 +17,7 @@ type Player struct {
 	Melee       bool
 	Moved       bool
 	ActionDelay int
+	TurnDelay   int
 	Stats
 }
 
@@ -36,20 +37,23 @@ func NewPlayer(id string) Player {
 
 func (player *Player) Move(dir float64, m Map) {
 	if dir != math.NaN() {
-		newpos := player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(dir))
+		if player.TurnDelay <= 0 {
+			player.Dir = dir
+			player.TurnDelay = player.GetTurnSpeed()
+		}
+		newpos := player.Pos.Add(pixel.V(player.Stats.MoveSpeed, 0).Rotated(player.Dir))
 		for _, wall := range m.Walls {
 			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
 				fmt.Println("Invalid move")
 				return
 			}
 		}
-		player.Dir = dir
 		player.Pos = newpos
 	}
 }
 
 func (player *Player) NewWeapon(weapon Weapon) {
-	if !player.IsAvailable(weapon.Id){
+	if !player.IsAvailable(weapon.Id) {
 		player.WeaponList = append(player.WeaponList, weapon)
 	}
 }
@@ -57,7 +61,7 @@ func (player *Player) NewWeapon(weapon Weapon) {
 func (player *Player) GetWeapon() *Weapon {
 	if player.Weapon < len(player.WeaponList) {
 		return &player.WeaponList[player.Weapon]
-	} else if len(player.WeaponList) > 0{
+	} else if len(player.WeaponList) > 0 {
 		player.Weapon = 0
 		return &player.WeaponList[player.Weapon]
 	} else {
@@ -83,4 +87,8 @@ func (player *Player) IsAvailable(weaponNum int) bool {
 		}
 	}
 	return false
+}
+
+func (player Player) GetTurnSpeed() int{
+	return 4
 }

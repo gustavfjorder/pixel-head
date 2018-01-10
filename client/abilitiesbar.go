@@ -97,16 +97,18 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player){
 		shotgun.Draw(win,scaled.Moved(shotgunLocation))
 	}
 	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
-	weaponText := text.New(pixel.V(abilitiesBarPosX+abilitiesBar.Picture().Bounds().Max.X/1.9,abilitiesBarPosY*0.9), basicAtlas)
-	bulletsText := text.New(pixel.V(abilitiesBarPosX-abilitiesBar.Picture().Bounds().Max.X/1.2,abilitiesBarPosY*0.9),basicAtlas)
-
+	weaponText := text.New(pixel.V(abilitiesBarPosX+abilitiesBar.Picture().Bounds().Max.X/2,abilitiesBarPosY*0.9), basicAtlas)
+	bulletsText := text.New(pixel.V(abilitiesBarPosX-abilitiesBar.Picture().Bounds().Max.X/2,abilitiesBarPosY*0.9),basicAtlas)
+	bulletTextSize := 0.0
 	fmt.Fprintln(weaponText, model.GetWeaponRef(myWep).GetName())
 	if myWep!=model.KNIFE{
-		fmt.Fprintln(bulletsText,me.WeaponList[myWep].Bullets)
+		s := fmt.Sprint(me.GetWeapon().Bullets, me.GetWeapon().MagazineCurrent)
+		bulletTextSize = bulletsText.LineHeight*1.3 * float64(len(s))
+		fmt.Fprintln(bulletsText,s)
 	}
 
 	weaponText.Draw(win, pixel.IM.Scaled(weaponText.Orig,2))
-	bulletsText.Draw(win,pixel.IM.Scaled(bulletsText.Orig,2))
+	bulletsText.Draw(win,pixel.IM.Scaled(bulletsText.Orig,2).Moved(pixel.V(-bulletTextSize,0)))
 
 	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesBarPosX, abilitiesBarPosY)))
 

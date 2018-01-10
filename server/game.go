@@ -188,16 +188,17 @@ func (g *Game) handleRequests() {
 				break
 			}
 		}
+		player.Reload = false
+		player.Shoot = false
+		player.Melee = false
+		player.ActionDelay--
+		player.TurnDelay--
 
 		if request.Move {
 			// todo: check if move is doable in map
 			player.Move(request.Dir, g.currentMap)
 		}
 
-		player.Reload = false
-		player.Shoot = false
-		player.Melee = false
-		player.ActionDelay--
 		fmt.Println(player.GetWeapon().Bullets, player.GetWeapon().MagazineCurrent)
 
 		//Action priority is like so: weapon change > reload > shoot > melee
@@ -215,6 +216,9 @@ func (g *Game) handleRequests() {
 			player.Shoot = len(playerShoots) > 0
 			g.state.Shoots = append(g.state.Shoots, playerShoots...)
 			player.ActionDelay = player.GetWeapon().GetShootDelay()
+		case request.Shoot && player.GetWeapon().RefillMag(): // Has no ammo
+			player.Reload = true
+			player.ActionDelay = player.GetWeapon().GetReloadSpeed()
 		case request.Melee:
 			player.Melee = true
 			// todo: create melee attack
