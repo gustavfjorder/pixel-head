@@ -32,6 +32,7 @@ func HandleControls(win pixelgl.Window, r *model.Request) {
 	}
 	if i <= 0 {
 		r.Move = false
+		angle = math.NaN()
 	}else{
 		r.Move = true
 		angle/= float64(i)

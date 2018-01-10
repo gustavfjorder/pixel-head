@@ -20,7 +20,7 @@ func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
 
 		fmt.Println("Got state:",state)
 
-		spc.Put("ready")
+		spc.Put("done")
 
 		for _,p := range state.Players{
 			if p.Id == me.Id {

@@ -42,7 +42,7 @@ func main() {
 				fmt.Println("Client uri: " + clientUris[i])
 			}
 
-			game := server.NewGame(gameUri, clientUris)
+			game := server.NewGame(gameUri, clientUris, awaiting)
 			game.AddPlayers(awaiting)
 
 			go game.Start()

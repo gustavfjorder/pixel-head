@@ -16,7 +16,7 @@ func NewStats(being int) (s Stats) {
 	case HUMAN:
 		s = Stats{
 			Health:    100,
-			MoveSpeed: 2,
+			MoveSpeed: 10,
 			Power:     5,
 		}
 	case ZOMBIE:

@@ -24,11 +24,11 @@ func registerModels() {
 	gob.Register([]model.Shoot{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
-	gob.Register(model.Line{})
+	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
-	gob.Register(model.Line{})
+	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 }
@@ -42,7 +42,7 @@ func run() {
 		frames           = 0
 		second           = time.Tick(time.Second)
 		fps              = time.Tick(time.Second / config.Conf.Fps)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1024, 800),}
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 1000),}
 		r                = model.Request{PlayerId: config.Conf.Id}
 		GameUri          string
 		ClientUri        string
@@ -53,7 +53,14 @@ func run() {
 		servspc          space.Space
 		me               = model.Player{Id: config.Conf.Id}
 	)
-	for k, _ := range animations {
+	bullet, err := client.LoadAnimation(config.Conf.BulletPath)
+	if err != nil{
+		panic(err)
+	}
+	bullet.Start(config.Conf.AnimationSpeed)
+	animations["bullet"] = bullet
+
+	for k := range animations {
 		fmt.Print(k, " ")
 	}
 
@@ -89,25 +96,23 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
+	myspc.Put("joined")
 
 	go client.HandleEvents(myspc, state, &me)
 
 	win.SetSmooth(true)
 	for !win.Closed() {
 		//Handle controls -> send request
-		oldwep := r.CurrentWep
 		client.HandleControls(*win, &r)
-		if r.Move || r.Melee || r.Reload || r.Shoot || oldwep != r.CurrentWep {
-			servspc.Put(r)
-		}
+		myspc.Put(r)
+
 
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 		imd.Draw(win)
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		client.DrawAbilities(win, me)
-		fmt.Print("weapon= ",me.Weapon)
-		//fmt.Println(activeAnimations)
+
 		win.Update()
 
 		//Count FPS

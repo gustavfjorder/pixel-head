@@ -10,19 +10,26 @@ import (
 	"math/rand"
 )
 
+type ClientSpace struct {
+	Id string
+	Space
+}
+
 type Game struct {
 	space        Space
-	clientSpaces []Space
+	clientSpaces []ClientSpace
 	state        *model.State
 	currentMap   model.Map
 	currentLevel int
 }
 
-func NewGame(uri string, clientUris []string) Game {
-	clientSpaces := make([]Space, len(clientUris))
+func NewGame(uri string, clientUris, ids []string) Game {
+	clientSpaces := make([]ClientSpace, len(clientUris))
 	for i, clientUri := range clientUris {
-		clientSpaces[i] = NewSpace(clientUri)
-		clientSpaces[i].Put("done")
+		clientSpaces[i] = ClientSpace{
+			Id:    ids[i],
+			Space: NewSpace(clientUri),
+		}
 	}
 
 	return Game{
@@ -49,10 +56,11 @@ func (g *Game) Start() {
 
 	for _, space := range g.clientSpaces {
 		space.Put("map", g.currentMap)
-		space.Put("ready")
 	}
 
-	time.Sleep(time.Second * 2)
+	for _, space := range g.clientSpaces {
+		space.Get("joined")
+	}
 
 	fmt.Println("Starting game loop")
 	t := time.Tick(time.Second / 30)
@@ -74,34 +82,34 @@ func (g *Game) Start() {
 		breakable := false
 
 		for {
-			fmt.Println("Game looooooping")
 			select {
-			case <- levelPrepared:
+			case <-levelPrepared:
 				breakable = true
 			default:
 			}
 
+			g.state.Timestamp = time.Now().UnixNano()
+
 			g.handleRequests()
 			g.handleZombies()
+			g.handleShots()
 
 			for i, player := range g.state.Players {
-				fmt.Println(player.Stats.Health)
 				if player.Stats.Health <= 0 {
-					g.state.Players = append(g.state.Players[:i], g.state.Players[i + 1:]...)
+					g.state.Players = append(g.state.Players[:i], g.state.Players[i+1:]...)
 				}
 			}
 
 			for _, space := range g.clientSpaces {
-				if _, err := space.GetP("done"); err == nil {
-					g.putToSpaces(&space)
-				}
+				space.GetP("state", &model.State{})
+				space.Put("state", g.state)
 			}
 
 			if breakable && len(g.state.Zombies) == 0 || len(g.state.Players) == 0 {
 				break
 			}
 
-			<- t
+			<-t
 		}
 
 		if len(g.state.Players) == 0 {
@@ -110,7 +118,6 @@ func (g *Game) Start() {
 
 		g.currentLevel++
 
-		<- t
 	}
 }
 
@@ -118,20 +125,10 @@ func (g *Game) prepareLevel(done chan bool) {
 	level := model.Levels[g.currentLevel]
 
 	for i := 0; i < level.NumberOfZombies; i++ {
-		g.state.Zombies = append(g.state.Zombies, model.NewZombie(300 + (rand.Float64() * 100), 200 + (rand.Float64() * 100)))
+		g.state.Zombies = append(g.state.Zombies, model.NewZombie(300+(rand.Float64()*100), 200+(rand.Float64()*100)))
 	}
 
 	close(done)
-}
-
-func (g *Game) putToSpaces(space *Space) {
-	//space.Get("done")
-
-	fmt.Println("Putting to client space")
-
-	space.Put("state", g.state)
-
-	space.Put("done")
 }
 
 func setupSpace(uri string) Space {
@@ -145,7 +142,7 @@ func setupSpace(uri string) Space {
 	gob.Register([]model.Shoot{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
-	gob.Register(model.Line{})
+	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 
@@ -161,7 +158,7 @@ func setupSpace(uri string) Space {
 	space.QueryP(&[]model.Shoot{})
 	space.QueryP(&model.Map{})
 	space.QueryP(&model.Wall{})
-	space.QueryP(&model.Line{})
+	space.QueryP(&model.Segment{})
 	space.QueryP(&model.Point{})
 	space.QueryP(&model.State{})
 
@@ -170,11 +167,17 @@ func setupSpace(uri string) Space {
 
 func (g *Game) handleRequests() {
 	// Load incoming requests
-	rTuples, _ := g.space.GetAll(&model.Request{})
-
+	requests:= make([]model.Request, len(g.clientSpaces))
+	for i, space := range g.clientSpaces {
+		rtuples, _ := space.GetAll(&model.Request{})
+		for _, rtuple := range rtuples {
+			request := rtuple.GetFieldAt(0).(model.Request)
+			requests[i] = requests[i].Merge(request)
+		}
+		requests[i].PlayerId = space.Id
+	}
 	players := g.state.Players
-	for _, rTuple := range rTuples {
-		request := rTuple.GetFieldAt(0).(model.Request)
+	for _, request := range requests {
 
 		// Load player
 		var player *model.Player
@@ -189,10 +192,8 @@ func (g *Game) handleRequests() {
 		player.ChangeWeapon(request.CurrentWep)
 
 		if request.Move {
-			fmt.Println("Handling move request from:", player.Pos)
 			// todo: check if move is doable in map
-			player.Move(request.Dir)
-			fmt.Println("Moved to:", player.Pos)
+			player.Move(request.Dir, g.currentMap)
 		}
 
 		player.Reload = false
@@ -204,7 +205,7 @@ func (g *Game) handleRequests() {
 			player.GetWeapon().RefillMag()
 		} else if request.Shoot {
 			player.Shoot = true
-			playerShoots := player.GetWeapon().GenerateShoots(request.Timestamp, player.Pos)
+			playerShoots := player.GetWeapon().GenerateShoots(g.state.Timestamp, *player)
 			g.state.Shoots = append(g.state.Shoots, playerShoots...)
 		} else if request.Melee {
 			player.Melee = true
@@ -214,23 +215,36 @@ func (g *Game) handleRequests() {
 }
 
 func (g *Game) handleZombies() {
-	for i := range g.state.Zombies {
+	for i := len(g.state.Zombies) - 1; i >= 0; i-- {
 		zombie := &g.state.Zombies[i]
-
 		// Any shoots hitting the zombie
-		for i, shoot := range g.state.Shoots {
-			if shoot.GetPos() == zombie.Pos {
-				zombie.Stats.Health -= shoot.Weapon.Power
-				g.state.Shoots = append(g.state.Shoots[:i], g.state.Shoots[i + 1:]...)
+		for j := len(g.state.Shoots) - 1; j >= 0; j-- {
+			shoot := g.state.Shoots[j]
+			if shoot.GetPos(g.state.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
+				zombie.Stats.Health -= model.Weapons[shoot.Weapon].Power
+				g.state.Shoots[j] = g.state.Shoots[len(g.state.Shoots)-1]
+				g.state.Shoots = g.state.Shoots[:len(g.state.Shoots)-1]
 			}
 		}
 
 		if zombie.Stats.Health <= 0 {
-			g.state.Zombies = append(g.state.Zombies[:i], g.state.Zombies[i + 1:]...)
+			g.state.Zombies[i] = g.state.Zombies[len(g.state.Zombies)-1]
+			g.state.Zombies = g.state.Zombies[:len(g.state.Zombies)-1]
 			continue
 		}
 
 		zombie.Move(g.state.Players)
 		zombie.Attack(g.state.Players)
+	}
+}
+
+func (g *Game) handleShots() {
+	for i := len(g.state.Shoots) - 1; i >= 0; i-- {
+		shot := g.state.Shoots[i]
+		if shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len() > model.Weapons[shot.Weapon].Range {
+			g.state.Shoots[i] = g.state.Shoots[len(g.state.Shoots)-1]
+			g.state.Shoots = g.state.Shoots[:len(g.state.Shoots)-1]
+			continue
+		}
 	}
 }

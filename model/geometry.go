@@ -1,23 +1,61 @@
 package model
 
-import "math"
+import (
+	"math"
+	"github.com/faiface/pixel"
+)
 
 type Point struct {
 	X float64
 	Y float64
 }
 
-type Line struct {
+type Segment struct {
 	P Point
 	Q Point
 }
 
-func NewLine(p, q Point) Line {
-	return Line{P: p, Q: q}
+type Line struct {
+	Slope     float64
+	Intercept float64
+	X         float64
+	Vertical  bool
+}
+
+func NewLine(p, q Point) Segment {
+	return Segment{P: p, Q: q}
 }
 
 func NewPoint(x, y float64) Point {
 	return Point{X: x, Y: y}
+}
+
+func PointFrom(v pixel.Vec) Point {
+	return Point{X: v.X, Y: v.Y}
+}
+
+func (s Segment) Line() (line Line) {
+	if s.Q.X == s.P.X {
+		line.X = s.Q.X
+		line.Vertical = true
+		return line
+	}
+	left := s.Q
+	right := s.P
+	if s.P.X < s.Q.X {
+		left = s.P
+		right = s.Q
+	}
+	dx := right.X - left.X
+	dy := right.Y - left.Y
+	slope := dy / dx
+	intercept := (-left.X)*slope + left.Y
+	line = Line{
+		Intercept: intercept,
+		Slope:     slope,
+		Vertical:  false,
+	}
+	return line
 }
 
 //returns angle in range [-Pi;Pi]
@@ -38,43 +76,37 @@ func (this Point) Dist(other Point) float64 {
 	return math.Sqrt(dx*dx + dy*dy)
 }
 
-//implemented from https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-func (this Line) Intersect(other Line) bool {
-	var (
-		p1 = this.P
-		p2 = this.Q
-		q1 = other.P
-		q2 = other.Q
-		o1 = orientation(p1, q1, p2)
-		o2 = orientation(p1, q1, q2)
-		o3 = orientation(p2, q2, p1)
-		o4 = orientation(p2, q2, q1)
-	)
-	return (o1 != o2 && o3 != o4) ||
-		(o1 == 0 && onSegment(p1, p2, q1)) ||
-		(o2 == 0 && onSegment(p1, q2, q1)) ||
-		(o3 == 0 && onSegment(p2, p1, q2)) ||
-		(o4 == 0 && onSegment(p2, q1, q2))
-}
-
-func onSegment(p, q, r Point) bool {
-	return (q.X <= max(p.X, r.X) && q.X >= min(p.X, r.X)) &&
-		(q.Y <= max(p.Y, r.Y) && q.X >= min(p.Y, r.Y))
-}
-
-// 0 --> p, q and r are colinear
-// 1 --> Clockwise
-// 2 --> Counterclockwise
-func orientation(p, q, r Point) int {
-	val := (q.Y-p.Y)*(r.X-q.X) - ( q.X-p.X)*(r.Y-q.Y)
+func (this Segment) Intersect(other Segment) bool {
+	var x, y float64
+	thisLine := this.Line()
+	otherLine := other.Line()
 	switch {
-	case val == 0:
-		return 0
-	case val > 0:
-		return 1
+	case !thisLine.Vertical:
+		if !otherLine.Vertical {
+			if thisLine.Slope == otherLine.Slope{
+				return thisLine.Intercept == otherLine.Intercept
+			}
+			x = -(thisLine.Intercept - otherLine.Intercept) / (thisLine.Slope - otherLine.Slope)
+			y = thisLine.Intercept + thisLine.Slope * x
+		} else {
+			x = otherLine.X
+			y = thisLine.Intercept + thisLine.Slope * x
+		}
+	case !otherLine.Vertical:
+		x = thisLine.X
+		y = otherLine.Intercept + otherLine.Slope * x
 	default:
-		return 2
+		return otherLine.X == thisLine.X && (this.hasInRange(other.Q) || this.hasInRange(other.P))
 	}
+	return this.hasInRange(Point{x,y}) && other.hasInRange(Point{x,y})
+}
+
+func (s Segment) hasInRange(p Point) bool {
+	minX := min(s.P.X, s.Q.X)
+	maxX := max(s.P.X, s.Q.X)
+	minY := min(s.P.Y, s.Q.Y)
+	maxY := max(s.P.Y, s.Q.Y)
+	return minX <= p.X && maxX >= p.X && minY <= p.Y && maxY >= p.Y
 }
 
 func max(v1, v2 float64) float64 {

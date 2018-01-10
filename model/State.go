@@ -1,8 +1,8 @@
 package model
 
-
 type State struct {
-	Players []Player
-	Zombies []Zombie
-	Shoots  []Shoot
+	Timestamp int64
+	Players   []Player
+	Zombies   []Zombie
+	Shoots    []Shoot
 }
