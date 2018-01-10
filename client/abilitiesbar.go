@@ -61,7 +61,7 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player){
 
 	)
 	fmt.Println("weapon1212:",me.Weapon)
-	if myWep != model.Knife {
+	if myWep != model.KNIFE {
 		knife.Draw(win,scaled.Moved(knifeLocation))
 		fmt.Print("draw knifenormal")
 		} else{
@@ -70,25 +70,25 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player){
 
 	}
 
-	if !me.IsAvailable(model.Handgun) {
+	if !me.IsAvailable(model.HANDGUN) {
 		handgunDark.Draw(win, scaled.Moved(handgunLocation))
-	} else if myWep==model.Handgun{
+	} else if myWep==model.HANDGUN{
 		handgunSelected.Draw(win,scaled.Moved(handgunLocation))
 	} else {
 		handgun.Draw(win,scaled.Moved(handgunLocation))
 	}
 
-	if !me.IsAvailable(model.Rifle){
+	if !me.IsAvailable(model.RIFLE){
 		rifleDark.Draw(win,scaled.Moved(rifleLocation))
-	}else if myWep==model.Rifle{
+	}else if myWep==model.RIFLE{
 		rifleSelected.Draw(win,scaled.Moved(rifleLocation))
 	}else{
 		rifle.Draw(win,scaled.Moved(rifleLocation))
 	}
 
-	if !me.IsAvailable(model.Shotgun){
+	if !me.IsAvailable(model.SHOTGUN){
 		shotgunDark.Draw(win,scaled.Moved(shotgunLocation))
-	}else if myWep==model.Shotgun{
+	}else if myWep==model.SHOTGUN{
 		shotgunSelected.Draw(win,scaled.Moved(shotgunLocation))
 	}else{
 		shotgun.Draw(win,scaled.Moved(shotgunLocation))
