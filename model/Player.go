@@ -21,15 +21,15 @@ type Player struct {
 
 func NewPlayer(id string) Player {
 	weaponList := make([]Weapon, len(Weapons))
-	weaponList[Knife] = Weapons[Knife]
-	weaponList[Handgun] = Weapons[Handgun]
-	weaponList[Rifle] = Weapons[Rifle]
-	weaponList[Shotgun] = Weapons[Shotgun]
+	weaponList[KNIFE] = Weapons[KNIFE]
+	weaponList[HANDGUN] = Weapons[HANDGUN]
+	weaponList[RIFLE] = Weapons[RIFLE]
+	weaponList[SHOTGUN] = Weapons[SHOTGUN]
 	return Player{
 		Id:         id,
 		Pos:        pixel.V(200, 200),
 		Dir:        0,
-		Weapon:     Handgun,
+		Weapon:     HANDGUN,
 		WeaponList: weaponList,
 		Stats:      NewStats(HUMAN),
 	}

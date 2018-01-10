@@ -4,6 +4,7 @@ import (
 	"time"
 	"math"
 	"github.com/faiface/pixel"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 type Weapon struct {
@@ -20,18 +21,18 @@ type Weapon struct {
 }
 
 const (
-	Knife   = iota
-	Rifle
-	Shotgun
-	Handgun
+	KNIFE            = iota
+	RIFLE
+	SHOTGUN
+	HANDGUN
 )
 
 var Weapons = map[int]Weapon{
-	Rifle:
+	RIFLE:
 	{
-		Id:             Rifle,
+		Id:             RIFLE,
 		Name:           "rifle",
-		Power:          20,
+		Power:          10,
 		Range:          300,
 		Speed:          1000,
 		Magazine:       30,
@@ -39,22 +40,22 @@ var Weapons = map[int]Weapon{
 		Bullets:        0,
 		BulletsPerShot: 1,
 	},
-	Knife:
+	KNIFE:
 	{
-		Id:             Knife,
-		Name:           "knife",
-		Power:          20,
-		Range:          20,
-		Speed:          1000,
-		Magazine:       -1,
-		Capacity:       -1,
-		Bullets:        -1,
+		Id:       KNIFE,
+		Name:     "knife",
+		Power:    100,
+		Range:    20,
+		Speed:    1000,
+		Magazine: -1,
+		Capacity: -1,
+		Bullets:  -1,
 	},
-	Shotgun:
+	SHOTGUN:
 	{
-		Id:             Shotgun,
+		Id:             SHOTGUN,
 		Name:           "shotgun",
-		Power:          20,
+		Power:          5,
 		Range:          300,
 		Speed:          1000,
 		Magazine:       3,
@@ -63,11 +64,11 @@ var Weapons = map[int]Weapon{
 		BulletsPerShot: 5,
 		Spread:         5,
 	},
-	Handgun:
+	HANDGUN:
 	{
-		Id:             Handgun,
+		Id:             HANDGUN,
 		Name:           "handgun",
-		Power:          20,
+		Power:          5,
 		Range:          300,
 		Speed:          1000,
 		Magazine:       10,
@@ -90,7 +91,7 @@ func (weapon *Weapon) GenerateShoots(timestamp int64, player Player) []Shoot {
 
 	for i := 0; i < weapon.BulletsPerShot; i++ {
 		shoots[i] = Shoot{
-			Start:     player.Pos.Add(pixel.V(18, 0).Rotated(player.Dir - math.Pi/2)),
+			Start:     player.Pos.Add(pixel.V(config.GUNPOSX, config.GUNPOSY).Rotated(player.Dir - math.Pi/2)),
 			Angle:     player.Dir + (float64(angle) * (math.Pi / 180)),
 			StartTime: time.Now().UnixNano(),
 			Weapon:    weapon.Id,

@@ -58,7 +58,7 @@ func angle(this pixel.Vec, other pixel.Vec) float64 {
 }
 
 func (zombie Zombie) GetRange() float64{
-	return 50
+	return 60
 }
 
 func (zombie Zombie) GetHitbox() float64 {
