@@ -15,19 +15,21 @@ func NewLootbox(id string, x float64, y float64, randPos bool, weapon int) Lootb
 	if randPos{
 		return Lootbox{
 			Id: id,
+
 			//todo: instead of 900+100 put map dimensions
 			Pos: pixel.V(rand.Float64()*900+100,rand.Float64()*900+100),
-			Weapon: Weapons[weapon],
+			Weapon: NewWeapon(weapon),
+
 		}
 	}
 	return Lootbox{
 		Id: id,
 		Pos: pixel.V(x,y),
-		Weapon: Weapons[weapon],
+		Weapon: NewWeapon(weapon),
 	}
 }
 
 func (player *Player) PickupLootbox(lootbox Lootbox){
-	player.WeaponList[lootbox.Weapon.Id].Bullets+=lootbox.Weapon.Magazine
+	player.WeaponList[lootbox.Weapon.Id].Bullets+=lootbox.Weapon.MagazineCurrent
 }
 

@@ -7,7 +7,7 @@ const (
 	//Zombie sprite settings
 	ZOMBIE_WIDTH = 30.0
 
-	BULLET_WIDTH = 2.0
+	BULLET_WIDTH = 10.0
 
 	//Don't touch below this point
 	HUMAN_PIC_WIDTH         = 148.0
@@ -25,6 +25,7 @@ const (
 	BULLET_SCALE             = BULLET_WIDTH / BULLET_PIC_WIDTH
 	BULLET_HEIGHT            = BULLET_WIDTH * BULLET_HEIGHT_WIDTH_FRAC
 
+	//Made to fit with shotgun/rifle
 	GUNPOSX = HUMAN_WIDTH * 0.34
 	GUNPOSY = HUMAN_HEIGHT * 0.5
 )

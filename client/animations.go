@@ -121,7 +121,7 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 		default:
 			movement = "idle"
 		}
-		prefix := Prefix("survivor", player.GetWeapon().Name, movement)
+		prefix := Prefix("survivor", player.GetWeapon().GetName(), movement)
 
 		anim, ok := currentAnims[player.Id]
 		if !ok {

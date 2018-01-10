@@ -189,9 +189,6 @@ func (g *Game) handleRequests() {
 			}
 		}
 
-		// Change weapon
-		player.ChangeWeapon(request.CurrentWep)
-
 		if request.Move {
 			// todo: check if move is doable in map
 			player.Move(request.Dir, g.currentMap)
@@ -200,15 +197,25 @@ func (g *Game) handleRequests() {
 		player.Reload = false
 		player.Shoot = false
 		player.Melee = false
+		player.ActionDelay--
+		fmt.Println(player.GetWeapon().Bullets, player.GetWeapon().MagazineCurrent)
 
-		if request.Reload {
-			player.Reload = true
-			player.GetWeapon().RefillMag()
-		} else if request.Shoot {
-			player.Shoot = true
+		//Action priority is like so: weapon change > reload > shoot > melee
+		switch {
+		case player.ActionDelay > 0:
+			break
+		case player.GetWeapon().Id != request.Weapon && player.IsAvailable(request.Weapon):
+			player.ChangeWeapon(request.Weapon)
+		case request.Reload && player.GetWeapon().RefillMag():
+			player.Reload= true
+			player.ActionDelay = player.GetWeapon().GetReloadSpeed()
+		case request.Shoot && player.GetWeapon().MagazineCurrent > 0:
 			playerShoots := player.GetWeapon().GenerateShoots(g.state.Timestamp, *player)
+			fmt.Println(len(playerShoots))
+			player.Shoot = len(playerShoots) > 0
 			g.state.Shoots = append(g.state.Shoots, playerShoots...)
-		} else if request.Melee {
+			player.ActionDelay = player.GetWeapon().GetShootDelay()
+		case request.Melee:
 			player.Melee = true
 			// todo: create melee attack
 		}
@@ -222,7 +229,7 @@ func (g *Game) handleZombies() {
 		for j := len(g.state.Shoots) - 1; j >= 0; j-- {
 			shoot := g.state.Shoots[j]
 			if shoot.GetPos(g.state.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
-				zombie.Stats.Health -= model.Weapons[shoot.Weapon].Power
+				zombie.Stats.Health -= model.GetWeaponRef(shoot.Weapon).GetPower()
 				g.state.Shoots[j] = g.state.Shoots[len(g.state.Shoots)-1]
 				g.state.Shoots = g.state.Shoots[:len(g.state.Shoots)-1]
 			}
@@ -242,7 +249,7 @@ func (g *Game) handleZombies() {
 func (g *Game) handleShots() {
 	for i := len(g.state.Shoots) - 1; i >= 0; i-- {
 		shot := g.state.Shoots[i]
-		if shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len() > model.Weapons[shot.Weapon].Range {
+		if shot.GetPos(g.state.Timestamp).Sub(shot.Start).Len() > model.GetWeaponRef(shot.Weapon).GetRange() {
 			g.state.Shoots[i] = g.state.Shoots[len(g.state.Shoots)-1]
 			g.state.Shoots = g.state.Shoots[:len(g.state.Shoots)-1]
 			continue
