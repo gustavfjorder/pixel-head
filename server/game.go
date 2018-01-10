@@ -199,8 +199,6 @@ func (g *Game) handleRequests() {
 			player.Move(request.Dir, g.currentMap)
 		}
 
-		fmt.Println(player.GetWeapon().Bullets, player.GetWeapon().MagazineCurrent)
-
 		//Action priority is like so: weapon change > reload > shoot > melee
 		switch {
 		case player.ActionDelay > 0:
@@ -212,7 +210,6 @@ func (g *Game) handleRequests() {
 			player.ActionDelay = player.GetWeapon().GetReloadSpeed()
 		case request.Shoot && player.GetWeapon().MagazineCurrent > 0:
 			playerShoots := player.GetWeapon().GenerateShoots(g.state.Timestamp, *player)
-			fmt.Println(len(playerShoots))
 			player.Shoot = len(playerShoots) > 0
 			g.state.Shoots = append(g.state.Shoots, playerShoots...)
 			player.ActionDelay = player.GetWeapon().GetShootDelay()
@@ -229,6 +226,7 @@ func (g *Game) handleRequests() {
 func (g *Game) handleZombies() {
 	for i := len(g.state.Zombies) - 1; i >= 0; i-- {
 		zombie := &g.state.Zombies[i]
+
 		// Any shoots hitting the zombie
 		for j := len(g.state.Shoots) - 1; j >= 0; j-- {
 			shoot := g.state.Shoots[j]
@@ -239,6 +237,7 @@ func (g *Game) handleZombies() {
 			}
 		}
 
+		//Remove all zombies at zero health
 		if zombie.Stats.Health <= 0 {
 			g.state.Zombies[i] = g.state.Zombies[len(g.state.Zombies)-1]
 			g.state.Zombies = g.state.Zombies[:len(g.state.Zombies)-1]
