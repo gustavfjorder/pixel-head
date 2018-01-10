@@ -112,6 +112,7 @@ func run() {
 		imd.Draw(win)
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		client.DrawAbilities(win, me)
+
 		win.Update()
 
 		//Count FPS
