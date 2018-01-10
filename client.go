@@ -106,6 +106,7 @@ func run() {
 		imd.Draw(win)
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		client.DrawAbilities(win, me)
+		fmt.Print("weapon= ",me.Weapon)
 		//fmt.Println(activeAnimations)
 		win.Update()
 

@@ -17,19 +17,25 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 		//knife
 
 		knife = ab["knife.png"].Sprites[0]
+		knifeSelected = ab["knifeSelected.png"].Sprites[0]
 
 		//handgun
 		handgun = ab["handgun.png"].Sprites[0]
-
 		handgunDark = ab["handgunDark.png"].Sprites[0]
+		handgunSelected = ab["handgunSelected.png"].Sprites[0]
+
 
 		//rifle
 		rifle = ab["rifle.png"].Sprites[0]
 		rifleDark = ab["rifleDark.png"].Sprites[0]
+		rifleSelected = ab["rifleSelected.png"].Sprites[0]
+
 
 		//shotgun
 		shotgun = ab["shotgun.png"].Sprites[0]
 		shotgunDark = ab["shotgunDark.png"].Sprites[0]
+		shotgunSelected = ab["shotgunSelected.png"].Sprites[0]
+
 	)
 	abilitiesX:=win.Bounds().Max.X/2
 	abilitiesY:=win.Bounds().Min.Y+abilitiesBar.Picture().Bounds().Max.Y/2
@@ -39,27 +45,35 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 	handgunLocation:=pixel.Vec{abilitiesX-(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
 	rifleLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
 	shotgunLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
-
-	if me.IsAvailable(model.Knife)|| !me.IsAvailable(model.Knife) {
+	myWep:=me.Weapon
+	if myWep != model.Knife {
 		knife.Draw(win,scaled.Moved(knifeLocation))
-	}
-
-	if me.IsAvailable(model.Handgun){
-		handgun.Draw(win,scaled.Moved(handgunLocation))
 	} else{
-		handgunDark.Draw(win,scaled.Moved(handgunLocation))
+		knifeSelected.Draw(win,scaled.Moved(knifeLocation))
 	}
 
-	if me.IsAvailable(model.Rifle){
-		rifle.Draw(win,scaled.Moved(rifleLocation))
-	}else{
+	if me.IsAvailable(model.Handgun) {
+		handgunDark.Draw(win, scaled.Moved(handgunLocation))
+	} else if me.Weapon==model.Handgun{
+		handgunSelected.Draw(win,scaled.Moved(handgunLocation))
+	} else {
+		handgun.Draw(win,scaled.Moved(handgunLocation))
+	}
+
+	if !me.IsAvailable(model.Rifle){
 		rifleDark.Draw(win,scaled.Moved(rifleLocation))
+	}else if myWep==model.Rifle{
+		rifleSelected.Draw(win,scaled.Moved(rifleLocation))
+	}else{
+		rifle.Draw(win,scaled.Moved(rifleLocation))
 	}
 
-	if me.IsAvailable(model.Shotgun){
-		shotgun.Draw(win,scaled.Moved(shotgunLocation))
-	}else{
+	if !me.IsAvailable(model.Shotgun){
 		shotgunDark.Draw(win,scaled.Moved(shotgunLocation))
+	}else if myWep==model.Shotgun{
+		shotgunSelected.Draw(win,scaled.Moved(shotgunLocation))
+	}else{
+		shotgun.Draw(win,scaled.Moved(shotgunLocation))
 	}
 	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesX,abilitiesY)))
 
