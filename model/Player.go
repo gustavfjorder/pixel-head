@@ -53,8 +53,17 @@ func (player *Player) NewWeapon(weapon Weapon) {
 	}
 }
 
-func (player Player) GetWeapon() *Weapon {
-	return &player.WeaponList[player.Weapon]
+func (player *Player) GetWeapon() *Weapon {
+	if player.Weapon < len(player.WeaponList) {
+		return &player.WeaponList[player.Weapon]
+	} else if len(player.WeaponList) > 0{
+		player.Weapon = 0
+		return &player.WeaponList[player.Weapon]
+	} else {
+		player.WeaponList = append(player.WeaponList, NewWeapon(KNIFE))
+		player.Weapon = 0
+		return &player.WeaponList[player.Weapon]
+	}
 }
 
 func (player *Player) ChangeWeapon(weaponNum int) {

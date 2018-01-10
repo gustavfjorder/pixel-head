@@ -57,7 +57,7 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player){
 		shotgunLocation=pixel.Vec{abilitiesBarPosX +(abilitiesBar.Picture().Bounds().Max.X/2.8), abilitiesBarPosY}
 
 		//myWep
-		myWep=me.Weapon
+		myWep=me.GetWeapon().Id
 
 	)
 	fmt.Println("weapon1212:",me.Weapon)

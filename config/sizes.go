@@ -7,7 +7,7 @@ const (
 	//Zombie sprite settings
 	ZOMBIE_WIDTH = 30.0
 
-	BULLET_WIDTH = 10.0
+	BULLET_WIDTH = 3.0
 
 	//Don't touch below this point
 	HUMAN_PIC_WIDTH         = 148.0
