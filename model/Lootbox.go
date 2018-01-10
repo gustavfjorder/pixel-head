@@ -15,9 +15,11 @@ func NewLootbox(id string, x float64, y float64, randPos bool, weapon int) Lootb
 	if randPos{
 		return Lootbox{
 			Id: id,
-			//todo: multiply random numbers by map bounds
-			Pos: pixel.V(rand.Float64(),rand.Float64()),
+
+			//todo: instead of 900+100 put map dimensions
+			Pos: pixel.V(rand.Float64()*900+100,rand.Float64()*900+100),
 			Weapon: NewWeapon(weapon),
+
 		}
 	}
 	return Lootbox{

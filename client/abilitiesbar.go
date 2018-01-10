@@ -6,6 +6,8 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/config"
 	"fmt"
+	"github.com/faiface/pixel/text"
+	"golang.org/x/image/font/basicfont"
 )
 
 var ab = Load(config.Conf.AbilityPath, "", IMG)
@@ -68,6 +70,7 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player){
 		fmt.Print("draw knifeselected")
 		knifeSelected.Draw(win, scaled.Moved(knifeLocation))
 
+
 	}
 
 	if !me.IsAvailable(model.HANDGUN) {
@@ -93,6 +96,18 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player){
 	}else{
 		shotgun.Draw(win,scaled.Moved(shotgunLocation))
 	}
+	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
+	weaponText := text.New(pixel.V(abilitiesBarPosX+abilitiesBar.Picture().Bounds().Max.X/1.9,abilitiesBarPosY*0.9), basicAtlas)
+	bulletsText := text.New(pixel.V(abilitiesBarPosX-abilitiesBar.Picture().Bounds().Max.X/1.2,abilitiesBarPosY*0.9),basicAtlas)
+
+	fmt.Fprintln(weaponText, model.GetWeaponRef(myWep).GetName())
+	if myWep!=model.KNIFE{
+		fmt.Fprintln(bulletsText,me.WeaponList[myWep].Bullets)
+	}
+
+	weaponText.Draw(win, pixel.IM.Scaled(weaponText.Orig,2))
+	bulletsText.Draw(win,pixel.IM.Scaled(bulletsText.Orig,2))
+
 	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesBarPosX, abilitiesBarPosY)))
 
 }

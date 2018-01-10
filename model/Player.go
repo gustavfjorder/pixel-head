@@ -21,6 +21,7 @@ type Player struct {
 }
 
 func NewPlayer(id string) Player {
+
 	weaponList := make([]Weapon, 0)
 	weaponList = append(weaponList, NewWeapon(KNIFE), NewWeapon(HANDGUN), NewWeapon(SHOTGUN), NewWeapon(RIFLE))
 	return Player{
