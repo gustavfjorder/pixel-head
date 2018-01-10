@@ -5,11 +5,15 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/config"
+	"fmt"
 )
 
 var ab = Load(config.Conf.AbilityPath, "", IMG)
 
-func DrawAbilities(win *pixelgl.Window, me model.Player){
+func DrawAbilities(win *pixelgl.Window, me *model.Player){
+	if me==nil{
+		return
+	}
 	var(
 		//abilities bar
 		abilitiesBar = ab["abilitiesBar.png"].Sprites[0]
@@ -36,25 +40,39 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 		shotgunDark = ab["shotgunDark.png"].Sprites[0]
 		shotgunSelected = ab["shotgunSelected.png"].Sprites[0]
 
+		//dimensions of abilities bar
+		abilitiesBarPosX =win.Bounds().Max.X/2
+		abilitiesBarPosY =win.Bounds().Min.Y+abilitiesBar.Picture().Bounds().Max.Y/2
+
+		//the factor by which we scale the weapon icons so they fit in the abilities bar
+		//fractionOfAbilitiesBar is the height of the icon as a fraction of the height of the abilities bar
+		//fractionOfAbilitiesBar = float64(2/3)
+		scalefactor = pixel.V(abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*32/40,abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*32/40)
+		scaled = pixel.IM.ScaledXY(pixel.ZV,scalefactor)
+
+		//locations of weapon icons
+		knifeLocation=pixel.Vec{abilitiesBarPosX -(abilitiesBar.Picture().Bounds().Max.X/2.8), abilitiesBarPosY}
+		handgunLocation=pixel.Vec{abilitiesBarPosX -(abilitiesBar.Picture().Bounds().Max.X/8.8), abilitiesBarPosY}
+		rifleLocation=pixel.Vec{abilitiesBarPosX +(abilitiesBar.Picture().Bounds().Max.X/8.5), abilitiesBarPosY}
+		shotgunLocation=pixel.Vec{abilitiesBarPosX +(abilitiesBar.Picture().Bounds().Max.X/2.8), abilitiesBarPosY}
+
+		//myWep
+		myWep=me.Weapon
+
 	)
-	abilitiesX:=win.Bounds().Max.X/2
-	abilitiesY:=win.Bounds().Min.Y+abilitiesBar.Picture().Bounds().Max.Y/2
-	scalefactor:=pixel.V(abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*2/3,abilitiesBar.Picture().Bounds().Max.Y/knife.Picture().Bounds().Max.Y*2/3)
-	scaled:=pixel.IM.ScaledXY(pixel.ZV,scalefactor)
-	knifeLocation:=pixel.Vec{abilitiesX-(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
-	handgunLocation:=pixel.Vec{abilitiesX-(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
-	rifleLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/8.8),abilitiesY}
-	shotgunLocation:=pixel.Vec{abilitiesX+(abilitiesBar.Picture().Bounds().Max.X/2.8),abilitiesY}
-	myWep:=me.Weapon
+	fmt.Println("weapon1212:",me.Weapon)
 	if myWep != model.KNIFE {
 		knife.Draw(win,scaled.Moved(knifeLocation))
-	} else{
-		knifeSelected.Draw(win,scaled.Moved(knifeLocation))
+		fmt.Print("draw knifenormal")
+		} else{
+		fmt.Print("draw knifeselected")
+		knifeSelected.Draw(win, scaled.Moved(knifeLocation))
+
 	}
 
-	if me.IsAvailable(model.HANDGUN) {
+	if !me.IsAvailable(model.HANDGUN) {
 		handgunDark.Draw(win, scaled.Moved(handgunLocation))
-	} else if me.Weapon==model.HANDGUN{
+	} else if myWep==model.HANDGUN{
 		handgunSelected.Draw(win,scaled.Moved(handgunLocation))
 	} else {
 		handgun.Draw(win,scaled.Moved(handgunLocation))
@@ -75,6 +93,6 @@ func DrawAbilities(win *pixelgl.Window, me model.Player){
 	}else{
 		shotgun.Draw(win,scaled.Moved(shotgunLocation))
 	}
-	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesX,abilitiesY)))
+	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesBarPosX, abilitiesBarPosY)))
 
 }

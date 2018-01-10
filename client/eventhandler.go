@@ -5,6 +5,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 	"time"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
@@ -23,8 +24,9 @@ func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
 		spc.Put("done")
 
 		for _,p := range state.Players{
-			if p.Id == me.Id {
-				me = &p
+			if config.Conf.Id == p.Id {
+				*me = p
+				fmt.Print("Setting id 123")
 			}
 		}
 
