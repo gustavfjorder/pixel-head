@@ -9,7 +9,7 @@ import (
 	"github.com/pspaces/gospace/space"
 )
 
-func HandleControls(spc space.Space, win *pixelgl.Window) {
+func HandleControls(spc *space.Space, win *pixelgl.Window) {
 	t := time.Tick(Conf.ServerHandleSpeed)
 	r := model.Request{}
 	for {

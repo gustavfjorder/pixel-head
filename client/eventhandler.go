@@ -8,7 +8,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 )
 
-func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
+func HandleEvents(spc *space.Space, state *model.State, me *model.Player) {
 	//Handle loop
 	sec := time.Tick(time.Second)
 	count := 0
@@ -18,8 +18,6 @@ func HandleEvents(spc space.Space, state *model.State, me *model.Player) {
 		if err != nil {
 			continue
 		}
-
-		spc.Put("done")
 
 		for _,p := range state.Players{
 			if config.Conf.Id == p.Id {

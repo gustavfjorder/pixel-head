@@ -47,7 +47,7 @@ func (zombie *Zombie) Move(players []Player) {
 	}
 	zombie.Dir = math.Mod(zombie.Dir, math.Pi*2)
 
-	zombie.Pos = zombie.Pos.Add(pixel.V(zombie.Stats.MoveSpeed, 0).Rotated(zombie.Dir))
+	zombie.Pos = zombie.Pos.Add(pixel.V(zombie.Stats.GetMoveSpeed(), 0).Rotated(zombie.Dir))
 
 }
 
@@ -63,7 +63,7 @@ func (zombie *Zombie) Attack(players []Player) {
 				player := &players[i]
 				if player.Id == zombie.TargetId {
 					if zombie.Pos.Sub(player.Pos).Len() <= zombie.GetRange() {
-						player.Stats.Health -= zombie.Stats.Power
+						player.Stats.Health -= zombie.Stats.GetPower()
 					}
 					break
 				}
@@ -72,7 +72,8 @@ func (zombie *Zombie) Attack(players []Player) {
 		}
 	}
 	for _, player := range players {
-		if zombie.Pos.Sub(player.Pos).Len() <= zombie.GetRange() {
+		if zombie.Pos.Sub(player.Pos).Len() <= zombie.GetRange() &&
+			math.Abs(zombie.Dir - angle(zombie.Pos, player.Pos)) <= math.Pi/2 {
 			zombie.Dir = angle(zombie.Pos, player.Pos)
 			zombie.Attacking = true
 			zombie.AttackDelay = zombie.GetAttackDelay()

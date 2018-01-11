@@ -13,26 +13,6 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-func registerModels() {
-	// Register models for encoding to space
-	gob.Register(model.Request{})
-	gob.Register(model.Player{})
-	gob.Register([]model.Player{})
-	gob.Register(model.Zombie{})
-	gob.Register([]model.Zombie{})
-	gob.Register(model.Shoot{})
-	gob.Register([]model.Shoot{})
-	gob.Register(model.Map{})
-	gob.Register(model.Wall{})
-	gob.Register(model.Segment{})
-	gob.Register(model.Point{})
-	gob.Register(model.Map{})
-	gob.Register(model.Wall{})
-	gob.Register(model.Segment{})
-	gob.Register(model.Point{})
-	gob.Register(model.State{})
-}
-
 func run() {
 	//config.LoadJson("settings.json", &config.Conf)
 	registerModels()
@@ -42,12 +22,12 @@ func run() {
 		frames           = 0
 		second           = time.Tick(time.Second)
 		fps              = time.Tick(config.Conf.Fps)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
-		state            = &model.State{}
-		activeAnimations = make(map[string]*client.Animation)
-		myUri, gameMap   = gotoLounge()
-		imd              = client.LoadMap(gameMap)
 		me               model.Player
+		state            model.State
+		activeAnimations = make(map[string]*client.Animation)
+		spc, gameMap     = gotoLounge()
+		imd              = client.LoadMap(gameMap)
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
 	)
 
 	//Make window
@@ -58,16 +38,15 @@ func run() {
 	win.SetSmooth(true)
 
 	//Start handlers
-	go client.HandleEvents(space.NewRemoteSpace(myUri), state, &me)
-
-	go client.HandleControls(space.NewRemoteSpace(myUri), win)
+	go client.HandleEvents(&spc, &state, &me)
+	go client.HandleControls(&spc, win)
 
 	for !win.Closed() {
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 
 		imd.Draw(win)
-		client.HandleAnimations(win, *state, animations, activeAnimations)
+		client.HandleAnimations(win, state, animations, activeAnimations)
 		client.DrawAbilities(win, &me)
 		client.DrawHealthbar(win, &me)
 
@@ -88,7 +67,8 @@ func run() {
 	config.SaveConfig("settings.json")
 }
 
-func gotoLounge() (myUri string, m model.Map) {
+func gotoLounge() (spc space.Space, m model.Map) {
+	var myUri string
 	if config.Conf.Online {
 		servspc := space.NewRemoteSpace(config.Conf.LoungeUri)
 		_, err := servspc.Put("request", config.Conf.Id)
@@ -106,7 +86,7 @@ func gotoLounge() (myUri string, m model.Map) {
 		//go server.StartGame(myuri, []string{config.Conf.Id})
 		//servspc = space.NewRemoteSpace(myuri)
 	}
-	spc := space.NewRemoteSpace(myUri)
+	spc = space.NewRemoteSpace(myUri)
 	// Load map from server
 	spc.Get("map", &m)
 	spc.Put("joined")
@@ -116,4 +96,24 @@ func gotoLounge() (myUri string, m model.Map) {
 
 func main() {
 	pixelgl.Run(run)
+}
+
+func registerModels() {
+	// Register models for encoding to space
+	gob.Register(model.Request{})
+	gob.Register(model.Player{})
+	gob.Register([]model.Player{})
+	gob.Register(model.Zombie{})
+	gob.Register([]model.Zombie{})
+	gob.Register(model.Shoot{})
+	gob.Register([]model.Shoot{})
+	gob.Register(model.Map{})
+	gob.Register(model.Wall{})
+	gob.Register(model.Segment{})
+	gob.Register(model.Point{})
+	gob.Register(model.Map{})
+	gob.Register(model.Wall{})
+	gob.Register(model.Segment{})
+	gob.Register(model.Point{})
+	gob.Register(model.State{})
 }
