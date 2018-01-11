@@ -20,33 +20,32 @@ func (request Request) GetRotation() pixel.Matrix {
 	return pixel.IM.Rotated(pixel.V(0,0), request.Dir)
 }
 
-func (request Request) Merge(other Request) (merged Request) {
-	merged.Move = request.Move || other.Move
-	merged.PlayerId = request.PlayerId
+func (request *Request) Merge(other Request) {
+	if request.PlayerId != other.PlayerId {
+		return
+	}
+	request.Move = request.Move || other.Move
 	switch { // Handles direction
 	case request.Dir == math.NaN():
-		merged.Dir = other.Dir
+		request.Dir = other.Dir
 	case other.Dir == math.NaN():
-		merged.Dir = request.Dir
+		request.Dir = request.Dir
 	default:
 		if request.Timestamp > other.Timestamp {
-			merged.Dir = request.Dir
+			request.Dir = request.Dir
 		}else {
-			merged.Dir = other.Dir
+			request.Dir = other.Dir
 		}
 	}
 	switch {
 	case request.Reload || other.Reload:
-		merged.Reload = true
+		request.Reload = true
 	case request.Shoot || other.Shoot:
-		merged.Shoot = true
+		request.Shoot = true
 	case request.Melee || other.Melee:
-		merged.Melee = true
+		request.Melee = true
 	}
-	if request.Timestamp > other.Timestamp {
-		merged.Weapon = request.Weapon
-	}else{
-		merged.Weapon = other.Weapon
+	if other.Timestamp > request.Timestamp {
+		request.Weapon = other.Weapon
 	}
-	return merged
 }

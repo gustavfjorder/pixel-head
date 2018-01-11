@@ -3,8 +3,9 @@ package model
 import (
 	"github.com/faiface/pixel"
 	"math"
-	"fmt"
 	"time"
+	"github.com/pkg/errors"
+	"fmt"
 )
 
 type Player struct {
@@ -30,7 +31,7 @@ func NewPlayer(id string) Player {
 		Id:         id,
 		Pos:        pixel.V(200, 200),
 		Dir:        0,
-		Weapon:     HANDGUN,
+		Weapon:     0,
 		WeaponList: weaponList,
 		Stats:      NewStats(HUMAN),
 	}
@@ -45,7 +46,6 @@ func (player *Player) Move(dir float64, g *Game) {
 		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed() , 0).Rotated(player.Dir))
 		for _, wall := range g.CurrentMap.Walls {
 			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
-				fmt.Println("Invalid move")
 				return
 			}
 		}
@@ -59,17 +59,15 @@ func (player *Player) NewWeapon(weapon Weapon) {
 	}
 }
 
-func (player *Player) GetWeapon() *Weapon {
-	if player.Weapon < len(player.WeaponList) {
-		return &player.WeaponList[player.Weapon]
-	} else if len(player.WeaponList) > 0 {
-		player.Weapon = 0
-		return &player.WeaponList[player.Weapon]
+func (player *Player) GetWeapon() (weapon *Weapon,e error) {
+	if player.Weapon < len(player.WeaponList){
+		weapon = &player.WeaponList[player.Weapon]
+		fmt.Println(weapon.GetName(), player.Id, player.WeaponList, player.Weapon)
 	} else {
-		player.WeaponList = append(player.WeaponList, NewWeapon(KNIFE))
-		player.Weapon = 0
-		return &player.WeaponList[player.Weapon]
+		panic(errors.New("Wopsi"))
 	}
+	return weapon, e
+
 }
 
 func (player *Player) ChangeWeapon(weaponNum int) {
@@ -92,4 +90,16 @@ func (player *Player) IsAvailable(weaponNum int) bool {
 
 func (player Player) GetTurnDelay() time.Duration {
 	return time.Second / 15
+}
+
+func findPlayer(players []Player, id string) (p *Player,e error){
+	p = &Player{}
+	for i, player := range players {
+		if id == player.Id{
+			p = &players[i]
+			return
+		}
+	}
+	e = errors.New("Unable to find player")
+	return
 }

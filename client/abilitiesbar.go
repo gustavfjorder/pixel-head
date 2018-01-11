@@ -14,6 +14,11 @@ import (
 var ab = Load(config.Conf.AbilityPath, "", IMG)
 
 func DrawAbilities(win *pixelgl.Window, me model.Player) {
+	//myWep
+	wep, err := me.GetWeapon()
+	if err != nil {
+		return
+	}
 	var (
 		//abilities bar
 		abilitiesBar = ab["abilitiesBar.png"].Sprites[0]
@@ -35,10 +40,9 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 		handgunLocation = pixel.Vec{abilitiesBarPosX - (abilitiesBar.Picture().Bounds().Max.X / 8.8), abilitiesBarPosY}
 		rifleLocation   = pixel.Vec{abilitiesBarPosX + (abilitiesBar.Picture().Bounds().Max.X / 8.5), abilitiesBarPosY}
 		shotgunLocation = pixel.Vec{abilitiesBarPosX + (abilitiesBar.Picture().Bounds().Max.X / 2.8), abilitiesBarPosY}
-
-		//myWep
-		myWep = me.GetWeapon().Id
+		myWep = wep.Id
 	)
+
 	ab[getSpriteName(me, model.KNIFE)].Sprites[0].Draw(win, scaled.Moved(knifeLocation))
 	ab[getSpriteName(me, model.HANDGUN)].Sprites[0].Draw(win, scaled.Moved(handgunLocation))
 	ab[getSpriteName(me, model.RIFLE)].Sprites[0].Draw(win, scaled.Moved(rifleLocation))
@@ -51,7 +55,7 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 	var bulletTextSize float64
 	fmt.Fprintln(weaponText, model.GetWeaponRef(myWep).GetName())
 	if myWep != model.KNIFE {
-		s := fmt.Sprint(me.GetWeapon().Bullets, me.GetWeapon().MagazineCurrent)
+		s := fmt.Sprint(wep.Bullets, wep.MagazineCurrent)
 		bulletTextSize = bulletsText.LineHeight * 1.3 * float64(len(s))
 		fmt.Fprintln(bulletsText, s)
 	}
@@ -63,8 +67,9 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 }
 
 func getSpriteName(me model.Player, weapon int) string {
+	wep, _ := me.GetWeapon()
 	s := model.GetWeaponRef(weapon).GetName()
-	if me.GetWeapon().Id == weapon {
+	if wep.Id == weapon {
 		s += "Selected"
 	} else if !me.IsAvailable(weapon){
 		s += "Dark"

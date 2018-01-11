@@ -11,7 +11,7 @@ import (
 
 func HandleControls(spc *space.Space, win *pixelgl.Window) {
 	t := time.Tick(Conf.ServerHandleSpeed)
-	r := model.Request{}
+	r := model.Request{PlayerId:Conf.Id}
 	for {
 		angle, i := 0.0, 0
 		r.Shoot = false
@@ -62,6 +62,7 @@ func HandleControls(spc *space.Space, win *pixelgl.Window) {
 		} else if win.Pressed(Conf.MeleeKey) {
 			r.Melee = true
 		}
+		r.PlayerId = Conf.Id
 		spc.Put(r)
 		<-t
 	}

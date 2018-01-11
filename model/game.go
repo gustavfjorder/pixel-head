@@ -1,16 +1,22 @@
 package model
 
-import "math/rand"
+import (
+	"math/rand"
+	"fmt"
+)
 
 type Game struct {
-	PlayerIds    []string
+	PlayerIds    map[string]bool // Is true if player is active in game
 	State        State
 	CurrentMap   Map
 	CurrentLevel int
 }
 
 func NewGame(ids []string, mapName string) (game Game) {
-	game.PlayerIds = ids
+	game.PlayerIds = make(map[string]bool)
+	for _, id := range ids {
+		game.PlayerIds[id] = true
+	}
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
@@ -31,46 +37,49 @@ func (g *Game) PrepareLevel(end <-chan bool) {
 
 func (g *Game) HandleRequests(requests []Request) {
 	// Load incoming requests
-
-	players := g.State.Players
 	for _, request := range requests {
 
 		// Load player
-		var player *Player
-		for i, p := range players {
-			if p.Id == request.PlayerId {
-				player = &(players)[i]
-				break
-			}
+		player, err := findPlayer(g.State.Players, request.PlayerId)
+
+		if err != nil {
+			fmt.Println(err)
+			continue
 		}
+
+		weapon, err := player.GetWeapon()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		if request.Move {
+			player.Move(request.Dir, g)
+		}
+
 		if g.State.Timestamp >= player.ActionDelay {
 			player.Reload = false
 			player.Shoot = false
 			player.Melee = false
 		}
 
-		if request.Move {
-			// todo: check if move is doable in map
-			player.Move(request.Dir, g)
-		}
-
 		//Action priority is like so: weapon change > reload > shoot > melee
 		switch {
 		case g.State.Timestamp < player.ActionDelay:
 			break
-		case player.GetWeapon().Id != request.Weapon && player.IsAvailable(request.Weapon):
+		case weapon.Id != request.Weapon && player.IsAvailable(request.Weapon):
 			player.ChangeWeapon(request.Weapon)
-		case request.Reload && player.GetWeapon().RefillMag():
+		case request.Reload && weapon.RefillMag():
 			player.Reload = true
-			player.ActionDelay = player.GetWeapon().GetReloadSpeed() + g.State.Timestamp
-		case request.Shoot && player.GetWeapon().MagazineCurrent > 0:
-			playerShoots := player.GetWeapon().GenerateShoots(g.State.Timestamp, *player)
+			player.ActionDelay = weapon.GetReloadSpeed() + g.State.Timestamp
+		case request.Shoot && weapon.MagazineCurrent > 0:
+			playerShoots := weapon.GenerateShoots(g.State.Timestamp, *player)
 			player.Shoot = len(playerShoots) > 0
 			g.State.Shoots = append(g.State.Shoots, playerShoots...)
-			player.ActionDelay = player.GetWeapon().GetShootDelay() + g.State.Timestamp
-		case request.Shoot && player.GetWeapon().RefillMag(): // Has no ammo
+			player.ActionDelay = weapon.GetShootDelay() + g.State.Timestamp
+		case request.Shoot && weapon.RefillMag(): // Has no ammo
 			player.Reload = true
-			player.ActionDelay = player.GetWeapon().GetReloadSpeed() + g.State.Timestamp
+			player.ActionDelay = weapon.GetReloadSpeed() + g.State.Timestamp
 		case request.Melee:
 			player.Melee = true
 			// todo: create melee attack
@@ -116,9 +125,15 @@ func (g *Game) HandleShots() {
 }
 
 func (g *Game) HandlePlayers() {
-	for i, player := range g.State.Players {
+	for i := len(g.State.Players) -1 ; i >= 0; i-- {
+		player := g.State.Players[i]
 		if player.Stats.Health <= 0 {
-			g.State.Players = append(g.State.Players[:i], g.State.Players[i+1:]...)
+			for i := 0; i < len(g.PlayerIds); i++ {
+				//Remove player from game
+				g.PlayerIds[player.Id] = false
+			}
+			g.State.Players[i] = g.State.Players[len(g.State.Players)-1]
+			g.State.Players = g.State.Players[:len(g.State.Players)-1]
 		}
 	}
 }

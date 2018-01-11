@@ -55,7 +55,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 			//Update game
 			g.State.Timestamp = time.Since(start)
-			g.HandleRequests(collectRequests(clientSpaces))
+			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
 			g.HandleZombies()
 			g.HandleShots()
 			g.HandlePlayers()
@@ -93,15 +93,22 @@ endgame:
 	fmt.Println("Game ended")
 }
 
-func collectRequests(clientSpaces []ClientSpace) (requests []model.Request) {
-	requests = make([]model.Request, len(clientSpaces))
-	for i, spc := range clientSpaces {
-		rtuples, _ := spc.GetAll(&model.Request{})
-		for _, rtuple := range rtuples {
-			request := rtuple.GetFieldAt(0).(model.Request)
-			requests[i] = requests[i].Merge(request)
+func collectRequests(clientSpaces []ClientSpace, playerIds map[string]bool) (requests []model.Request) {
+	requests = make([]model.Request, 0)
+	for _, spc := range clientSpaces {
+		if v, ok := playerIds[spc.Id]; !ok || !v {
+			continue
 		}
-		requests[i].PlayerId = spc.Id
+		rtuples, _ := spc.GetAll(&model.Request{})
+		if len(rtuples) <= 0{
+			continue
+		}
+		requests = append(requests, rtuples[0].GetFieldAt(0).(model.Request))
+		for _, rtuple := range rtuples[1:] {
+			request := rtuple.GetFieldAt(0).(model.Request)
+			requests[len(requests) - 1].Merge(request)
+		}
+		requests[len(requests) - 1].PlayerId = spc.Id
 	}
 	return requests
 }
