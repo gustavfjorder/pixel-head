@@ -62,7 +62,6 @@ func (player *Player) NewWeapon(weapon Weapon) {
 func (player *Player) GetWeapon() (weapon *Weapon,e error) {
 	if player.Weapon < len(player.WeaponList){
 		weapon = &player.WeaponList[player.Weapon]
-		fmt.Println(weapon.GetName(), player.Id, player.WeaponList, player.Weapon)
 	} else {
 		panic(errors.New("Wopsi"))
 	}
