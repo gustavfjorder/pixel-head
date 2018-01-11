@@ -53,7 +53,7 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 	weaponText := text.New(pixel.V(abilitiesBarPosX+abilitiesBar.Picture().Bounds().Max.X/2, abilitiesBarPosY*0.9), basicAtlas)
 	bulletsText := text.New(pixel.V(abilitiesBarPosX-abilitiesBar.Picture().Bounds().Max.X/2, abilitiesBarPosY*0.9), basicAtlas)
 	var bulletTextSize float64
-	fmt.Fprintln(weaponText, myWep.GetName())
+	fmt.Fprintln(weaponText, myWep.Name())
 	if myWep != model.KNIFE {
 		s := fmt.Sprint(wep.Bullets, wep.MagazineCurrent)
 		bulletTextSize = bulletsText.LineHeight * 1.3 * float64(len(s))
@@ -67,7 +67,7 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 }
 
 func getSpriteName(me model.Player, weapon model.WeaponType) string {
-	s := weapon.GetName()
+	s := weapon.Name()
 	if me.WeaponType == weapon {
 		s += "Selected"
 	} else if !me.IsAvailable(weapon){

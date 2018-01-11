@@ -65,19 +65,19 @@ func (g *Game) HandleRequests(requests []Request) {
 		switch {
 		case g.State.Timestamp < player.ActionDelay:
 			break
-		case weapon.weaponType != request.Weapon && player.IsAvailable(request.Weapon):
+		case weapon.WeaponType != request.Weapon && player.IsAvailable(request.Weapon):
 			player.ChangeWeapon(request.Weapon)
 		case request.Reload && weapon.RefillMag():
 			player.Reload = true
-			player.ActionDelay = weapon.GetReloadSpeed() + g.State.Timestamp
+			player.ActionDelay = weapon.ReloadSpeed() + g.State.Timestamp
 		case request.Shoot && weapon.MagazineCurrent > 0:
 			playerShoots := weapon.GenerateShoots(g.State.Timestamp, *player)
 			player.Shoot = len(playerShoots) > 0
 			g.State.Shoots = append(g.State.Shoots, playerShoots...)
-			player.ActionDelay = weapon.GetShootDelay() + g.State.Timestamp
+			player.ActionDelay = weapon.ShootDelay() + g.State.Timestamp
 		case request.Shoot && weapon.RefillMag(): // Has no ammo
 			player.Reload = true
-			player.ActionDelay = weapon.GetReloadSpeed() + g.State.Timestamp
+			player.ActionDelay = weapon.ReloadSpeed() + g.State.Timestamp
 		case request.Melee:
 			player.Melee = true
 			// todo: create melee attack
@@ -93,7 +93,7 @@ func (g *Game) HandleZombies() {
 		for j := len(g.State.Shoots) - 1; j >= 0; j-- {
 			shoot := g.State.Shoots[j]
 			if shoot.GetPos(g.State.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
-				zombie.Stats.Health -= GetWeaponRef(shoot.WeaponType).GetPower()
+				zombie.Stats.Health -= shoot.WeaponType.Power()
 				g.State.Shoots[j] = g.State.Shoots[len(g.State.Shoots)-1]
 				g.State.Shoots = g.State.Shoots[:len(g.State.Shoots)-1]
 			}
@@ -114,7 +114,7 @@ func (g *Game) HandleZombies() {
 func (g *Game) HandleShots() {
 	for i := len(g.State.Shoots) - 1; i >= 0; i-- {
 		shot := g.State.Shoots[i]
-		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > GetWeaponRef(shot.WeaponType).GetRange() {
+		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > shot.WeaponType.Range() {
 			g.State.Shoots[i] = g.State.Shoots[len(g.State.Shoots)-1]
 			g.State.Shoots = g.State.Shoots[:len(g.State.Shoots)-1]
 			continue

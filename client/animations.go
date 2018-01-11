@@ -122,7 +122,7 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			movement = "moved"
 		}
 
-		prefix := Prefix("survivor", player.WeaponType.GetName(), movement)
+		prefix := Prefix("survivor", player.WeaponType.Name(), movement)
 		anim, ok := currentAnims[player.Id]
 		if !ok {
 			newAnim, ok := anims[prefix]

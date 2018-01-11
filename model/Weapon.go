@@ -3,79 +3,71 @@ package model
 import (
 	"time"
 	"math"
-	"github.com/faiface/pixel"
-	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/pkg/errors"
 )
 
-
 type WeaponType int
+
 const (
-	KNIFE  WeaponType = iota
+	KNIFE   WeaponType = iota
 	RIFLE
 	SHOTGUN
 	HANDGUN
 	nWeapon
 )
 
-
 type Weapon struct {
-	weaponType      WeaponType
+	WeaponType
 	MagazineCurrent int
 	Bullets         int
 }
 
-func NewWeapon(weaponNum WeaponType) (weapon Weapon){
-	if weaponNum >= nWeapon{
+func NewWeapon(weaponNum WeaponType) (weapon Weapon) {
+	if weaponNum >= nWeapon {
 		panic(errors.New("No such weapon"))
 	}
-	weapon.weaponType = weaponNum
-	weapon.MagazineCurrent = weapon.GetMagazineCapacity()
-	weapon.Bullets = weapon.GetCapacity()
+	weapon.WeaponType = weaponNum
+	weapon.MagazineCurrent = weapon.MagazineCapacity()
+	weapon.Bullets = weapon.Capacity()
 	return weapon
-}
-
-func GetWeaponRef(weaponType WeaponType) (Weapon) {
-	return Weapon{weaponType: weaponType}
 }
 
 //Returns true if the magazine was reloaded
 func (weapon *Weapon) RefillMag() bool {
-	if weapon.MagazineCurrent >= weapon.GetMagazineCapacity(){
+	if weapon.MagazineCurrent >= weapon.MagazineCapacity() {
 		return false
 	}
-	dBullet := minInt(weapon.GetMagazineCapacity(), weapon.Bullets)
+	dBullet := minInt(weapon.MagazineCapacity(), weapon.Bullets)
 	weapon.MagazineCurrent = dBullet
 	weapon.Bullets -= dBullet
 	return dBullet > 0
 }
 
-func (weapon *Weapon) GenerateShoots(timestamp time.Duration, player Player) []Shoot {
-	shotsPerSideOfDirection := int(math.Floor(float64(weapon.GetBulletsPerShot() / 2)))
-	angle := -(shotsPerSideOfDirection * weapon.GetBulletsPerShot())
-	shoots := make([]Shoot, int(math.Min(float64(weapon.GetBulletsPerShot()), float64(weapon.MagazineCurrent))))
-
-	for i := 0; i < weapon.GetBulletsPerShot() && weapon.MagazineCurrent > 0; i++ {
-		shoots[i] = Shoot{
-			Start:      player.Pos.Add(pixel.V(config.GunPosX, config.GunPosY).Rotated(player.Dir - math.Pi/2)),
-			Angle:      player.Dir + (float64(angle) * (math.Pi / 180)),
-			StartTime:  timestamp,
-			WeaponType: weapon.weaponType,
-		}
-
-		angle += weapon.GetSpread()
-		weapon.MagazineCurrent--
+func (weapon *Weapon) GenerateShoots(timestamp time.Duration, player Player) []Shot {
+	if weapon.MagazineCurrent <= 0 {
+		return []Shot{}
 	}
+	offset := 0.0
+	if weapon.BulletsPerShot()%2 == 0 {
+		offset = weapon.Spread() * 0.5
+	}
+	angle := offset - weapon.Spread()*float64(weapon.BulletsPerShot()/2)
+	shoots := make([]Shot, weapon.BulletsPerShot())
 
+	for i := 0; i < weapon.BulletsPerShot(); i++ {
+		shoots[i] = NewShot(player, timestamp, angle)
+		angle += weapon.Spread()
+	}
+	weapon.MagazineCurrent--
 	return shoots
 }
 
-func (weapon Weapon) GetReloadSpeed() time.Duration {
+func (weaponType WeaponType) ReloadSpeed() time.Duration {
 	return time.Second / 5
 }
 
-func (weapon Weapon) GetShootDelay() time.Duration {
-	switch weapon.weaponType {
+func (weaponType WeaponType) ShootDelay() time.Duration {
+	switch weaponType {
 	case RIFLE:
 		return time.Second / 5
 	case HANDGUN:
@@ -87,8 +79,8 @@ func (weapon Weapon) GetShootDelay() time.Duration {
 	}
 }
 
-func (weapon Weapon) GetMagazineCapacity() int {
-	switch weapon.weaponType {
+func (weaponType WeaponType) MagazineCapacity() int {
+	switch weaponType {
 	case RIFLE:
 		return 30
 	case HANDGUN:
@@ -100,8 +92,8 @@ func (weapon Weapon) GetMagazineCapacity() int {
 	}
 }
 
-func (weapon Weapon) GetPower() int{
-	switch weapon.weaponType {
+func (weaponType WeaponType) Power() int {
+	switch weaponType {
 	case RIFLE:
 		return 10
 	case HANDGUN:
@@ -115,8 +107,8 @@ func (weapon Weapon) GetPower() int{
 	}
 }
 
-func (weapon Weapon) GetRange() float64 {
-	switch weapon.weaponType {
+func (weaponType WeaponType) Range() float64 {
+	switch weaponType {
 	case RIFLE:
 		return 500
 	case HANDGUN:
@@ -132,8 +124,8 @@ func (weapon Weapon) GetRange() float64 {
 }
 
 //Units per second
-func (weapon Weapon) GetProjectileSpeed() (speed float64) {
-	switch weapon.weaponType {
+func (weaponType WeaponType) ProjectileSpeed() (speed float64) {
+	switch weaponType {
 	default:
 		speed = 1000
 	}
@@ -141,8 +133,8 @@ func (weapon Weapon) GetProjectileSpeed() (speed float64) {
 	return
 }
 
-func (weapon Weapon) GetBulletsPerShot() int {
-	switch weapon.weaponType {
+func (weaponType WeaponType) BulletsPerShot() int {
+	switch weaponType {
 	case SHOTGUN:
 		return 5
 	default:
@@ -150,24 +142,24 @@ func (weapon Weapon) GetBulletsPerShot() int {
 	}
 }
 
-func (weapon Weapon) GetSpread() int {
-	switch weapon.weaponType {
+func (weaponType WeaponType) Spread() float64 {
+	switch weaponType {
 	case SHOTGUN:
-		return 5
+		return math.Pi / 30
 	default:
 		return 0
 
 	}
 }
 
-func (weapon Weapon) GetCapacity() int {
-	switch weapon.weaponType {
+func (weaponType WeaponType) Capacity() int {
+	switch weaponType {
 	default:
 		return 150
 	}
 }
 
-func (weaponType WeaponType) GetName() string {
+func (weaponType WeaponType) Name() string {
 	switch weaponType {
 	case RIFLE:
 		return "rifle"
@@ -180,8 +172,4 @@ func (weaponType WeaponType) GetName() string {
 	default:
 		return ""
 	}
-}
-
-func (weapon Weapon) WeaponType() WeaponType{
-	return weapon.weaponType
 }

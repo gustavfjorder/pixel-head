@@ -30,6 +30,6 @@ func NewLootbox(id string, x float64, y float64, randPos bool, weapon WeaponType
 }
 
 func (player *Player) PickupLootbox(lootbox Lootbox){
-	player.WeaponList[lootbox.Weapon.weaponType].Bullets+=lootbox.Weapon.MagazineCurrent
+	player.WeaponList[lootbox.Weapon.WeaponType].Bullets+=lootbox.Weapon.MagazineCurrent
 }
 

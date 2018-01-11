@@ -26,7 +26,7 @@ type Player struct {
 func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
 	player.WeaponList = make([]Weapon, nWeapon)
 	player.WeaponType = HANDGUN
-	player.NewWeapon(NewWeapon(KNIFE), NewWeapon(player.WeaponType))
+	player.NewWeapon(NewWeapon(KNIFE), NewWeapon(player.WeaponType), NewWeapon(SHOTGUN))
 	player.Id = id
 	player.Stats = NewStats(HUMAN)
 	player.Dir = 0
@@ -56,7 +56,7 @@ func (player *Player) Move(dir float64, g *Game) {
 
 func (player *Player) NewWeapon(weapons ...Weapon) {
 	for _, weapon := range weapons{
-		player.WeaponList[weapon.weaponType] = weapon
+		player.WeaponList[weapon.WeaponType] = weapon
 	}
 
 }
