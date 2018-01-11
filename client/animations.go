@@ -104,7 +104,10 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			v.Next().Draw(win, transformation)
 		}
 	}
+	//todo draw barrels
+	/*for -,barrel := range state.Barrels{
 
+	}*/
 	for _, player := range state.Players {
 		movement := "idle"
 		blocking := false

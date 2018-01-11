@@ -7,4 +7,5 @@ type State struct {
 	Players   []Player
 	Zombies   []Zombie
 	Shoots    []Shoot
+	Barrels   []Barrel
 }
