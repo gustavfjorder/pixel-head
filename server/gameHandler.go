@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/config"
+	"encoding/gob"
 )
 
 type ClientSpace struct {
@@ -60,9 +61,11 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			g.HandlePlayers()
 
 			//Send new game state to clients
-			for _, spc := range clientSpaces {
-				spc.GetP("state", &model.State{})
-				spc.Put("state", g.State)
+			if config.Conf.Online {
+				for _, spc := range clientSpaces {
+					spc.GetP("state", &model.State{})
+					spc.Put("state", g.State)
+				}
 			}
 
 			//If all players died end game
@@ -101,4 +104,40 @@ func collectRequests(clientSpaces []ClientSpace) (requests []model.Request) {
 		requests[i].PlayerId = spc.Id
 	}
 	return requests
+}
+
+func SetupSpace(uri string) space.Space {
+	// Register models for encoding to space
+	gob.Register(model.Request{})
+	gob.Register([]model.Request{})
+	gob.Register(model.Player{})
+	gob.Register([]model.Player{})
+	gob.Register(model.Zombie{})
+	gob.Register([]model.Zombie{})
+	gob.Register(model.Shoot{})
+	gob.Register([]model.Shoot{})
+	gob.Register(model.Map{})
+	gob.Register(model.Wall{})
+	gob.Register(model.Segment{})
+	gob.Register(model.Point{})
+	gob.Register(model.State{})
+
+	space := space.NewSpace(uri)
+
+	// todo: pSpaces seems to need this to be able to Get/Query on clients
+	space.QueryP(&model.Request{})
+	space.QueryP(&[]model.Request{})
+	space.QueryP(&model.Player{})
+	space.QueryP(&[]model.Player{})
+	space.QueryP(&model.Zombie{})
+	space.QueryP(&[]model.Zombie{})
+	space.QueryP(&model.Shoot{})
+	space.QueryP(&[]model.Shoot{})
+	space.QueryP(&model.Map{})
+	space.QueryP(&model.Wall{})
+	space.QueryP(&model.Segment{})
+	space.QueryP(&model.Point{})
+	space.QueryP(&model.State{})
+
+	return space
 }
