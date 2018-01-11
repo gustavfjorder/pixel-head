@@ -5,36 +5,37 @@ import (
 	"math"
 	"time"
 	"github.com/pkg/errors"
-	"fmt"
+	"math/rand"
 )
 
 type Player struct {
-	Id         string
-	Pos        pixel.Vec
-	Dir        float64
-	Weapon     int
-	WeaponList []Weapon
-	Reload     bool
-	Shoot      bool
-	Melee      bool
-	Moved      bool
+	Id          string
+	Pos         pixel.Vec
+	Dir         float64
+	WeaponType  WeaponType
+	WeaponList  []Weapon
+	Reload      bool
+	Shoot       bool
+	Melee       bool
+	Moved       bool
 	Stats
 	ActionDelay time.Duration
-	TurnDelay time.Duration
+	TurnDelay   time.Duration
 }
 
-func NewPlayer(id string) Player {
-
-	weaponList := make([]Weapon, 0)
-	weaponList = append(weaponList, NewWeapon(KNIFE), NewWeapon(HANDGUN), NewWeapon(SHOTGUN))
-	return Player{
-		Id:         id,
-		Pos:        pixel.V(200, 200),
-		Dir:        0,
-		Weapon:     0,
-		WeaponList: weaponList,
-		Stats:      NewStats(HUMAN),
+func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
+	player.WeaponList = make([]Weapon, nWeapon)
+	player.WeaponType = HANDGUN
+	player.NewWeapon(NewWeapon(KNIFE), NewWeapon(player.WeaponType))
+	player.Id = id
+	player.Stats = NewStats(HUMAN)
+	player.Dir = 0
+	if len(pos) > 0 {
+		player.Pos = pos[0]
+	} else {
+		player.Pos = pixel.V(rand.Float64()*1000, rand.Float64()*1000)
 	}
+	return
 }
 
 func (player *Player) Move(dir float64, g *Game) {
@@ -53,38 +54,32 @@ func (player *Player) Move(dir float64, g *Game) {
 	}
 }
 
-func (player *Player) NewWeapon(weapon Weapon) {
-	if !player.IsAvailable(weapon.Id) {
-		player.WeaponList = append(player.WeaponList, weapon)
+func (player *Player) NewWeapon(weapons ...Weapon) {
+	for _, weapon := range weapons{
+		player.WeaponList[weapon.weaponType] = weapon
 	}
+
 }
 
 func (player *Player) GetWeapon() (weapon *Weapon,e error) {
-	if player.Weapon < len(player.WeaponList){
-		weapon = &player.WeaponList[player.Weapon]
-	} else {
-		panic(errors.New("Wopsi"))
+	if player.WeaponType >= nWeapon || player.WeaponType < 0{
+		weapon = &Weapon{}
+		e = errors.New("Unable to change weapon")
+		return
 	}
+	weapon = &player.WeaponList[player.WeaponType]
 	return weapon, e
 
 }
 
-func (player *Player) ChangeWeapon(weaponNum int) {
-	for i, weapon := range player.WeaponList {
-		if weapon.Id == weaponNum {
-			player.Weapon = i
-			break
-		}
+func (player *Player) ChangeWeapon(weaponType WeaponType) {
+	if player.IsAvailable(weaponType) {
+		player.WeaponType = weaponType
 	}
 }
 
-func (player *Player) IsAvailable(weaponNum int) bool {
-	for _, weapon := range player.WeaponList {
-		if weapon.Id == weaponNum {
-			return true
-		}
-	}
-	return false
+func (player *Player) IsAvailable(weaponType WeaponType) bool {
+	return player.WeaponList[weaponType] != Weapon{}
 }
 
 func (player Player) GetTurnDelay() time.Duration {

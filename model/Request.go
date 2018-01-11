@@ -8,7 +8,7 @@ import (
 type Request struct {
 	Timestamp int64
 	PlayerId  string
-	Weapon    int
+	Weapon    WeaponType
 	Dir       float64
 	Move      bool
 	Shoot     bool

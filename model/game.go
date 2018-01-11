@@ -14,14 +14,12 @@ type Game struct {
 
 func NewGame(ids []string, mapName string) (game Game) {
 	game.PlayerIds = make(map[string]bool)
-	for _, id := range ids {
-		game.PlayerIds[id] = true
-	}
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
 	for i, id := range ids {
 		game.State.Players[i] = NewPlayer(id)
+		game.PlayerIds[id] = true
 	}
 	return game
 }
@@ -67,7 +65,7 @@ func (g *Game) HandleRequests(requests []Request) {
 		switch {
 		case g.State.Timestamp < player.ActionDelay:
 			break
-		case weapon.Id != request.Weapon && player.IsAvailable(request.Weapon):
+		case weapon.weaponType != request.Weapon && player.IsAvailable(request.Weapon):
 			player.ChangeWeapon(request.Weapon)
 		case request.Reload && weapon.RefillMag():
 			player.Reload = true
@@ -95,7 +93,7 @@ func (g *Game) HandleZombies() {
 		for j := len(g.State.Shoots) - 1; j >= 0; j-- {
 			shoot := g.State.Shoots[j]
 			if shoot.GetPos(g.State.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
-				zombie.Stats.Health -= GetWeaponRef(shoot.Weapon).GetPower()
+				zombie.Stats.Health -= GetWeaponRef(shoot.WeaponType).GetPower()
 				g.State.Shoots[j] = g.State.Shoots[len(g.State.Shoots)-1]
 				g.State.Shoots = g.State.Shoots[:len(g.State.Shoots)-1]
 			}
@@ -116,7 +114,7 @@ func (g *Game) HandleZombies() {
 func (g *Game) HandleShots() {
 	for i := len(g.State.Shoots) - 1; i >= 0; i-- {
 		shot := g.State.Shoots[i]
-		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > GetWeaponRef(shot.Weapon).GetRange() {
+		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > GetWeaponRef(shot.WeaponType).GetRange() {
 			g.State.Shoots[i] = g.State.Shoots[len(g.State.Shoots)-1]
 			g.State.Shoots = g.State.Shoots[:len(g.State.Shoots)-1]
 			continue

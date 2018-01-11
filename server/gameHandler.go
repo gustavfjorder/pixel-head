@@ -114,7 +114,7 @@ func collectRequests(clientSpaces []ClientSpace, playerIds map[string]bool) (req
 }
 
 func SetupSpace(uri string) space.Space {
-	// Register models for encoding to space
+	// Register models for encoding to spc
 	gob.Register(model.Request{})
 	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
@@ -129,22 +129,22 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 
-	space := space.NewSpace(uri)
+	spc := space.NewSpace(uri)
 
 	// todo: pSpaces seems to need this to be able to Get/Query on clients
-	space.QueryP(&model.Request{})
-	space.QueryP(&[]model.Request{})
-	space.QueryP(&model.Player{})
-	space.QueryP(&[]model.Player{})
-	space.QueryP(&model.Zombie{})
-	space.QueryP(&[]model.Zombie{})
-	space.QueryP(&model.Shoot{})
-	space.QueryP(&[]model.Shoot{})
-	space.QueryP(&model.Map{})
-	space.QueryP(&model.Wall{})
-	space.QueryP(&model.Segment{})
-	space.QueryP(&model.Point{})
-	space.QueryP(&model.State{})
+	spc.QueryP(&model.Request{})
+	spc.QueryP(&[]model.Request{})
+	spc.QueryP(&model.Player{})
+	spc.QueryP(&[]model.Player{})
+	spc.QueryP(&model.Zombie{})
+	spc.QueryP(&[]model.Zombie{})
+	spc.QueryP(&model.Shoot{})
+	spc.QueryP(&[]model.Shoot{})
+	spc.QueryP(&model.Map{})
+	spc.QueryP(&model.Wall{})
+	spc.QueryP(&model.Segment{})
+	spc.QueryP(&model.Point{})
+	spc.QueryP(&model.State{})
 
-	return space
+	return spc
 }

@@ -106,11 +106,6 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 	}
 
 	for _, player := range state.Players {
-		weapon, err := player.GetWeapon()
-		if err != nil{
-			fmt.Println(err)
-			continue
-		}
 		movement := "idle"
 		blocking := false
 		switch {
@@ -125,12 +120,9 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 			blocking = true
 		case player.Moved:
 			movement = "moved"
-		default:
-			movement = "idle"
 		}
 
-		prefix := Prefix("survivor", weapon.GetName(), movement)
-
+		prefix := Prefix("survivor", player.WeaponType.GetName(), movement)
 		anim, ok := currentAnims[player.Id]
 		if !ok {
 			newAnim, ok := anims[prefix]
