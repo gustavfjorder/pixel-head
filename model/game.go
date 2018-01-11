@@ -24,13 +24,13 @@ func NewGame(ids []string, mapName string) (game Game) {
 	return game
 }
 
-func (g *Game) PrepareLevel(end <-chan bool) {
+func (g *Game) PrepareLevel(end chan<- bool) {
 	level := Levels[g.CurrentLevel]
 	g.State.Zombies = make([]Zombie, level.NumberOfZombies)
 	for i := range g.State.Zombies {
 		g.State.Zombies[i] = NewZombie(rand.Float64()*900+100, rand.Float64()*900+100)
 	}
-	<-end
+	end<-true
 }
 
 func (g *Game) HandleRequests(requests []Request) {

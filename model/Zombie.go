@@ -3,9 +3,9 @@ package model
 import (
 	"github.com/faiface/pixel"
 	"math"
-	"github.com/rs/xid"
 	"github.com/gustavfjorder/pixel-head/config"
 	"time"
+	"strconv"
 )
 
 type Zombie struct {
@@ -18,9 +18,12 @@ type Zombie struct {
 	TargetId    string
 }
 
+var count = 0
+
 func NewZombie(x, y float64) Zombie {
+	count++
 	return Zombie{
-		Id:    xid.New().String(),
+		Id:    strconv.Itoa(count),
 		Pos:   pixel.V(x, y),
 		Dir:   0,
 		Stats: NewStats(ZOMBIE),

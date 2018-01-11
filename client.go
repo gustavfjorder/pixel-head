@@ -59,7 +59,6 @@ func run() {
 
 		imd.Draw(win)
 		lock.Lock()
-		fmt.Println(state)
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		lock.Unlock()
 		client.DrawAbilities(win, me)

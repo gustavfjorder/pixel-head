@@ -33,7 +33,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 	for g.CurrentLevel < len(model.Levels) {
 		fmt.Println("Starting level " + strconv.Itoa(g.CurrentLevel))
 
-		duration := time.Second * 10
+		duration := time.Second * 1
 		if g.CurrentLevel == 0 {
 			duration = 0
 		}
@@ -100,15 +100,15 @@ func collectRequests(clientSpaces []ClientSpace, playerIds map[string]bool) (req
 			continue
 		}
 		rtuples, _ := spc.GetAll(&model.Request{})
-		if len(rtuples) <= 0{
+		if len(rtuples) <= 0 {
 			continue
 		}
 		requests = append(requests, rtuples[0].GetFieldAt(0).(model.Request))
 		for _, rtuple := range rtuples[1:] {
 			request := rtuple.GetFieldAt(0).(model.Request)
-			requests[len(requests) - 1].Merge(request)
+			requests[len(requests)-1].Merge(request)
 		}
-		requests[len(requests) - 1].PlayerId = spc.Id
+		requests[len(requests)-1].PlayerId = spc.Id
 	}
 	return requests
 }

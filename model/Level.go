@@ -5,7 +5,7 @@ type Level struct {
 }
 
 var Levels = map[int]Level {
-	0: {10},
+	0: {1},
 	1: {20},
 	2: {30},
 	3: {40},
