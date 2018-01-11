@@ -43,9 +43,11 @@ func (g *Game) HandleRequests(requests []Request) {
 				break
 			}
 		}
-		player.Reload = false
-		player.Shoot = false
-		player.Melee = false
+		if g.State.Timestamp >= player.ActionDelay {
+			player.Reload = false
+			player.Shoot = false
+			player.Melee = false
+		}
 
 		if request.Move {
 			// todo: check if move is doable in map

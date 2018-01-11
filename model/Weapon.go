@@ -63,16 +63,7 @@ func (weapon *Weapon) GenerateShoots(timestamp time.Duration, player Player) []S
 }
 
 func (weapon Weapon) GetReloadSpeed() time.Duration {
-	switch weapon.Id {
-	case RIFLE:
-		return time.Second / 2
-	case HANDGUN:
-		return time.Second / 2
-	case SHOTGUN:
-		return time.Second / 2
-	default:
-		return time.Second / 2
-	}
+	return time.Second / 5
 }
 
 func (weapon Weapon) GetShootDelay() time.Duration {

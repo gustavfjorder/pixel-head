@@ -12,6 +12,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 	"golang.org/x/image/colornames"
 	"github.com/gustavfjorder/pixel-head/server"
+	"sync"
 )
 
 func run() {
@@ -23,13 +24,21 @@ func run() {
 		frames             = 0
 		second             = time.Tick(time.Second)
 		fps                = time.Tick(config.Conf.Fps)
-		me                 = model.Player{Id:config.Conf.Id}
-		state              *model.State
+		me                 = model.Player{Id: config.Conf.Id}
+		state              = &model.State{}
 		activeAnimations   = make(map[string]*client.Animation)
 		spc, gameMap, game = gotoLounge()
 		imd                = client.LoadMap(gameMap)
 		cfg                = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
+		lock               = &sync.Mutex{}
 	)
+
+	//Start state handler
+	if config.Conf.Online {
+		go client.HandleEvents(&spc, state, lock)
+	} else {
+		state = &game.State
+	}
 
 	//Make window
 	win, err := pixelgl.NewWindow(cfg)
@@ -38,23 +47,22 @@ func run() {
 	}
 	win.SetSmooth(true)
 
-	//Start handlers
-	if config.Conf.Online {
-		go client.HandleEvents(&spc, state)
-	} else {
-		state = &game.State
-	}
+	//Start control handler
 	go client.HandleControls(&spc, win)
 
 	for !win.Closed() {
+
+		client.GetPlayer(state.Players, &me)
+
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 
 		imd.Draw(win)
-		client.GetPlayer(game.State.Players, &me)
+		lock.Lock()
 		client.HandleAnimations(win, *state, animations, activeAnimations)
-		client.DrawAbilities(win, &me)
-		client.DrawHealthbar(win, &me)
+		lock.Unlock()
+		client.DrawAbilities(win, me)
+		client.DrawHealthbar(win, me)
 
 		win.Update()
 

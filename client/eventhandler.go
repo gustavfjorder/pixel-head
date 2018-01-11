@@ -5,18 +5,24 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 	"time"
+	"sync"
 )
 
-func HandleEvents(spc *space.Space, state *model.State) {
+func HandleEvents(spc *space.Space, state *model.State, lock *sync.Mutex) {
 	//Handle loop
 	sec := time.Tick(time.Second)
 	count := 0
 	fmt.Println("Handling events")
 	for {
-		_, err := spc.Get("state", state)
+
+		stateTuple, err := spc.Get("state", &model.State{})
 		if err != nil {
 			continue
 		}
+		tempState := stateTuple.GetFieldAt(1).(model.State)
+		lock.Lock()
+		*state = tempState
+		lock.Unlock()
 
 		count++
 		select {
@@ -29,10 +35,14 @@ func HandleEvents(spc *space.Space, state *model.State) {
 	}
 }
 
-func GetPlayer(players []model.Player, player *model.Player){
+func GetPlayer(players []model.Player, player *model.Player) {
+	if player == nil {
+		return
+	}
 	for _, p := range players {
 		if player.Id == p.Id {
 			*player = p
 		}
 	}
+
 }

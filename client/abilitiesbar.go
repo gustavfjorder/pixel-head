@@ -13,10 +13,7 @@ import (
 //ability sprites
 var ab = Load(config.Conf.AbilityPath, "", IMG)
 
-func DrawAbilities(win *pixelgl.Window, me *model.Player) {
-	if me == nil {
-		return
-	}
+func DrawAbilities(win *pixelgl.Window, me model.Player) {
 	var (
 		//abilities bar
 		abilitiesBar = ab["abilitiesBar.png"].Sprites[0]
@@ -42,10 +39,10 @@ func DrawAbilities(win *pixelgl.Window, me *model.Player) {
 		//myWep
 		myWep = me.GetWeapon().Id
 	)
-	ab[getSpriteName(*me, model.KNIFE)].Sprites[0].Draw(win, scaled.Moved(knifeLocation))
-	ab[getSpriteName(*me, model.HANDGUN)].Sprites[0].Draw(win, scaled.Moved(handgunLocation))
-	ab[getSpriteName(*me, model.RIFLE)].Sprites[0].Draw(win, scaled.Moved(rifleLocation))
-	ab[getSpriteName(*me, model.SHOTGUN)].Sprites[0].Draw(win, scaled.Moved(shotgunLocation))
+	ab[getSpriteName(me, model.KNIFE)].Sprites[0].Draw(win, scaled.Moved(knifeLocation))
+	ab[getSpriteName(me, model.HANDGUN)].Sprites[0].Draw(win, scaled.Moved(handgunLocation))
+	ab[getSpriteName(me, model.RIFLE)].Sprites[0].Draw(win, scaled.Moved(rifleLocation))
+	ab[getSpriteName(me, model.SHOTGUN)].Sprites[0].Draw(win, scaled.Moved(shotgunLocation))
 
 
 	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
@@ -79,10 +76,7 @@ func getSpriteName(me model.Player, weapon int) string {
 //load health sprites
 var hp = Load(config.Conf.HealthPath, "", IMG)
 
-func DrawHealthbar(win *pixelgl.Window, me *model.Player) {
-	if me == nil {
-		return
-	}
+func DrawHealthbar(win *pixelgl.Window, me model.Player) {
 	var (
 		//load sprites
 		healthgraphic    = hp["health.png"].Sprites[0]
