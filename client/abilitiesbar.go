@@ -98,9 +98,9 @@ func DrawHealthbar(win *pixelgl.Window, me *model.Player) {
 		scaled         = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor, yScalefactor))
 		healthscaled   = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor*float64(me.Health)/float64(me.GetMaxHealth()), yScalefactor))
 		frameLocation  = pixel.Vec{win.Bounds().Max.X / 2, win.Bounds().Min.Y + ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
-		healthfraction = float64((me.GetMaxHealth() - me.Health) / (me.GetMaxHealth()))
+		healthfraction = float64(me.GetMaxHealth() - me.Health) / float64(me.GetMaxHealth())
 		healthLocation = pixel.Vec{
-			win.Bounds().Max.X/2 + (healthgraphic.Picture().Bounds().Max.X/2*xScalefactor)*healthfraction - 2,
+			win.Bounds().Max.X/2 + (healthgraphic.Picture().Bounds().Max.X/2*xScalefactor)*float64(healthfraction) - 2,
 			win.Bounds().Min.Y + ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
 	)
 	//draw background, health and frame
