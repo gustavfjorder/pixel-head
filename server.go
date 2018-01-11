@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/gustavfjorder/pixel-head/model"
-	"encoding/gob"
 )
 
 const MaxRooms = 10
