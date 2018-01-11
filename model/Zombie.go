@@ -14,11 +14,11 @@ type Zombie struct {
 	Dir         float64
 	Attacking   bool
 	Stats       Stats
-	AttackDelay time.Duration
 	TargetId    string
 }
 
 var count = 0
+var attackDelays = make(map[string]time.Duration)
 
 func NewZombie(x, y float64) Zombie {
 	count++
@@ -62,7 +62,7 @@ func (zombie *Zombie) Move(players []Player) {
 func (zombie *Zombie) Attack(state State) {
 	zombie.Attacking = false
 	if zombie.TargetId != "" {
-		if zombie.AttackDelay > state.Timestamp {
+		if zombie.AttackDelay() > state.Timestamp {
 			zombie.Attacking = true
 			return
 		} else {
@@ -84,7 +84,7 @@ func (zombie *Zombie) Attack(state State) {
 			math.Abs(zombie.angle(player.Pos)) <= zombie.GetMaxAttackAngle(){
 			zombie.Dir = angle(zombie.Pos, player.Pos)
 			zombie.Attacking = true
-			zombie.AttackDelay = zombie.GetAttackDelay() + state.Timestamp
+			zombie.SetAttackDelay(state.Timestamp)
 			zombie.TargetId = player.Id
 			break
 		}
@@ -121,4 +121,12 @@ func (zombie Zombie) GetTurnSpeed() (turnSpeed float64) {
 	turnSpeed = math.Pi / 3
 
 	return turnSpeed * config.Conf.ServerHandleSpeed.Seconds()
+}
+
+func (zombie Zombie) AttackDelay() time.Duration{
+	return attackDelays[zombie.Id]
+}
+
+func (zombie *Zombie) SetAttackDelay(timestamp time.Duration) {
+	attackDelays[zombie.Id] = zombie.GetAttackDelay() + timestamp
 }

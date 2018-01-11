@@ -36,7 +36,7 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 func (g *Game) HandleRequests(requests []Request) {
 	// Load incoming requests
 	for _, request := range requests {
-
+		timestamp := g.State.Timestamp
 		// Load player
 		player, err := findPlayer(g.State.Players, request.PlayerId)
 
@@ -51,36 +51,37 @@ func (g *Game) HandleRequests(requests []Request) {
 			continue
 		}
 
-		if request.Move {
+		if request.Moved() {
 			player.Move(request.Dir, g)
 		}
 
-		if g.State.Timestamp >= player.ActionDelay {
-			player.Reload = false
-			player.Shoot = false
-			player.Melee = false
+		if timestamp >= player.ActionDelay() {
+			player.Action = IDLE
 		}
 
 		//Action priority is like so: weapon change > reload > shoot > melee
 		switch {
-		case g.State.Timestamp < player.ActionDelay:
+		case timestamp < player.ActionDelay():
 			break
 		case weapon.WeaponType != request.Weapon && player.IsAvailable(request.Weapon):
 			player.ChangeWeapon(request.Weapon)
-		case request.Reload && weapon.RefillMag():
-			player.Reload = true
-			player.ActionDelay = weapon.ReloadSpeed() + g.State.Timestamp
-		case request.Shoot && weapon.MagazineCurrent > 0:
+		case request.Reload() && weapon.RefillMag():
+			player.SetAction(RELOAD,timestamp)
+		case request.Shoot() && weapon.MagazineCurrent > 0:
 			playerShoots := weapon.GenerateShoots(g.State.Timestamp, *player)
-			player.Shoot = len(playerShoots) > 0
 			g.State.Shoots = append(g.State.Shoots, playerShoots...)
-			player.ActionDelay = weapon.ShootDelay() + g.State.Timestamp
-		case request.Shoot && weapon.RefillMag(): // Has no ammo
-			player.Reload = true
-			player.ActionDelay = weapon.ReloadSpeed() + g.State.Timestamp
-		case request.Melee:
-			player.Melee = true
+			player.SetAction(SHOOT, timestamp)
+		case request.Shoot() && weapon.RefillMag(): // Has no ammo
+			player.SetAction(RELOAD, timestamp)
+		case request.Melee():
+			player.SetAction(MELEE, timestamp)
 			// todo: create melee attack
+		default:
+			if request.Moved(){
+				player.Action = MOVE
+			} else {
+				player.Action = IDLE
+			}
 		}
 	}
 }

@@ -14,9 +14,6 @@ func HandleControls(spc *space.Space, win *pixelgl.Window) {
 	r := model.Request{PlayerId:Conf.Id}
 	for {
 		angle, i := 0.0, 0
-		r.Shoot = false
-		r.Reload = false
-		r.Melee = false
 
 		if win.Pressed(Conf.UpKey) {
 			angle += math.Pi / 2
@@ -37,12 +34,11 @@ func HandleControls(spc *space.Space, win *pixelgl.Window) {
 			i++
 		}
 		if i <= 0 {
-			r.Move = false
-			angle = math.NaN()
+			r.Dir = math.NaN()
+			r.Action = model.IDLE
 		} else {
-			r.Move = true
-			angle /= float64(i)
-			r.Dir = angle
+			r.Dir = angle / float64(i)
+			r.Action = model.MOVE
 		}
 		switch {
 		case win.Pressed(Conf.KnifeKey):
@@ -56,11 +52,11 @@ func HandleControls(spc *space.Space, win *pixelgl.Window) {
 		}
 
 		if win.Pressed(Conf.ReloadKey) && r.Weapon != model.KNIFE {
-			r.Reload = true
+			r.Action = model.RELOAD
 		} else if win.Pressed(Conf.ShootKey) {
-			r.Shoot = true
+			r.Action = model.SHOOT
 		} else if win.Pressed(Conf.MeleeKey) {
-			r.Melee = true
+			r.Action = model.MELEE
 		}
 		r.PlayerId = Conf.Id
 		spc.Put(r)

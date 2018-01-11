@@ -26,7 +26,7 @@ var Conf = Config{
 	ShotgunKey:        pixelgl.Key4,
 	ReloadKey:         pixelgl.KeyR,
 	Id:                xid.New().String(),
-	Online:            false,
+	Online:            true,
 	LoungeUri:         "tcp://localhost:31415/lounge",
 	LocalUri:          "game",
 	AnimationPath:     "client/sprites",

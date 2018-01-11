@@ -4,22 +4,27 @@ import "github.com/gustavfjorder/pixel-head/config"
 
 type Stats struct {
 	Health    int
-	Being	  int
+	Being
 }
 
+type Being int
 const (
-	HUMAN  = iota
+	HUMAN Being = iota
 	ZOMBIE
+	nBeing
 )
 
-func NewStats(being int) (s Stats) {
+func NewStats(being Being) (s Stats) {
+	if being >= nBeing{
+		panic("Invalid being")
+	}
 	s.Being=being
 	s.Health = s.GetMaxHealth()
 	return
 }
 
-func (s Stats) GetMaxHealth() int{
-	switch s.Being {
+func (being Being) GetMaxHealth() int{
+	switch being {
 	case HUMAN:
 		return 100
 	case ZOMBIE:
@@ -29,8 +34,8 @@ func (s Stats) GetMaxHealth() int{
 }
 
 //Number of units per second
-func (s Stats) GetMoveSpeed() (speed float64){
-	switch s.Being {
+func (being Being) GetMoveSpeed() (speed float64){
+	switch being {
 	case HUMAN:
 		speed = 400
 	case ZOMBIE:
@@ -39,8 +44,8 @@ func (s Stats) GetMoveSpeed() (speed float64){
 	return speed * config.Conf.ServerHandleSpeed.Seconds()
 }
 
-func (s Stats) GetPower() int {
-	switch s.Being {
+func (being Being) GetPower() int {
+	switch being {
 	case HUMAN:
 		return 5
 	case ZOMBIE:

@@ -104,9 +104,12 @@ func collectRequests(clientSpaces []ClientSpace, playerIds map[string]bool) (req
 			continue
 		}
 		requests = append(requests, rtuples[0].GetFieldAt(0).(model.Request))
+		last := len(requests) - 1
 		for _, rtuple := range rtuples[1:] {
 			request := rtuple.GetFieldAt(0).(model.Request)
-			requests[len(requests)-1].Merge(request)
+			if request.Timestamp > requests[last].Timestamp {
+				requests[last] = request
+			}
 		}
 		requests[len(requests)-1].PlayerId = spc.Id
 	}
