@@ -1,5 +1,7 @@
 package model
 
+import "github.com/gustavfjorder/pixel-head/config"
+
 type Stats struct {
 	Health    int
 	Being	  int
@@ -26,14 +28,15 @@ func (s Stats) GetMaxHealth() int{
 	return 0
 }
 
-func (s Stats) GetMoveSpeed() float64{
+//Number of units per second
+func (s Stats) GetMoveSpeed() (speed float64){
 	switch s.Being {
 	case HUMAN:
-		return 10
+		speed = 400
 	case ZOMBIE:
-		return 2
+		speed =  50
 	}
-	return 0
+	return speed * config.Conf.ServerHandleSpeed.Seconds()
 }
 
 func (s Stats) GetPower() int {

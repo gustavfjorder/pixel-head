@@ -11,6 +11,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/client"
 	"github.com/gustavfjorder/pixel-head/config"
 	"golang.org/x/image/colornames"
+	"github.com/gustavfjorder/pixel-head/server"
 )
 
 func run() {
@@ -19,15 +20,15 @@ func run() {
 	animations := client.Load("client/sprites", "", client.ANIM)
 	animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
 	var (
-		frames           = 0
-		second           = time.Tick(time.Second)
-		fps              = time.Tick(config.Conf.Fps)
-		me               model.Player
-		state            model.State
-		activeAnimations = make(map[string]*client.Animation)
-		spc, gameMap     = gotoLounge()
-		imd              = client.LoadMap(gameMap)
-		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
+		frames             = 0
+		second             = time.Tick(time.Second)
+		fps                = time.Tick(config.Conf.Fps)
+		me                 = model.Player{Id:config.Conf.Id}
+		state              *model.State
+		activeAnimations   = make(map[string]*client.Animation)
+		spc, gameMap, game = gotoLounge()
+		imd                = client.LoadMap(gameMap)
+		cfg                = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
 	)
 
 	//Make window
@@ -38,7 +39,11 @@ func run() {
 	win.SetSmooth(true)
 
 	//Start handlers
-	go client.HandleEvents(&spc, &state, &me)
+	if config.Conf.Online {
+		go client.HandleEvents(&spc, state)
+	} else {
+		state = &game.State
+	}
 	go client.HandleControls(&spc, win)
 
 	for !win.Closed() {
@@ -46,7 +51,8 @@ func run() {
 		win.Clear(colornames.Darkolivegreen)
 
 		imd.Draw(win)
-		client.HandleAnimations(win, state, animations, activeAnimations)
+		client.GetPlayer(game.State.Players, &me)
+		client.HandleAnimations(win, *state, animations, activeAnimations)
 		client.DrawAbilities(win, &me)
 		client.DrawHealthbar(win, &me)
 
@@ -67,9 +73,9 @@ func run() {
 	config.SaveConfig("settings.json")
 }
 
-func gotoLounge() (spc space.Space, m model.Map) {
-	var myUri string
+func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
 	if config.Conf.Online {
+		var myUri string
 		servspc := space.NewRemoteSpace(config.Conf.LoungeUri)
 		_, err := servspc.Put("request", config.Conf.Id)
 		if err != nil {
@@ -81,13 +87,22 @@ func gotoLounge() (spc space.Space, m model.Map) {
 		if err != nil {
 			panic(err)
 		}
+		spc = space.NewRemoteSpace(myUri)
+		// Load map from server
 	} else {
-		// todo: Implement when Game/Server is final
-		//go server.StartGame(myuri, []string{config.Conf.Id})
-		//servspc = space.NewRemoteSpace(myuri)
+		g := model.NewGame([]string{config.Conf.Id}, "Test1")
+		game = &g
+		m = model.MapTemplates["Test1"]
+		uri := config.Conf.LoungeUri
+		clientSpace := server.ClientSpace{
+			Id:    config.Conf.Id,
+			Uri:   uri,
+			Space: server.SetupSpace(uri),
+		}
+		c := make(chan bool, 1)
+		go server.Start(game, []server.ClientSpace{clientSpace}, c)
+		spc = space.NewRemoteSpace(uri)
 	}
-	spc = space.NewRemoteSpace(myUri)
-	// Load map from server
 	spc.Get("map", &m)
 	spc.Put("joined")
 

@@ -4,14 +4,13 @@ import "math/rand"
 
 type Game struct {
 	PlayerIds    []string
-	State        *State
+	State        State
 	CurrentMap   Map
 	CurrentLevel int
 }
 
 func NewGame(ids []string, mapName string) (game Game) {
 	game.PlayerIds = ids
-	game.State = &State{}
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
@@ -99,7 +98,7 @@ func (g *Game) HandleZombies() {
 		}
 
 		zombie.Move(g.State.Players)
-		zombie.Attack(g.State.Players)
+		zombie.Attack(g.State)
 	}
 }
 

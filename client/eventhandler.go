@@ -5,10 +5,9 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 	"time"
-	"github.com/gustavfjorder/pixel-head/config"
 )
 
-func HandleEvents(spc *space.Space, state *model.State, me *model.Player) {
+func HandleEvents(spc *space.Space, state *model.State) {
 	//Handle loop
 	sec := time.Tick(time.Second)
 	count := 0
@@ -19,20 +18,21 @@ func HandleEvents(spc *space.Space, state *model.State, me *model.Player) {
 			continue
 		}
 
-		for _,p := range state.Players{
-			if config.Conf.Id == p.Id {
-				*me = p
-			}
-		}
-
 		count++
-
-		select{
+		select {
 		case <-sec:
 			fmt.Println("Handled:", count, "state updates")
 			count = 0
 		default:
 			break
+		}
+	}
+}
+
+func GetPlayer(players []model.Player, player *model.Player){
+	for _, p := range players {
+		if player.Id == p.Id {
+			*player = p
 		}
 	}
 }

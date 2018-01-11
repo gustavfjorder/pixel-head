@@ -12,7 +12,7 @@ import (
 
 var Conf = Config{
 	AnimationSpeed:    time.Second / 30,
-	ServerHandleSpeed: time.Second / 30,
+	ServerHandleSpeed: time.Second / 200,
 	Fps:               time.Second / 60,
 	LeftKey:           pixelgl.KeyA,
 	RightKey:          pixelgl.KeyD,
@@ -26,7 +26,7 @@ var Conf = Config{
 	ShotgunKey:        pixelgl.Key4,
 	ReloadKey:         pixelgl.KeyR,
 	Id:                xid.New().String(),
-	Online:            true,
+	Online:            false,
 	LoungeUri:         "tcp://localhost:31414/lounge",
 	LocalUri:          "game",
 	AnimationPath:     "client/sprites",
