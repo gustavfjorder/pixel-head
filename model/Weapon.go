@@ -132,11 +132,14 @@ func (weapon Weapon) GetRange() float64 {
 	}
 }
 
-func (weapon Weapon) GetProjectileSpeed() float64 {
+//Units per second
+func (weapon Weapon) GetProjectileSpeed() (speed float64) {
 	switch weapon.Id {
 	default:
-		return 1000
+		speed = 1000
 	}
+
+	return
 }
 
 func (weapon Weapon) GetBulletsPerShot() int {

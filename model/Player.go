@@ -42,8 +42,7 @@ func (player *Player) Move(dir float64, g *Game) {
 			player.Dir = dir
 			player.TurnDelay = player.GetTurnDelay() + g.State.Timestamp
 		}
-		fmt.Println("moved player", player)
-		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed(), 0).Rotated(player.Dir))
+		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed() , 0).Rotated(player.Dir))
 		for _, wall := range g.CurrentMap.Walls {
 			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
 				fmt.Println("Invalid move")
