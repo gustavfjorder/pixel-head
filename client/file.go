@@ -125,3 +125,17 @@ func Prefix(aps ...string) (res string) {
 	}
 	return
 }
+
+func LoadSpriteSheet(deltax float64, deltay float64, numx int, numy int, total int, path string) Animation{
+	pic,err:=LoadPicture(path)
+	if err!=nil{
+		panic(err)
+	}
+	sprites:=make([]Animation, total)
+	index:=0
+	for y:=pic.Bounds().Max.Y; y>=pic.Bounds().Min.Y;y=y-deltay{
+		for x:=pic.Bounds().Min.X;x<=pic.Bounds().Max.X;x=x+deltax{
+			sprites[index]=append
+		}
+	}
+}
