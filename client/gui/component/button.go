@@ -1,11 +1,10 @@
 package component
 
-import (
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-)
+import "github.com/faiface/pixel"
 
 type Button struct {
+	Clickable
+
 	width   int // internal bricks
 	sprite  pixel.Sprite
 	pic     pixel.Picture
@@ -74,43 +73,5 @@ func (b *Button) Draw(target pixel.Target, pos pixel.Vec, center ...bool) {
 		txtComp.Size = 10
 
 		txtComp.Draw(target, b.bounds.Center(), true)
-	}
-}
-
-
-/**
- * Event handling
- */
-func (b *Button) OnLeftMouseClick(win *pixelgl.Window, handler func()) {
-	b.OnClick(win, func(button pixelgl.Button) {
-		if button == pixelgl.MouseButtonLeft {
-			handler()
-		}
-	})
-}
-
-func (b *Button) OnRightMouseClick(win *pixelgl.Window, handler func()) {
-	b.OnClick(win, func(button pixelgl.Button) {
-		if button == pixelgl.MouseButtonRight {
-			handler()
-		}
-	})
-}
-
-func (b *Button) OnClick(win *pixelgl.Window, handler func(button pixelgl.Button)) {
-	mouse := win.MousePosition()
-	if ! b.bounds.Contains(mouse) {
-		return
-	}
-
-	if win.JustPressed(pixelgl.MouseButtonLeft) {
-		b.Pressed = true
-		handler(pixelgl.MouseButtonLeft)
-	} else if win.JustPressed(pixelgl.MouseButtonRight) {
-		handler(pixelgl.MouseButtonRight)
-	}
-
-	if win.JustReleased(pixelgl.MouseButtonLeft) {
-		b.Pressed = false
 	}
 }
