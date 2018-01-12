@@ -5,9 +5,11 @@ import (
 	"time"
 	"github.com/gustavfjorder/pixel-head/config"
 	"math"
+	"github.com/rs/xid"
 )
 
 type Shot struct {
+	Id         string
 	Start      pixel.Vec
 	Angle      float64
 	StartTime  time.Duration
@@ -20,6 +22,7 @@ func NewShot(player Player, angleOffset ...float64) (shot Shot) {
 	shot.Angle = player.Dir
 	shot.WeaponType = player.WeaponType
 	shot.StartTime = Timestamp
+	shot.Id = xid.New().String()
 	if len(angleOffset) > 0 {
 		shot.Angle += angleOffset[0]
 	}
@@ -30,4 +33,12 @@ func (s Shot) GetPos() (v pixel.Vec) {
 	dt := float64(Timestamp-s.StartTime) / float64(time.Second.Nanoseconds())
 	delta := pixel.V(s.WeaponType.ProjectileSpeed(), 0).Scaled(float64(dt)).Rotated(s.Angle)
 	return s.Start.Add(delta)
+}
+
+func (s Shot) ID() string {
+	return s.Id
+}
+
+func (s Shot) EntityType() EntityType {
+	return ShotE
 }

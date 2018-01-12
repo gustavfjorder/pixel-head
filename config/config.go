@@ -27,7 +27,7 @@ var Conf = Config{
 	ReloadKey:         pixelgl.KeyR,
 	Id:                xid.New().String(),
 	Online:            false,
-	LoungeUri:         "tcp://localhost:31414/lounge",
+	LoungeUri:         "tcp://localhost:31415/lounge",
 	LocalUri:          "game",
 	AnimationPath:     "client/sprites",
 	AbilityPath:       "client/images/abilities",

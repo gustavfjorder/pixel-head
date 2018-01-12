@@ -74,7 +74,7 @@ func (game *Game) HandleZombies() {
 
 		//Remove all zombies at zero health
 		if zombie.Stats.Health <= 0 {
-			game.Remove(Entry{Zombie{}, i})
+			game.Remove(Entry{*zombie, i})
 			continue
 		}
 
@@ -87,7 +87,7 @@ func (game *Game) HandleShots() {
 	for i := len(game.State.Shots) - 1; i >= 0; i-- {
 		shot := game.State.Shots[i]
 		if shot.GetPos().Sub(shot.Start).Len() > shot.WeaponType.Range() {
-			game.Remove(Entry{Shot{}, i})
+			game.Remove(Entry{shot, i})
 			continue
 		}
 	}
@@ -99,7 +99,7 @@ func (game *Game) HandlePlayers() {
 		if player.Stats.Health <= 0 {
 			//Remove player from game
 			game.PlayerIds[player.Id] = false
-			game.Remove(Entry{Player{}, i})
+			game.Remove(Entry{player, i})
 		}
 	}
 }
@@ -129,20 +129,22 @@ func (game *Game) Remove(entries ...Entry){
 			last := len(game.State.Players) - 1
 			game.State.Players[entry.index] = game.State.Players[last]
 			game.State.Players = game.State.Players[:last]
+			game.Updates.Remove(entry.elem.(Player))
 		case Shot:
 			last := len(game.State.Shots) - 1
 			game.State.Shots[entry.index] = game.State.Shots[last]
 			game.State.Shots = game.State.Shots[:last]
-			game.Updates.Add(entry.elem.(Shot))
+			game.Updates.Remove(entry.elem.(Shot))
 		case Zombie:
 			last := len(game.State.Zombies) - 1
 			game.State.Zombies[entry.index] = game.State.Zombies[last]
 			game.State.Zombies = game.State.Zombies[:last]
+			game.Updates.Remove(entry.elem.(Zombie))
 		case Barrel:
 			last := len(game.State.Barrels) - 1
 			game.State.Barrels[entry.index] = game.State.Barrels[last]
 			game.State.Barrels = game.State.Barrels[:last]
-			game.Updates.Add(entry.elem.(Barrel))
+			game.Updates.Remove(entry.elem.(Barrel))
 		}
 	}
 }

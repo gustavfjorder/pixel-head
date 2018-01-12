@@ -12,33 +12,29 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 	"golang.org/x/image/colornames"
 	"github.com/gustavfjorder/pixel-head/server"
-	"sync"
+	"runtime"
+	"log"
 )
 
 func run() {
 	//config.LoadJson("settings.json", &config.Conf)
 	registerModels()
 	var (
-		campos             pixel.Vec
-		frames             = 0
-		second             = time.Tick(time.Second)
-		fps                = time.Tick(config.Conf.Fps)
-		me                 = model.Player{Id: config.Conf.Id}
-		state              = &model.State{}
-		spc, gameMap, game = gotoLounge()
-		imd                = client.LoadMap(gameMap)
-		cfg                = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
-		lock               = &sync.Mutex{}
-		updateChan         = make(chan model.Updates, config.Conf.ServerHandleSpeed)
+		campos           pixel.Vec
+		frames           = 0
+		second           = time.Tick(time.Second)
+		fps              = time.Tick(config.Conf.Fps)
+		me               = model.NewPlayer(config.Conf.Id)
+		spc, gameMap     = gotoLounge()
+		walls            = client.LoadMap(gameMap)
+		cfg              = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
+		updateChan       = make(chan model.Updates, config.Conf.ServerHandleSpeed)
+		state = &model.State{}
 		animationHandler = client.NewAnimationHandler(updateChan)
 	)
 
 	//Start state handler
-	if config.Conf.Online {
-		go client.HandleEvents(&spc, state, lock, updateChan)
-	} else {
-		state = &game.State
-	}
+	go client.HandleEvents(&spc, state, updateChan)
 
 	//Make window
 	win, err := pixelgl.NewWindow(cfg)
@@ -52,13 +48,12 @@ func run() {
 	go client.HandleControls(&spc, win)
 
 	for !win.Closed() {
-
 		client.GetPlayer(state.Players, &me)
 		campos = pixel.V(0, 0).Sub(me.Pos).Add(win.Bounds().Center())
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 
-		imd.Draw(win)
+		walls.Draw(win)
 		win.SetMatrix(pixel.IM.Moved(campos))
 		animationHandler.Draw(*state)
 		client.DrawAbilities(win, me)
@@ -81,7 +76,7 @@ func run() {
 	config.SaveConfig("settings.json")
 }
 
-func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
+func gotoLounge() (spc space.Space, m model.Map) {
 	if config.Conf.Online {
 		var myUri string
 		servspc := space.NewRemoteSpace(config.Conf.LoungeUri)
@@ -99,7 +94,6 @@ func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
 		// Load map from server
 	} else {
 		g := model.NewGame([]string{config.Conf.Id}, "Test1")
-		game = &g
 		m = model.MapTemplates["Test1"]
 		uri := config.Conf.LoungeUri
 		clientSpace := server.ClientSpace{
@@ -107,9 +101,9 @@ func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
 			Uri:   uri,
 			Space: server.SetupSpace(uri),
 		}
-		c := make(chan bool, 1)
-		go server.Start(game, []server.ClientSpace{clientSpace}, c)
 		spc = space.NewRemoteSpace(uri)
+		c := make(chan bool, 1)
+		go server.Start(&g, []server.ClientSpace{clientSpace}, c)
 	}
 	spc.Get("map", &m)
 	spc.Put("joined")
@@ -118,6 +112,14 @@ func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
 }
 
 func main() {
+	go func() {
+		for {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			log.Printf("\nAlloc = %v\nTotalAlloc = %v\nSys = %v\nNumGC = %v\n\n", m.Alloc/1024, m.TotalAlloc/1024, m.Sys/1024, m.NumGC)
+			time.Sleep(5 * time.Second)
+		}
+	}()
 	pixelgl.Run(run)
 }
 

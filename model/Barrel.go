@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/faiface/pixel"
 	"math"
+	"github.com/rs/xid"
 )
 
 type Barrel struct {
@@ -11,9 +12,9 @@ type Barrel struct {
 	Exploded bool
 }
 
-func NewBarrel(id string, pos pixel.Vec) Barrel {
+func NewBarrel(pos pixel.Vec) Barrel {
 	return Barrel{
-		Id:  id,
+		Id:  xid.New().String(),
 		Pos: pos,
 	}
 }
@@ -51,4 +52,12 @@ func (barrel Barrel) GetHitBox() float64 {
 
 func (barrel Barrel) GetPower() int {
 	return 50
+}
+
+func (barrel Barrel) ID() string {
+	return barrel.Id
+}
+
+func (barrel Barrel) EntityType()EntityType {
+	return BarrelE
 }

@@ -19,12 +19,12 @@ const (
 )
 
 type Player struct {
-	Id          string
-	Pos         pixel.Vec
-	Dir         float64
-	WeaponType  WeaponType
-	WeaponList  []Weapon
-	Action      Action
+	Id         string
+	Pos        pixel.Vec
+	Dir        float64
+	WeaponType WeaponType
+	WeaponList []Weapon
+	Action     Action
 	Stats
 }
 
@@ -193,5 +193,13 @@ func (player Player) TurnDelay() time.Duration {
 
 func (player Player) TurnSpeed() time.Duration {
 	return time.Second / 10
+}
+
+func (player Player) ID() string {
+	return player.Id
+}
+
+func (player Player) EntityType() EntityType {
+	return PlayerE
 }
 

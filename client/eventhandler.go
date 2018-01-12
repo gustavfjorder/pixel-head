@@ -5,11 +5,10 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 	"time"
-	"sync"
 	"github.com/gustavfjorder/pixel-head/config"
 )
 
-func HandleEvents(spc *space.Space, state *model.State, lock *sync.Mutex, updates chan<- model.Updates) {
+func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Updates) {
 	//Handle loop
 	sec := time.NewTicker(time.Second)
 	delay := time.NewTicker(config.Conf.ServerHandleSpeed)
@@ -22,10 +21,7 @@ func HandleEvents(spc *space.Space, state *model.State, lock *sync.Mutex, update
 	for {
 		_, err := spc.GetP("state", &t, &tempState)
 		if err == nil {
-			lock.Lock()
-			model.Timestamp = t
 			*state = tempState
-			lock.Unlock()
 		}
 		updateTuples, err := spc.GetAll("update", &t, &model.Updates{})
 		for _, updateTuple := range updateTuples {
@@ -49,7 +45,7 @@ func GetPlayer(players []model.Player, player *model.Player) {
 		return
 	}
 	for _, p := range players {
-		if player.Id == p.Id {
+		if player.ID() == p.ID() {
 			*player = p
 		}
 	}

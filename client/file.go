@@ -97,7 +97,6 @@ func LoadAnimation(path string) (Animation, error) {
 	return Animation{
 		Sprites:  res,
 		Cur:      0,
-		Tick:     nil,
 		NextAnim: &Animation{},
 	}, nil
 }
