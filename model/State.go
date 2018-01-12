@@ -6,6 +6,6 @@ type State struct {
 	Timestamp time.Duration
 	Players   []Player
 	Zombies   []Zombie
-	Shoots    []Shoot
+	Shots     []Shoot
 	Barrels   []Barrel
 }

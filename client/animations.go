@@ -67,12 +67,17 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 	center := pixel.ZV
 
 	bullet := anims["bullet"]
-	for _, shot := range state.Shoots {
+	for _, shot := range state.Shots {
 		p := shot.GetPos(state.Timestamp)
 		transformation := pixel.IM.Scaled(pixel.ZV, config.BulletScale).Rotated(pixel.ZV,shot.Angle - math.Pi/2).Moved(p)
 		bullet.Next().Draw(win, transformation)
 	}
+	barrel:=anims["barrel"]
+	for _, b := range state.Barrels{
+		transofrmation:=pixel.IM.ScaledXY(pixel.ZV,pixel.V(0.5,0.5)).Moved(b.Pos)
+		barrel.Next().Draw(win,transofrmation)
 
+	}
 	for _, zombie := range state.Zombies {
 		v, ok := currentAnims[zombie.Id]
 		prefix := Prefix("zombie", "walk")

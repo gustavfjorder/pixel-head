@@ -20,6 +20,8 @@ func run() {
 	registerModels()
 	animations := client.Load("client/sprites", "", client.ANIM)
 	animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
+	animations["barrel"],_ = client.LoadAnimation(config.Conf.BarrelPath)
+
 	var (
 		frames             = 0
 		second             = time.Tick(time.Second)

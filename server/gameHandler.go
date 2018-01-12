@@ -56,9 +56,11 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			//Update game
 			g.State.Timestamp = time.Since(start)
 			g.HandleRequests(collectRequests(clientSpaces))
+			g.HandleBarrels()
 			g.HandleZombies()
 			g.HandleShots()
 			g.HandlePlayers()
+
 
 			//Send new game state to clients
 			if config.Conf.Online {

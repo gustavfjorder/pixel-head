@@ -26,13 +26,16 @@ var Conf = Config{
 	ShotgunKey:        pixelgl.Key4,
 	ReloadKey:         pixelgl.KeyR,
 	Id:                xid.New().String(),
-	Online:            true,
-	LoungeUri:         "tcp://10.16.135.30:31415/lounge",
+	Online:            false,
+	//LoungeUri:         "tcp://10.16.135.30:31415/lounge",
+	LoungeUri:         "tcp://localhost:31415/lounge",
 	LocalUri:          "game",
 	AnimationPath:     "client/sprites",
 	AbilityPath:       "client/images/abilities",
 	BulletPath:        "client/images/bullet",
 	HealthPath:        "client/images/health",
+	BarrelPath:        "client/images/barrel",
+	//LootboxPath:       "client/images/",
 }
 
 type Config struct {
@@ -58,6 +61,8 @@ type Config struct {
 	AbilityPath       string
 	BulletPath        string
 	HealthPath        string
+	BarrelPath        string
+	//LootboxPath       string
 }
 
 func LoadJson(file string, config interface{}) {
