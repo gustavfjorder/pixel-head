@@ -24,11 +24,11 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 		abilitiesBar = ab["abilitiesBar.png"].Sprites[0]
 
 		//knife - used as reference
-		knife         = ab["knife.png"].Sprites[0]
+		knife = ab["knife.png"].Sprites[0]
 
 		//dimensions of abilities bar
-		abilitiesBarPosX = win.Bounds().Max.X / 2
-		abilitiesBarPosY = win.Bounds().Min.Y + abilitiesBar.Picture().Bounds().Max.Y/2
+
+		abPos = pixel.V(win.Bounds().Max.X/2, win.Bounds().Min.Y+abilitiesBar.Picture().Bounds().Max.Y/2).Add(me.Pos).Sub(win.Bounds().Center())
 
 		//the factor by which we scale the weapon icons so they fit in the abilities bar
 		//fractionOfAbilitiesBar is the height of the icon as a fraction of the height of the abilities bar
@@ -36,11 +36,11 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 		scaled      = pixel.IM.ScaledXY(pixel.ZV, scalefactor)
 
 		//locations of weapon icons
-		knifeLocation   = pixel.Vec{abilitiesBarPosX - (abilitiesBar.Picture().Bounds().Max.X / 2.8), abilitiesBarPosY}
-		handgunLocation = pixel.Vec{abilitiesBarPosX - (abilitiesBar.Picture().Bounds().Max.X / 8.8), abilitiesBarPosY}
-		rifleLocation   = pixel.Vec{abilitiesBarPosX + (abilitiesBar.Picture().Bounds().Max.X / 8.5), abilitiesBarPosY}
-		shotgunLocation = pixel.Vec{abilitiesBarPosX + (abilitiesBar.Picture().Bounds().Max.X / 2.8), abilitiesBarPosY}
-		myWep = me.WeaponType
+		knifeLocation   = pixel.Vec{abPos.X - (abilitiesBar.Picture().Bounds().Max.X / 2.8), abPos.Y}
+		handgunLocation = pixel.Vec{abPos.X - (abilitiesBar.Picture().Bounds().Max.X / 8.8), abPos.Y}
+		rifleLocation   = pixel.Vec{abPos.X + (abilitiesBar.Picture().Bounds().Max.X / 8.5), abPos.Y}
+		shotgunLocation = pixel.Vec{abPos.X + (abilitiesBar.Picture().Bounds().Max.X / 2.8), abPos.Y}
+		myWep           = me.WeaponType
 	)
 
 	ab[getSpriteName(me, model.KNIFE)].Sprites[0].Draw(win, scaled.Moved(knifeLocation))
@@ -48,10 +48,9 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 	ab[getSpriteName(me, model.RIFLE)].Sprites[0].Draw(win, scaled.Moved(rifleLocation))
 	ab[getSpriteName(me, model.SHOTGUN)].Sprites[0].Draw(win, scaled.Moved(shotgunLocation))
 
-
 	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
-	weaponText := text.New(pixel.V(abilitiesBarPosX+abilitiesBar.Picture().Bounds().Max.X/2, abilitiesBarPosY*0.9), basicAtlas)
-	bulletsText := text.New(pixel.V(abilitiesBarPosX-abilitiesBar.Picture().Bounds().Max.X/2, abilitiesBarPosY*0.9), basicAtlas)
+	weaponText := text.New(pixel.V(abPos.X+abilitiesBar.Picture().Bounds().Max.X/2, abPos.Y), basicAtlas)
+	bulletsText := text.New(pixel.V(abPos.X-abilitiesBar.Picture().Bounds().Max.X/2, abPos.Y), basicAtlas)
 	var bulletTextSize float64
 	fmt.Fprintln(weaponText, myWep.Name())
 	if myWep != model.KNIFE {
@@ -62,7 +61,7 @@ func DrawAbilities(win *pixelgl.Window, me model.Player) {
 	weaponText.Draw(win, pixel.IM.Scaled(weaponText.Orig, 2))
 	bulletsText.Draw(win, pixel.IM.Scaled(bulletsText.Orig, 2).Moved(pixel.V(-bulletTextSize, 0)))
 
-	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abilitiesBarPosX, abilitiesBarPosY)))
+	abilitiesBar.Draw(win, pixel.IM.Moved(pixel.V(abPos.X, abPos.Y)))
 
 }
 
@@ -70,7 +69,7 @@ func getSpriteName(me model.Player, weapon model.WeaponType) string {
 	s := weapon.Name()
 	if me.WeaponType == weapon {
 		s += "Selected"
-	} else if !me.IsAvailable(weapon){
+	} else if !me.IsAvailable(weapon) {
 		s += "Dark"
 	}
 	s += ".png"
@@ -96,11 +95,15 @@ func DrawHealthbar(win *pixelgl.Window, me model.Player) {
 		scaled         = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor, yScalefactor))
 		healthscaled   = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor*float64(me.Health)/float64(me.GetMaxHealth()), yScalefactor))
 		frameLocation  = pixel.Vec{win.Bounds().Max.X / 2, win.Bounds().Min.Y + ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
-		healthfraction = float64(me.GetMaxHealth() - me.Health) / float64(me.GetMaxHealth())
+		healthfraction = float64(me.GetMaxHealth()-me.Health) / float64(me.GetMaxHealth())
 		healthLocation = pixel.Vec{
 			win.Bounds().Max.X/2 + (healthgraphic.Picture().Bounds().Max.X/2*xScalefactor)*float64(healthfraction) - 2,
 			win.Bounds().Min.Y + ab["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
 	)
+	pos := me.Pos.Sub(win.Bounds().Center())
+	frameLocation = frameLocation.Add(pos)
+	healthLocation = healthLocation.Add(pos)
+
 	//draw background, health and frame
 	healthBackground.Draw(win, scaled.Moved(frameLocation))
 

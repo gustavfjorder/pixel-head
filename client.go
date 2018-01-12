@@ -20,11 +20,12 @@ func run() {
 	registerModels()
 	animations := client.Load("client/sprites", "", client.ANIM)
 	animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
-	animations["barrel"],_ = client.LoadAnimation(config.Conf.BarrelPath)
-	exp:=client.LoadSpriteSheet(1024/8,1024/8,8*8,config.Conf.ExplosionPath)
-	exp.Start(time.Second/100)
+	animations["barrel"], _ = client.LoadAnimation(config.Conf.BarrelPath)
+	exp := client.LoadSpriteSheet(1024/8, 1024/8, 8*8, config.Conf.ExplosionPath)
+	exp.Start(time.Second / 100)
 	fmt.Println(exp.Sprites)
 	var (
+		campos             pixel.Vec
 		frames             = 0
 		second             = time.Tick(time.Second)
 		fps                = time.Tick(config.Conf.Fps)
@@ -57,18 +58,18 @@ func run() {
 	for !win.Closed() {
 
 		client.GetPlayer(state.Players, &me)
-
+		campos = pixel.V(0, 0).Sub(me.Pos).Add(win.Bounds().Center())
 		//Update visuals
 		win.Clear(colornames.Darkolivegreen)
 
 		imd.Draw(win)
 		lock.Lock()
-		win.SetMatrix(pixel.IM.Moved(pixel.V(0,0).Sub(me.Pos).Add(win.Bounds().Center())))
+		win.SetMatrix(pixel.IM.Moved(campos))
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		lock.Unlock()
 		client.DrawAbilities(win, me)
 		client.DrawHealthbar(win, me)
-		exp.Next().Draw(win,pixel.IM.ScaledXY(pixel.ZV,pixel.V(15,15)).Moved(win.Bounds().Center()))
+		exp.Next().Draw(win, pixel.IM.ScaledXY(pixel.ZV, pixel.V(15, 15)).Moved(win.Bounds().Center()))
 
 		win.Update()
 
