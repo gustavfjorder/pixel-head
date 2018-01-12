@@ -11,7 +11,7 @@ type Lootbox struct {
 	Weapon
 }
 
-func NewLootbox(id string, x float64, y float64, randPos bool, weapon int) Lootbox{
+func NewLootbox(id string, x float64, y float64, randPos bool, weapon WeaponType) Lootbox{
 	if randPos{
 		return Lootbox{
 			Id: id,
@@ -30,6 +30,6 @@ func NewLootbox(id string, x float64, y float64, randPos bool, weapon int) Lootb
 }
 
 func (player *Player) PickupLootbox(lootbox Lootbox){
-	player.WeaponList[lootbox.Weapon.Id].Bullets+=lootbox.Weapon.MagazineCurrent
+	player.WeaponList[lootbox.Weapon.WeaponType].Bullets+=lootbox.Weapon.MagazineCurrent
 }
 

@@ -63,6 +63,7 @@ func run() {
 
 		imd.Draw(win)
 		lock.Lock()
+		win.SetMatrix(pixel.IM.Moved(pixel.V(0,0).Sub(me.Pos)))
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		lock.Unlock()
 		client.DrawAbilities(win, me)
@@ -133,8 +134,8 @@ func registerModels() {
 	gob.Register([]model.Player{})
 	gob.Register(model.Zombie{})
 	gob.Register([]model.Zombie{})
-	gob.Register(model.Shoot{})
-	gob.Register([]model.Shoot{})
+	gob.Register(model.Shot{})
+	gob.Register([]model.Shot{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
 	gob.Register(model.Segment{})

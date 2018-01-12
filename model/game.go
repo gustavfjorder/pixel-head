@@ -2,82 +2,88 @@ package model
 
 import (
 	"math/rand"
+	"fmt"
 	"github.com/faiface/pixel"
 )
 
 type Game struct {
-	PlayerIds    []string
+	PlayerIds    map[string]bool // Is true if player is active in game
 	State        State
 	CurrentMap   Map
 	CurrentLevel int
 }
 
 func NewGame(ids []string, mapName string) (game Game) {
-	game.PlayerIds = ids
+	game.PlayerIds = make(map[string]bool)
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
 	for i, id := range ids {
 		game.State.Players[i] = NewPlayer(id)
+		game.PlayerIds[id] = true
 	}
 	game.State.Barrels=[]Barrel {NewBarrel("1",pixel.Vec{500,500})}
 	return game
 }
 
-func (g *Game) PrepareLevel(end <-chan bool) {
+func (g *Game) PrepareLevel(end chan<- bool) {
 	level := Levels[g.CurrentLevel]
 	g.State.Zombies = make([]Zombie, level.NumberOfZombies)
 	for i := range g.State.Zombies {
 		g.State.Zombies[i] = NewZombie(rand.Float64()*900+100, rand.Float64()*900+100)
 	}
-	<-end
+	end<-true
 }
 
 func (g *Game) HandleRequests(requests []Request) {
 	// Load incoming requests
-
-	players := g.State.Players
 	for _, request := range requests {
-
+		timestamp := g.State.Timestamp
 		// Load player
-		var player *Player
-		for i, p := range players {
-			if p.Id == request.PlayerId {
-				player = &(players)[i]
-				break
-			}
-		}
-		if g.State.Timestamp >= player.ActionDelay {
-			player.Reload = false
-			player.Shoot = false
-			player.Melee = false
+		player, err := findPlayer(g.State.Players, request.PlayerId)
+
+		if err != nil {
+			fmt.Println(err)
+			continue
 		}
 
-		if request.Move {
-			// todo: check if move is doable in map
+		weapon, err := player.GetWeapon()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		if request.Moved() {
 			player.Move(request.Dir, g)
+		}
+
+		if timestamp >= player.ActionDelay() {
+			player.Action = IDLE
 		}
 
 		//Action priority is like so: weapon change > reload > shoot > melee
 		switch {
-		case g.State.Timestamp < player.ActionDelay:
+		case timestamp < player.ActionDelay():
 			break
-		case player.GetWeapon().Id != request.Weapon && player.IsAvailable(request.Weapon):
+		case weapon.WeaponType != request.Weapon && player.IsAvailable(request.Weapon):
 			player.ChangeWeapon(request.Weapon)
-		case request.Reload && player.GetWeapon().RefillMag():
-			player.Reload = true
-			player.ActionDelay = player.GetWeapon().GetReloadSpeed() + g.State.Timestamp
-		case request.Shoot && player.GetWeapon().MagazineCurrent > 0:
-			playerShoots := player.GetWeapon().GenerateShoots(g.State.Timestamp, *player)
-			player.Shoot = len(playerShoots) > 0
-			g.State.Shots = append(g.State.Shots, playerShoots...)
-			player.ActionDelay = player.GetWeapon().GetShootDelay() + g.State.Timestamp
-		case request.Shoot && player.GetWeapon().RefillMag(): // Has no ammo
-			player.Reload = true
-			player.ActionDelay = player.GetWeapon().GetReloadSpeed() + g.State.Timestamp
-		case request.Melee:
-			player.Melee = true
+		case request.Reload() && weapon.RefillMag():
+			player.SetAction(RELOAD,timestamp)
+		case request.Shoot() && weapon.MagazineCurrent > 0:
+			playerShoots := weapon.GenerateShoots(g.State.Timestamp, *player)
+			g.State.Shoots = append(g.State.Shoots, playerShoots...)
+			player.SetAction(SHOOT, timestamp)
+		case request.Shoot() && weapon.RefillMag(): // Has no ammo
+			player.SetAction(RELOAD, timestamp)
+		case request.Melee():
+			player.SetAction(MELEE, timestamp)
 			// todo: create melee attack
+		default:
+			if request.Moved(){
+				player.Action = MOVE
+			} else {
+				player.Action = IDLE
+			}
 		}
 	}
 }
@@ -120,9 +126,15 @@ func (g *Game) HandleShots() {
 }
 
 func (g *Game) HandlePlayers() {
-	for i, player := range g.State.Players {
+	for i := len(g.State.Players) -1 ; i >= 0; i-- {
+		player := g.State.Players[i]
 		if player.Stats.Health <= 0 {
-			g.State.Players = append(g.State.Players[:i], g.State.Players[i+1:]...)
+			for i := 0; i < len(g.PlayerIds); i++ {
+				//Remove player from game
+				g.PlayerIds[player.Id] = false
+			}
+			g.State.Players[i] = g.State.Players[len(g.State.Players)-1]
+			g.State.Players = g.State.Players[:len(g.State.Players)-1]
 		}
 	}
 }

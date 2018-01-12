@@ -33,7 +33,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 	for g.CurrentLevel < len(model.Levels) {
 		fmt.Println("Starting level " + strconv.Itoa(g.CurrentLevel))
 
-		duration := time.Second * 10
+		duration := time.Second * 1
 		if g.CurrentLevel == 0 {
 			duration = 0
 		}
@@ -55,7 +55,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 			//Update game
 			g.State.Timestamp = time.Since(start)
-			g.HandleRequests(collectRequests(clientSpaces))
+			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
 			g.HandleBarrels()
 			g.HandleZombies()
 			g.HandleShots()
@@ -95,51 +95,61 @@ endgame:
 	fmt.Println("Game ended")
 }
 
-func collectRequests(clientSpaces []ClientSpace) (requests []model.Request) {
-	requests = make([]model.Request, len(clientSpaces))
-	for i, spc := range clientSpaces {
-		rtuples, _ := spc.GetAll(&model.Request{})
-		for _, rtuple := range rtuples {
-			request := rtuple.GetFieldAt(0).(model.Request)
-			requests[i] = requests[i].Merge(request)
+func collectRequests(clientSpaces []ClientSpace, playerIds map[string]bool) (requests []model.Request) {
+	requests = make([]model.Request, 0)
+	for _, spc := range clientSpaces {
+		if v, ok := playerIds[spc.Id]; !ok || !v {
+			continue
 		}
-		requests[i].PlayerId = spc.Id
+		rtuples, _ := spc.GetAll(&model.Request{})
+		if len(rtuples) <= 0 {
+			continue
+		}
+		requests = append(requests, rtuples[0].GetFieldAt(0).(model.Request))
+		last := len(requests) - 1
+		for _, rtuple := range rtuples[1:] {
+			request := rtuple.GetFieldAt(0).(model.Request)
+			if request.Timestamp > requests[last].Timestamp {
+				requests[last] = request
+			}
+		}
+		requests[len(requests)-1].PlayerId = spc.Id
 	}
 	return requests
 }
 
 func SetupSpace(uri string) space.Space {
-	// Register models for encoding to space
+	// Register models for encoding to spc
 	gob.Register(model.Request{})
 	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
 	gob.Register([]model.Player{})
 	gob.Register(model.Zombie{})
 	gob.Register([]model.Zombie{})
-	gob.Register(model.Shoot{})
-	gob.Register([]model.Shoot{})
+	gob.Register(model.Shot{})
+	gob.Register([]model.Shot{})
 	gob.Register(model.Map{})
 	gob.Register(model.Wall{})
 	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 
-	space := space.NewSpace(uri)
+	spc := space.NewSpace(uri)
 
 	// todo: pSpaces seems to need this to be able to Get/Query on clients
-	space.QueryP(&model.Request{})
-	space.QueryP(&[]model.Request{})
-	space.QueryP(&model.Player{})
-	space.QueryP(&[]model.Player{})
-	space.QueryP(&model.Zombie{})
-	space.QueryP(&[]model.Zombie{})
-	space.QueryP(&model.Shoot{})
-	space.QueryP(&[]model.Shoot{})
-	space.QueryP(&model.Map{})
-	space.QueryP(&model.Wall{})
-	space.QueryP(&model.Segment{})
-	space.QueryP(&model.Point{})
-	space.QueryP(&model.State{})
+	spc.QueryP(&model.Request{})
+	spc.QueryP(&[]model.Request{})
+	spc.QueryP(&model.Player{})
+	spc.QueryP(&[]model.Player{})
+	spc.QueryP(&model.Zombie{})
+	spc.QueryP(&[]model.Zombie{})
+	spc.QueryP(&model.Shot{})
+	spc.QueryP(&[]model.Shot{})
+	spc.QueryP(&model.Map{})
+	spc.QueryP(&model.Wall{})
+	spc.QueryP(&model.Segment{})
+	spc.QueryP(&model.Point{})
+	spc.QueryP(&model.State{})
 
-	return space
+	return spc
 }
