@@ -52,23 +52,27 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 				zombiesSpawned = true
 			default:
 			}
-
 			//Update game
-			g.State.Timestamp = time.Since(start)
+			model.Timestamp = time.Since(start)
+
 			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
 			g.HandleBarrels()
 			g.HandleZombies()
 			g.HandleShots()
 			g.HandlePlayers()
 
-
 			//Send new game state to clients
 			if config.Conf.Online {
+				var t time.Duration
 				for _, spc := range clientSpaces {
-					spc.GetP("state", &model.State{})
-					spc.Put("state", g.State)
+					spc.GetP("state",&t, &model.State{})
+					spc.Put("state",model.Timestamp ,g.State)
+					if !g.Updates.Empty(){
+						spc.Put("update",model.Timestamp,g.Updates)
+					}
 				}
 			}
+			g.Updates.Clear()
 
 			//If all players died end game
 			if len(g.State.Players) == 0 {
@@ -133,6 +137,7 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
+	gob.Register(model.Updates{})
 
 	spc := space.NewSpace(uri)
 
@@ -150,6 +155,7 @@ func SetupSpace(uri string) space.Space {
 	spc.QueryP(&model.Segment{})
 	spc.QueryP(&model.Point{})
 	spc.QueryP(&model.State{})
+	spc.QueryP(&model.Updates{})
 
 	return spc
 }

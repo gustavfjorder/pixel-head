@@ -60,7 +60,7 @@ func (zombie *Zombie) Move(players []Player) {
 func (zombie *Zombie) Attack(state State) {
 	zombie.Attacking = false
 	if zombie.TargetId != "" {
-		if zombie.AttackDelay() > state.Timestamp {
+		if zombie.AttackDelay() > Timestamp {
 			zombie.Attacking = true
 			return
 		} else {
@@ -82,7 +82,7 @@ func (zombie *Zombie) Attack(state State) {
 			math.Abs(zombie.angle(player.Pos)) <= zombie.GetMaxAttackAngle(){
 			zombie.Dir = angle(zombie.Pos, player.Pos)
 			zombie.Attacking = true
-			zombie.SetAttackDelay(state.Timestamp)
+			zombie.SetAttackDelay()
 			zombie.TargetId = player.Id
 			break
 		}
@@ -125,6 +125,6 @@ func (zombie Zombie) AttackDelay() time.Duration{
 	return attackDelays[zombie.Id]
 }
 
-func (zombie *Zombie) SetAttackDelay(timestamp time.Duration) {
-	attackDelays[zombie.Id] = zombie.GetAttackDelay() + timestamp
+func (zombie *Zombie) SetAttackDelay() {
+	attackDelays[zombie.Id] = zombie.GetAttackDelay() + Timestamp
 }

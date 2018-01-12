@@ -48,9 +48,9 @@ func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
 
 func (player *Player) Move(dir float64, g *Game) {
 	if !math.IsNaN(dir) {
-		if player.TurnDelay() < g.State.Timestamp {
+		if player.TurnDelay() < Timestamp {
 			player.Dir = dir
-			player.Turn(g.State.Timestamp)
+			player.Turn()
 			return
 		}
 		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed(), 0).Rotated(player.Dir))
@@ -71,7 +71,7 @@ func (player *Player) NewWeapon(weapons ...Weapon) {
 
 }
 
-func (player *Player) GetWeapon() (weapon *Weapon, e error) {
+func (player *Player) Weapon() (weapon *Weapon, e error) {
 	if player.WeaponType >= nWeapon || player.WeaponType < 0 {
 		weapon = &Weapon{}
 		e = errors.New("Unable to change weapon")
@@ -108,9 +108,9 @@ func findPlayer(players []Player, id string) (p *Player, e error) {
 	return
 }
 
-func (player *Player) SetAction(action Action, timestamp time.Duration){
+func (player *Player) SetAction(action Action){
 	player.Action = action
-	actionDelays[player.Id] = player.Delay(action) + timestamp
+	actionDelays[player.Id] = player.Delay(action) + Timestamp
 }
 
 func (player Player) Delay(action Action) time.Duration{
@@ -124,10 +124,63 @@ func (player Player) Delay(action Action) time.Duration{
 	}
 }
 
+func (player Player) Reload() bool{
+	wep, err := player.Weapon()
+	if err != nil {
+		return false
+	}
+	player.SetAction(RELOAD)
+	return wep.RefillMag()
+}
+
+func (player Player) EmptyMag() bool{
+	wep, err := player.Weapon()
+	if err != nil {
+		return true
+	}
+	return wep.MagazineCurrent <= 0
+}
+
+func (player *Player) Shoot(g *Game) {
+	weapon, err := player.Weapon()
+	if err != nil {
+		return
+	}
+	playerShoots := weapon.GenerateShoots(*player)
+	g.State.Shots = append(g.State.Shots, playerShoots...)
+	player.SetAction(SHOOT)
+}
+
+func (player *Player) Do(request Request, g *Game) {
+	if Timestamp < player.ActionDelay(){
+		return
+	}
+
+	switch{
+	case player.WeaponType != request.Weapon && player.IsAvailable(request.Weapon):
+		player.ChangeWeapon(request.Weapon)
+	case request.Reload() && player.Reload():
+		player.SetAction(RELOAD)
+	case request.Shoot() && !player.EmptyMag():
+		player.Shoot(g)
+	case request.Shoot() && player.Reload(): // Has no ammo
+		player.SetAction(RELOAD)
+	case request.Melee():
+		player.SetAction(MELEE)
+		// todo: create melee attack
+	default:
+		if request.Moved() {
+			player.Action = MOVE
+		} else {
+			player.Action = IDLE
+		}
+	}
+}
 
 
-func (player Player) Turn(timestamp time.Duration) {
-	turnDelays[player.Id] = timestamp + player.TurnSpeed()
+
+func (player Player) Turn() {
+	turnDelays[player.Id] = Timestamp + player.TurnSpeed()
 }
 
 func (player Player) ActionDelay() time.Duration {

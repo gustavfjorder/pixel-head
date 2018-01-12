@@ -3,12 +3,12 @@ package model
 import (
 	"math/rand"
 	"fmt"
-	"github.com/faiface/pixel"
 )
 
 type Game struct {
 	PlayerIds    map[string]bool // Is true if player is active in game
 	State        State
+	Updates      Updates
 	CurrentMap   Map
 	CurrentLevel int
 }
@@ -22,139 +22,127 @@ func NewGame(ids []string, mapName string) (game Game) {
 		game.State.Players[i] = NewPlayer(id)
 		game.PlayerIds[id] = true
 	}
-	game.State.Barrels=[]Barrel {NewBarrel("1",pixel.Vec{500,500})}
 	return game
 }
 
-func (g *Game) PrepareLevel(end chan<- bool) {
-	level := Levels[g.CurrentLevel]
-	g.State.Zombies = make([]Zombie, level.NumberOfZombies)
-	for i := range g.State.Zombies {
-		g.State.Zombies[i] = NewZombie(rand.Float64()*900+100, rand.Float64()*900+100)
+func (game *Game) PrepareLevel(end chan<- bool) {
+	level := Levels[game.CurrentLevel]
+	game.State.Zombies = make([]Zombie, level.NumberOfZombies)
+	for i := range game.State.Zombies {
+		game.State.Zombies[i] = NewZombie(rand.Float64()*900+100, rand.Float64()*900+100)
 	}
-	end<-true
+	end <- true
 }
 
-func (g *Game) HandleRequests(requests []Request) {
+func (game *Game) HandleRequests(requests []Request) {
 	// Load incoming requests
 	for _, request := range requests {
-		timestamp := g.State.Timestamp
 		// Load player
-		player, err := findPlayer(g.State.Players, request.PlayerId)
+		player, err := findPlayer(game.State.Players, request.PlayerId)
 
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
-		weapon, err := player.GetWeapon()
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
 
 		if request.Moved() {
-			player.Move(request.Dir, g)
+			player.Move(request.Dir, game)
 		}
 
-		if timestamp >= player.ActionDelay() {
+		if Timestamp >= player.ActionDelay() {
 			player.Action = IDLE
 		}
 
 		//Action priority is like so: weapon change > reload > shoot > melee
-		switch {
-		case timestamp < player.ActionDelay():
-			break
-		case weapon.WeaponType != request.Weapon && player.IsAvailable(request.Weapon):
-			player.ChangeWeapon(request.Weapon)
-		case request.Reload() && weapon.RefillMag():
-			player.SetAction(RELOAD,timestamp)
-		case request.Shoot() && weapon.MagazineCurrent > 0:
-			playerShoots := weapon.GenerateShoots(g.State.Timestamp, *player)
-			g.State.Shots = append(g.State.Shots, playerShoots...)
-			player.SetAction(SHOOT, timestamp)
-		case request.Shoot() && weapon.RefillMag(): // Has no ammo
-			player.SetAction(RELOAD, timestamp)
-		case request.Melee():
-			player.SetAction(MELEE, timestamp)
-			// todo: create melee attack
-		default:
-			if request.Moved(){
-				player.Action = MOVE
-			} else {
-				player.Action = IDLE
-			}
-		}
+		player.Do(request, game)
 	}
 }
 
-func (g *Game) HandleZombies() {
-	for i := len(g.State.Zombies) - 1; i >= 0; i-- {
-		zombie := &g.State.Zombies[i]
+func (game *Game) HandleZombies() {
+	for i := len(game.State.Zombies) - 1; i >= 0; i-- {
+		zombie := &game.State.Zombies[i]
 
 		// Any shoots hitting the zombie
-		for j := len(g.State.Shots) - 1; j >= 0; j-- {
-			shoot := g.State.Shots[j]
-			if shoot.GetPos(g.State.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
+		for j := len(game.State.Shots) - 1; j >= 0; j-- {
+			shoot := game.State.Shots[j]
+			if shoot.GetPos().Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
 				zombie.Stats.Health -= shoot.WeaponType.Power()
-				g.State.Shots[j] = g.State.Shots[len(g.State.Shots)-1]
-				g.State.Shots = g.State.Shots[:len(g.State.Shots)-1]
+				game.Remove(Entry{shoot, j})
 			}
 		}
 
 		//Remove all zombies at zero health
 		if zombie.Stats.Health <= 0 {
-			g.State.Zombies[i] = g.State.Zombies[len(g.State.Zombies)-1]
-			g.State.Zombies = g.State.Zombies[:len(g.State.Zombies)-1]
+			game.Remove(Entry{Zombie{}, i})
 			continue
 		}
 
-		zombie.Move(g.State.Players)
-		zombie.Attack(g.State)
+		zombie.Move(game.State.Players)
+		zombie.Attack(game.State)
 	}
 }
 
-func (g *Game) HandleShots() {
-	for i := len(g.State.Shots) - 1; i >= 0; i-- {
-		shot := g.State.Shots[i]
-		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > shot.WeaponType.Range() {
-			g.State.Shots[i] = g.State.Shots[len(g.State.Shots)-1]
-			g.State.Shots = g.State.Shots[:len(g.State.Shots)-1]
+func (game *Game) HandleShots() {
+	for i := len(game.State.Shots) - 1; i >= 0; i-- {
+		shot := game.State.Shots[i]
+		if shot.GetPos().Sub(shot.Start).Len() > shot.WeaponType.Range() {
+			game.Remove(Entry{Shot{}, i})
 			continue
 		}
 	}
 }
 
-func (g *Game) HandlePlayers() {
-	for i := len(g.State.Players) -1 ; i >= 0; i-- {
-		player := g.State.Players[i]
+func (game *Game) HandlePlayers() {
+	for i := len(game.State.Players) - 1; i >= 0; i-- {
+		player := game.State.Players[i]
 		if player.Stats.Health <= 0 {
-			for i := 0; i < len(g.PlayerIds); i++ {
-				//Remove player from game
-				g.PlayerIds[player.Id] = false
-			}
-			g.State.Players[i] = g.State.Players[len(g.State.Players)-1]
-			g.State.Players = g.State.Players[:len(g.State.Players)-1]
+			//Remove player from game
+			game.PlayerIds[player.Id] = false
+			game.Remove(Entry{Player{}, i})
 		}
 	}
 }
 
-func (g *Game) HandleBarrels(){
-	for i:=len(g.State.Barrels)-1; i>=0;i--{
-		barrel:=g.State.Barrels[i]
-		for j:=len(g.State.Shots)-1;j>=0;j--{
-			shot:=g.State.Shots[j]
-			if shot.GetPos(g.State.Timestamp).Sub(barrel.Pos).Len()<barrel.GetHitBox(){
-				barrel.Explode(&g.State)
+func (game *Game) HandleBarrels() {
+	for i := len(game.State.Barrels) - 1; i >= 0; i-- {
+		barrel := game.State.Barrels[i]
+		for j := len(game.State.Shots) - 1; j >= 0; j-- {
+			shot := game.State.Shots[j]
+			if shot.GetPos().Sub(barrel.Pos).Len() < barrel.GetHitBox() {
+				//Update objects
+				barrel.Explode(&game.State)
+				shot.Hit = true
 
-				g.State.Barrels[i]=g.State.Barrels[len(g.State.Barrels)-1]
-				g.State.Barrels=g.State.Barrels[:len(g.State.Barrels)-1]
-
-				g.State.Shots[j]=g.State.Shots[len(g.State.Shots)-1]
-				g.State.Shots=g.State.Shots[:len(g.State.Shots)-1]
-
+				//Add to updates and remove from state
+				game.Remove(Entry{barrel, i}, Entry{shot, j})
 				break
 			}
+		}
+	}
+}
+
+func (game *Game) Remove(entries ...Entry){
+	for _, entry := range entries {
+		switch entry.elem.(type){
+		case Player:
+			last := len(game.State.Players) - 1
+			game.State.Players[entry.index] = game.State.Players[last]
+			game.State.Players = game.State.Players[:last]
+		case Shot:
+			last := len(game.State.Shots) - 1
+			game.State.Shots[entry.index] = game.State.Shots[last]
+			game.State.Shots = game.State.Shots[:last]
+			game.Updates.Add(entry.elem.(Shot))
+		case Zombie:
+			last := len(game.State.Zombies) - 1
+			game.State.Zombies[entry.index] = game.State.Zombies[last]
+			game.State.Zombies = game.State.Zombies[:last]
+		case Barrel:
+			last := len(game.State.Barrels) - 1
+			game.State.Barrels[entry.index] = game.State.Barrels[last]
+			game.State.Barrels = game.State.Barrels[:last]
+			game.Updates.Add(entry.elem.(Barrel))
 		}
 	}
 }

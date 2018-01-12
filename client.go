@@ -18,12 +18,6 @@ import (
 func run() {
 	//config.LoadJson("settings.json", &config.Conf)
 	registerModels()
-	animations := client.Load("client/sprites", "", client.ANIM)
-	animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
-	animations["barrel"], _ = client.LoadAnimation(config.Conf.BarrelPath)
-	exp := client.LoadSpriteSheet(1024/8, 1024/8, 8*8, config.Conf.ExplosionPath)
-	exp.Start(time.Second / 100)
-	fmt.Println(exp.Sprites)
 	var (
 		campos             pixel.Vec
 		frames             = 0
@@ -31,16 +25,17 @@ func run() {
 		fps                = time.Tick(config.Conf.Fps)
 		me                 = model.Player{Id: config.Conf.Id}
 		state              = &model.State{}
-		activeAnimations   = make(map[string]*client.Animation)
 		spc, gameMap, game = gotoLounge()
 		imd                = client.LoadMap(gameMap)
 		cfg                = pixelgl.WindowConfig{Title: "Zombie Hunter 3000!", Bounds: pixel.R(0, 0, 1600, 800),}
 		lock               = &sync.Mutex{}
+		updateChan         = make(chan model.Updates, config.Conf.ServerHandleSpeed)
+		animationHandler = client.NewAnimationHandler(updateChan)
 	)
 
 	//Start state handler
 	if config.Conf.Online {
-		go client.HandleEvents(&spc, state, lock)
+		go client.HandleEvents(&spc, state, lock, updateChan)
 	} else {
 		state = &game.State
 	}
@@ -51,6 +46,7 @@ func run() {
 		panic(err)
 	}
 	win.SetSmooth(true)
+	animationHandler.SetWindow(win)
 
 	//Start control handler
 	go client.HandleControls(&spc, win)
@@ -63,13 +59,10 @@ func run() {
 		win.Clear(colornames.Darkolivegreen)
 
 		imd.Draw(win)
-		lock.Lock()
 		win.SetMatrix(pixel.IM.Moved(campos))
-		client.HandleAnimations(win, *state, animations, activeAnimations)
-		lock.Unlock()
+		animationHandler.Draw(*state)
 		client.DrawAbilities(win, me)
 		client.DrawHealthbar(win, me)
-		exp.Next().Draw(win, pixel.IM.ScaledXY(pixel.ZV, pixel.V(15, 15)).Moved(win.Bounds().Center()))
 
 		win.Update()
 

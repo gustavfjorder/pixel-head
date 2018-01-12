@@ -15,7 +15,7 @@ var ab = Load(config.Conf.AbilityPath, "", IMG)
 
 func DrawAbilities(win *pixelgl.Window, me model.Player) {
 	//myWep
-	wep, err := me.GetWeapon()
+	wep, err := me.Weapon()
 	if err != nil {
 		return
 	}
@@ -104,7 +104,7 @@ func DrawHealthbar(win *pixelgl.Window, me model.Player) {
 	frameLocation = frameLocation.Add(pos)
 	healthLocation = healthLocation.Add(pos)
 
-	//draw background, health and frame
+	//Draw background, health and frame
 	healthBackground.Draw(win, scaled.Moved(frameLocation))
 
 	if healthfraction < 0.95 {
