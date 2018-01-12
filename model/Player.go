@@ -51,8 +51,8 @@ func (player *Player) Move(dir float64, g *Game) {
 		if player.TurnDelay() < g.State.Timestamp {
 			player.Dir = dir
 			player.Turn(g.State.Timestamp)
+			return
 		}
-
 		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed(), 0).Rotated(player.Dir))
 		for _, wall := range g.CurrentMap.Walls {
 			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
@@ -93,7 +93,7 @@ func (player *Player) IsAvailable(weaponType WeaponType) bool {
 }
 
 func (player Player) GetTurnDelay() time.Duration {
-	return time.Second / 15
+	return time.Second / 8
 }
 
 func findPlayer(players []Player, id string) (p *Player, e error) {
@@ -104,7 +104,7 @@ func findPlayer(players []Player, id string) (p *Player, e error) {
 			return
 		}
 	}
-	e = errors.New("Unable to find player")
+	e = errors.New("Unable to find player with ID: " + id)
 	return
 }
 

@@ -73,7 +73,7 @@ func (weaponType WeaponType) ShootDelay() time.Duration {
 	case HANDGUN:
 		return time.Second / 2
 	case SHOTGUN:
-		return time.Second / 2
+		return time.Second
 	default:
 		return 0
 	}
@@ -86,7 +86,7 @@ func (weaponType WeaponType) MagazineCapacity() int {
 	case HANDGUN:
 		return 10
 	case SHOTGUN:
-		return 20
+		return math.MaxInt32
 	default:
 		return 0
 	}
@@ -136,7 +136,7 @@ func (weaponType WeaponType) ProjectileSpeed() (speed float64) {
 func (weaponType WeaponType) BulletsPerShot() int {
 	switch weaponType {
 	case SHOTGUN:
-		return 5
+		return 100
 	default:
 		return 1
 	}
@@ -154,6 +154,8 @@ func (weaponType WeaponType) Spread() float64 {
 
 func (weaponType WeaponType) Capacity() int {
 	switch weaponType {
+	case SHOTGUN:
+		return 20
 	default:
 		return 150
 	}

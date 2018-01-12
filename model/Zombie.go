@@ -41,21 +41,19 @@ func (zombie *Zombie) Move(players []Player) {
 			closestPlayer = player
 		}
 	}
-	if closestPlayer.Pos.Sub(zombie.Pos).Len() < zombie.GetRange()/2{
-		return
-	}
 
-	a := angle(zombie.Pos, closestPlayer.Pos)
+	a := zombie.angle(closestPlayer.Pos)
 
-	dAngle := a - zombie.Dir
-	if math.Abs(dAngle) > math.Pi {
-		zombie.Dir += math.Copysign(math.Min(math.Abs(dAngle)-math.Pi, zombie.GetTurnSpeed()), -dAngle)
-	} else {
-		zombie.Dir += math.Copysign(math.Min(math.Abs(dAngle), zombie.GetTurnSpeed()), dAngle)
+	if math.Abs(a) > math.Pi {
+		a = math.Copysign(math.Pi*2 - math.Abs(a), -a)
 	}
+	zombie.Dir += math.Copysign(math.Min(math.Abs(a), zombie.GetTurnSpeed()), a)
 	zombie.Dir = math.Mod(zombie.Dir, math.Pi*2)
 
-	zombie.Pos = zombie.Pos.Add(pixel.V(zombie.Stats.GetMoveSpeed(), 0).Rotated(zombie.Dir))
+	if closestPlayer.Pos.Sub(zombie.Pos).Len() > zombie.GetRange()/2 &&
+		math.Abs(a) <= math.Pi/2{
+		zombie.Pos = zombie.Pos.Add(pixel.V(zombie.Stats.GetMoveSpeed(), 0).Rotated(zombie.Dir))
+	}
 
 }
 
