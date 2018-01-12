@@ -3,11 +3,16 @@ package component
 import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
+	"github.com/pkg/errors"
+	"fmt"
 )
 
-type component interface {
-	Draw(target pixel.Target, pos pixel.Vec, center ...bool)
-	//Target() *pixel.Batch
+type ComponentInterface interface {
+	Pos(pos pixel.Vec) ComponentInterface
+	Center() ComponentInterface
+	Render() ComponentInterface
+	Draw(win *pixelgl.Window)
 }
 
 type ClickableInterface interface {
@@ -19,7 +24,98 @@ type ClickableInterface interface {
 	OnRightMouseClick(handler func())
 }
 
+type Component struct {
+	ComponentInterface
+
+	columns float64
+	rows    float64
+
+	center bool
+	pos    pixel.Vec
+	bounds pixel.Rect
+
+	children []ComponentInterface
+
+	Batch *pixel.Batch
+	Text  *text.Text
+
+	pic   pixel.Picture
+	Rects []pixel.Rect
+	data  SpriteData
+}
+
+func (component *Component) Pos(pos pixel.Vec) ComponentInterface {
+	component.pos = pos
+
+	topRight := pixel.V(component.columns * component.data.Width, component.rows * component.data.Height)
+	component.bounds = pixel.Rect{
+		Min: pos,
+		Max: pos.Add(topRight),
+	}
+
+	return component
+}
+
+func (component *Component) Center() ComponentInterface {
+	move := component.bounds.Center().Sub(component.bounds.Max)
+	component.bounds = component.bounds.Moved(move)
+	component.center = true
+
+	return component
+}
+
+func (component *Component) Child(child ...ComponentInterface) {
+	if len(component.children) == 0 {
+		component.children = make([]ComponentInterface, 0)
+	}
+
+	component.children = append(component.children, child...)
+
+	fmt.Println(len(component.children))
+}
+
+func (component *Component) Draw(win *pixelgl.Window) {
+	// todo: would be better to do this here. Investigate polymorphic behaviour
+	//if component.center {
+	//	move := component.bounds.Center().Sub(component.bounds.Max)
+	//	component.bounds = component.bounds.Moved(move)
+	//}
+	//
+	//component.Render()
+
+	if component.Text != nil {
+		pos := component.bounds.Min
+		if component.center {
+			pos = pos.Sub(component.Text.Bounds().Center())
+		}
+		component.Text.Draw(win, pixel.IM.Moved(pos))
+		component.Text.Clear()
+	} else {
+		component.Batch.Draw(win)
+		component.Batch.Clear()
+	}
+
+
+	for _, child := range component.children {
+		child.Pos(component.bounds.Center()).Center()
+		child.Render().Draw(win)
+	}
+}
+
+func (component *Component) Render() ComponentInterface {
+	panic(errors.New("COMPONENT HAS NO RENDER..."))
+}
+
+func (component *Component) loadSprite(file string) {
+	component.pic, component.Rects, component.data = LoadSprite(file)
+	component.Batch = pixel.NewBatch(&pixel.TrianglesData{}, component.pic)
+}
+
+
+
 type Clickable struct {
+	Component
+
 	ClickableInterface
 
 	Pressed  bool

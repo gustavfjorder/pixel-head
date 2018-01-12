@@ -1,59 +1,44 @@
 package component
 
-import "github.com/faiface/pixel"
+import (
+	"github.com/faiface/pixel"
+)
 
 type Button struct {
+	Component
 	Clickable
 
-	width   int // internal bricks
-	sprite  pixel.Sprite
-	pic     pixel.Picture
-	rects   []pixel.Rect
-	batch   *pixel.Batch
-	data    SpriteData
-	Pressed bool
 	Text    string
-	bounds  pixel.Rect
 }
 
-func NewButton(width int) Button {
-	return Button{
-		width: width,
+func NewButton(width float64) *Button {
+	button := &Button{
+		Component: Component{
+			columns: width + 2,
+			rows:    1,
+		},
 	}
+
+	button.loadSprite("assets/gui/Yellow")
+
+	return button
 }
 
-func (b *Button) loadSprite() {
-	b.pic, b.rects, b.data = LoadSprite("assets/gui/Yellow")
-	b.batch = pixel.NewBatch(&pixel.TrianglesData{}, b.pic)
-}
-
-func (b *Button) Draw(target pixel.Target, pos pixel.Vec, center ...bool) {
-	b.loadSprite()
-
-	topRight := pixel.V(float64(b.width + 2) * b.data.Width, b.data.Height)
-	b.bounds = pixel.Rect{
-		Min: pos,
-		Max: pos.Add(topRight),
-	}
-
-	if len(center) > 0 && center[0] {
-		b.bounds = b.bounds.Moved(b.bounds.Center().Sub(b.bounds.Max))
-	}
-
+func (b *Button) Render() ComponentInterface {
 	adder := 0
 	if b.Pressed {
 		adder = 3
 	}
 
-	for column := 0; column < b.width + 2; column++ {
+	for column := 0.0; column < b.columns + 2.0; column++ {
 		var rect pixel.Rect
 
 		if column == 0 {
-			rect = b.rects[54 + adder]
-		} else if column == b.width + 1 {
-			rect = b.rects[56 + adder]
+			rect = b.Rects[54 + adder]
+		} else if column == b.columns + 1.0 {
+			rect = b.Rects[56 + adder]
 		} else {
-			rect = b.rects[55 + adder]
+			rect = b.Rects[55 + adder]
 		}
 
 		place := b.bounds.Min.Add(pixel.V(
@@ -62,16 +47,16 @@ func (b *Button) Draw(target pixel.Target, pos pixel.Vec, center ...bool) {
 		)).Add(pixel.V(b.data.Width / 2, b.data.Height / 2))
 
 		sprite := pixel.NewSprite(b.pic, rect)
-		sprite.Draw(b.batch, pixel.IM/*.Scaled(pixel.ZV, 2)*/.Moved(place))
+		sprite.Draw(b.Batch, pixel.IM/*.Scaled(pixel.ZV, 2)*/.Moved(place))
 	}
-
-	b.batch.Draw(target)
 
 	// Draw text if any
 	if b.Text != "" {
 		txtComp := NewTextWithContent(b.Text)
-		txtComp.Size = 10
+		txtComp.SetSize(10)
 
-		txtComp.Draw(target, b.bounds.Center(), true)
+		b.Child(txtComp)
 	}
+
+	return b
 }

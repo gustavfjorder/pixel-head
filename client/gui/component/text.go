@@ -9,55 +9,60 @@ import (
 )
 
 type Text struct {
+	Component
+
 	atlas   *text.Atlas
+	txt		*text.Text
 	content []string
 	Color   color.Color
-	Size    float64
+	size    float64
 }
 
-func NewText() Text {
+func NewText() *Text {
 	return NewTextWithContents([]string{})
 }
 
-func NewTextWithContent(content string) Text {
+func NewTextWithContent(content string) *Text {
 	return NewTextWithContents([]string{content})
 }
 
-func NewTextWithContents(content []string) Text {
-	return Text{
+func NewTextWithContents(content []string) *Text {
+	txt := &Text{
 		Color:   colornames.Black,
-		Size:    12,
+		size:    12,
 		content: content,
 	}
+
+	txt.loadFontFace()
+
+	return txt
 }
 
 func (t *Text) loadFontFace() {
-	face, err := LoadTTF("assets/gui/kenvector_future.ttf", t.Size)
+	face, err := LoadTTF("assets/gui/kenvector_future.ttf", t.size)
 	if err != nil {
 		panic(err)
 	}
 
 	t.atlas = text.NewAtlas(face, text.ASCII)
+	t.Text = text.New(pixel.ZV, t.atlas)
 }
 
-func (t *Text) Draw(target pixel.Target, pos pixel.Vec, center ...bool) {
-	t.loadFontFace()
-
-	txt := text.New(pixel.ZV, t.atlas)
-
-	txt.Color = t.Color
+func (t *Text) Render() ComponentInterface {
+	t.Text.Color = t.Color
 
 	for _, str := range t.content {
-		//txt.Dot.X -= txt.BoundsOf(str).W() // Right align
-		//txt.Dot.X -= txt.BoundsOf(str).W() / 2 // Center align
-		fmt.Fprintln(txt, str)
+		//t.Text.Dot.X -= t.Text.BoundsOf(str).W() // Right align
+		//t.Text.Dot.X -= t.Text.BoundsOf(str).W() / 2 // Center align
+		fmt.Fprintln(t.Text, str)
 	}
 
-	if len(center) > 0 && center[0] {
-		pos = pos.Sub(txt.Bounds().Center())
-	}
+	return t
+}
 
-	txt.Draw(target, pixel.IM.Moved(pos))
+func (t *Text) SetSize(size float64) {
+	t.size = size
+	t.loadFontFace()
 }
 
 func (t *Text) Write(txt string) {
