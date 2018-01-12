@@ -63,7 +63,7 @@ func run() {
 
 		imd.Draw(win)
 		lock.Lock()
-		win.SetMatrix(pixel.IM.Moved(pixel.V(0,0).Sub(me.Pos)))
+		win.SetMatrix(pixel.IM.Moved(pixel.V(0,0).Sub(me.Pos).Add(win.Bounds().Center())))
 		client.HandleAnimations(win, *state, animations, activeAnimations)
 		lock.Unlock()
 		client.DrawAbilities(win, me)

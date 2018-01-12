@@ -71,7 +71,7 @@ func (g *Game) HandleRequests(requests []Request) {
 			player.SetAction(RELOAD,timestamp)
 		case request.Shoot() && weapon.MagazineCurrent > 0:
 			playerShoots := weapon.GenerateShoots(g.State.Timestamp, *player)
-			g.State.Shoots = append(g.State.Shoots, playerShoots...)
+			g.State.Shots = append(g.State.Shots, playerShoots...)
 			player.SetAction(SHOOT, timestamp)
 		case request.Shoot() && weapon.RefillMag(): // Has no ammo
 			player.SetAction(RELOAD, timestamp)
@@ -96,7 +96,7 @@ func (g *Game) HandleZombies() {
 		for j := len(g.State.Shots) - 1; j >= 0; j-- {
 			shoot := g.State.Shots[j]
 			if shoot.GetPos(g.State.Timestamp).Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
-				zombie.Stats.Health -= GetWeaponRef(shoot.Weapon).GetPower()
+				zombie.Stats.Health -= shoot.WeaponType.Power()
 				g.State.Shots[j] = g.State.Shots[len(g.State.Shots)-1]
 				g.State.Shots = g.State.Shots[:len(g.State.Shots)-1]
 			}
@@ -117,7 +117,7 @@ func (g *Game) HandleZombies() {
 func (g *Game) HandleShots() {
 	for i := len(g.State.Shots) - 1; i >= 0; i-- {
 		shot := g.State.Shots[i]
-		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > GetWeaponRef(shot.Weapon).GetRange() {
+		if shot.GetPos(g.State.Timestamp).Sub(shot.Start).Len() > shot.WeaponType.Range() {
 			g.State.Shots[i] = g.State.Shots[len(g.State.Shots)-1]
 			g.State.Shots = g.State.Shots[:len(g.State.Shots)-1]
 			continue
