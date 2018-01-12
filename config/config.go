@@ -36,6 +36,7 @@ var Conf = Config{
 	HealthPath:        "client/images/health",
 	BarrelPath:        "client/images/barrel",
 	//LootboxPath:       "client/images/",
+	ExplosionPath:      "client/images/explosion/explosion.png",
 }
 
 type Config struct {
@@ -63,6 +64,7 @@ type Config struct {
 	HealthPath        string
 	BarrelPath        string
 	//LootboxPath       string
+	ExplosionPath     string
 }
 
 func LoadJson(file string, config interface{}) {

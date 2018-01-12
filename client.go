@@ -21,7 +21,9 @@ func run() {
 	animations := client.Load("client/sprites", "", client.ANIM)
 	animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
 	animations["barrel"],_ = client.LoadAnimation(config.Conf.BarrelPath)
-
+	exp:=client.LoadSpriteSheet(1024/8,1024/8,8*8,config.Conf.ExplosionPath)
+	exp.Start(time.Second/100)
+	fmt.Println(exp.Sprites)
 	var (
 		frames             = 0
 		second             = time.Tick(time.Second)
@@ -65,6 +67,7 @@ func run() {
 		lock.Unlock()
 		client.DrawAbilities(win, me)
 		client.DrawHealthbar(win, me)
+		exp.Next().Draw(win,pixel.IM.ScaledXY(pixel.ZV,pixel.V(15,15)).Moved(win.Bounds().Center()))
 
 		win.Update()
 
