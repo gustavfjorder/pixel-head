@@ -75,6 +75,24 @@ func (game *Game) HandleRequests(requests []Request) {
 	}
 }
 
+var lastTime = time.Now()
+func (g *Game) HandleLoot() {
+	if lastTime.Add(time.Second * 10).Before(time.Now()) && float64(rand.Intn(100)) <= 3.8 {
+		min := 0
+		max := len(g.CurrentMap.LootPoints)
+
+		lootPoint := rand.Intn(max - min) + min
+		point := g.CurrentMap.LootPoints[lootPoint]
+
+		if ! g.State.HasLootboxAt(point) {
+			lootbox := NewLootbox(point.X, point.Y, SHOTGUN)
+			g.State.Lootboxes = append(g.State.Lootboxes, lootbox)
+
+			lastTime = time.Now()
+		}
+	}
+}
+
 func (game *Game) HandleZombies() {
 	for i := len(game.State.Zombies) - 1; i >= 0; i-- {
 		zombie := &game.State.Zombies[i]

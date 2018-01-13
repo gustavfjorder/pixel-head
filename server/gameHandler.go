@@ -58,6 +58,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			model.Timestamp = time.Since(start)
 
 			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
+			g.HandleLoot()
 			g.HandleBarrels()
 			g.HandleZombies()
 			g.HandleShots()

@@ -2,29 +2,19 @@ package model
 
 import (
 	"github.com/faiface/pixel"
-	"math/rand"
+	"github.com/rs/xid"
 )
 
 type Lootbox struct {
-	Id string
-	Pos pixel.Vec
-	Weapon
+	Id     string
+	Pos    pixel.Vec
+	Weapon Weapon
 }
 
-func NewLootbox(id string, x float64, y float64, randPos bool, weapon WeaponType) Lootbox{
-	if randPos{
-		return Lootbox{
-			Id: id,
-
-			//todo: instead of 900+100 put map dimensions
-			Pos: pixel.V(rand.Float64()*900+100,rand.Float64()*900+100),
-			Weapon: NewWeapon(weapon),
-
-		}
-	}
+func NewLootbox(x, y float64, weapon WeaponType) Lootbox {
 	return Lootbox{
-		Id: id,
-		Pos: pixel.V(x,y),
+		Id:     xid.New().String(),
+		Pos:    pixel.V(x, y),
 		Weapon: NewWeapon(weapon),
 	}
 }
