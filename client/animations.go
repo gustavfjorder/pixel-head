@@ -10,6 +10,15 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 )
 
+type AnimationType int
+
+const(
+	NonBlocking AnimationType = iota
+	Blocking
+	Terminal
+	Image
+)
+
 type Animation struct {
 	Prefix   string
 	Sprites  []*pixel.Sprite
@@ -23,10 +32,11 @@ type Animation struct {
 	Finished bool
 }
 
+func NewAnimation(prefix string, sprites []*pixel.Sprite) Animation{
+	return Animation{Prefix:prefix,Sprites:sprites}
+}
+
 func (a *Animation) Draw(win *pixelgl.Window) {
-	if a.Cur >= len(a.Sprites) {
-		a.Cur = 0
-	}
 	a.Sprites[a.Cur].Draw(win, pixel.IM.Rotated(pixel.ZV, a.Rotation).Scaled(pixel.ZV, a.Scale).Moved(a.Pos))
 }
 
@@ -45,7 +55,7 @@ func (a *Animation) Next() {
 }
 
 func (a *Animation) ChangeAnimation(other Animation, blocking, terminal bool) (e error) {
-	if a.Terminal || (a.NextAnim == nil && a.NextAnim.Terminal) {
+	if a.Terminal || (a.NextAnim != nil && a.NextAnim.Terminal) {
 		e = errors.New("cannot change terminal animation")
 		return
 	}

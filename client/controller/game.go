@@ -24,15 +24,12 @@ type Game struct {
 	lock  *sync.Mutex
 
 	usedMap          *imdraw.IMDraw
-	animations       map[string]client.Animation
-	activeAnimations map[string]*client.Animation
 }
 
 func (g *Game) Init() {
 	g.me = &model.Player{Id: config.Conf.Id}
 	g.state = &model.State{}
 	g.lock = &sync.Mutex{}
-	g.activeAnimations = make(map[string]*client.Animation)
 }
 
 func (g *Game) Run() {
@@ -41,9 +38,6 @@ func (g *Game) Run() {
 	)
 
 	g.usedMap = client.LoadMap(gameMap)
-
-	g.animations = client.Load("client/sprites", "", client.ANIM)
-	g.animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
 
 	//Start state handler
 	updateChan := make(chan model.Updates)

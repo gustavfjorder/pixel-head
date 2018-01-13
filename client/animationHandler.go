@@ -25,22 +25,16 @@ type AnimationHandler struct {
 	me               model.Player
 }
 
+
 func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
-	ah.animations = Load("client/sprites", "", ANIM)
-	for prefix, anim := range Load(config.Conf.AbilityPath, "", IMG) {
-		ah.animations[prefix] = anim
-	}
-	ah.animations["bullet"], _ = LoadAnimation(config.Conf.BulletPath)
-	ah.animations["barrel"], _ = LoadAnimation(config.Conf.BarrelPath)
-	ah.animations["explosion"] = LoadSpriteSheet(1024/8, 1024/8, 8*8, config.Conf.ExplosionPath)
+	spritePath := "client/sprites/"
+	ah.animations = LoadAll(spritePath + "animations", spritePath + "images")
+	ah.animations["explosion"] = LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath + "images/explosion/explosion.png")
 	ah.activeAnimations = make(map[string]*Animation)
 	ah.center = pixel.ZV
 	ah.updateChan = updates
 	ah.me = model.NewPlayer(config.Conf.Id)
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
-	for k, v := range ah.animations {
-		fmt.Println(k, v)
-	}
 	return
 }
 
@@ -64,6 +58,7 @@ func (ah AnimationHandler) Draw(state model.State) {
 		break
 	}
 	for id, animation := range ah.activeAnimations {
+		fmt.Println(animation.Prefix)
 		animation.Draw(ah.win)
 		if nextFrame {
 			animation.Next()
@@ -116,14 +111,14 @@ func (ah AnimationHandler) handleUpdates() () {
 
 func (ah AnimationHandler) collectBarrels() {
 	for _, b := range ah.state.Barrels {
-		barrel := ah.animations["barrel"]
+		barrel := ah.animations[Prefix("barrel","barrel")]
 		barrel.Pos = b.Pos
 		barrel.Scale = 1
 		ah.activeAnimations[b.ID()] = &barrel
 	}
 }
 func (ah AnimationHandler) collectBulllets() {
-	bullet := ah.animations["bullet"]
+	bullet := ah.animations[Prefix("bullet","bullet")]
 	for _, shot := range ah.state.Shots {
 		bullet.Scale = config.BulletScale
 		bullet.Pos = shot.GetPos()
