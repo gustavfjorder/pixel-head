@@ -5,11 +5,11 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"github.com/pkg/errors"
-	"fmt"
 )
 
 type ComponentInterface interface {
 	Pos(pos pixel.Vec) ComponentInterface
+	ParentPos(pos pixel.Vec) ComponentInterface
 	Center() ComponentInterface
 	Render() ComponentInterface
 	Draw(win *pixelgl.Window)
@@ -30,9 +30,10 @@ type Component struct {
 	columns float64
 	rows    float64
 
-	center bool
-	pos    pixel.Vec
-	bounds pixel.Rect
+	center    bool
+	pos       pixel.Vec
+	bounds    pixel.Rect
+	parentPos pixel.Vec
 
 	children []ComponentInterface
 
@@ -46,6 +47,27 @@ type Component struct {
 
 func (component *Component) Pos(pos pixel.Vec) ComponentInterface {
 	component.pos = pos
+	component.CalculateBounds()
+
+	return component
+}
+
+func (component *Component) ParentPos(pos pixel.Vec) ComponentInterface {
+	component.parentPos = pos
+	component.CalculateBounds()
+
+	return component
+}
+
+func (component *Component) Center() ComponentInterface {
+	component.center = true
+	component.CalculateBounds()
+
+	return component
+}
+
+func (component *Component) CalculateBounds() {
+	pos := component.parentPos.Add(component.pos)
 
 	topRight := pixel.V(component.columns * component.data.Width, component.rows * component.data.Height)
 	component.bounds = pixel.Rect{
@@ -53,15 +75,10 @@ func (component *Component) Pos(pos pixel.Vec) ComponentInterface {
 		Max: pos.Add(topRight),
 	}
 
-	return component
-}
-
-func (component *Component) Center() ComponentInterface {
-	move := component.bounds.Center().Sub(component.bounds.Max)
-	component.bounds = component.bounds.Moved(move)
-	component.center = true
-
-	return component
+	if component.center {
+		move := component.bounds.Center().Sub(component.bounds.Max)
+		component.bounds = component.bounds.Moved(move)
+	}
 }
 
 func (component *Component) Child(child ...ComponentInterface) {
@@ -70,8 +87,6 @@ func (component *Component) Child(child ...ComponentInterface) {
 	}
 
 	component.children = append(component.children, child...)
-
-	fmt.Println(len(component.children))
 }
 
 func (component *Component) Draw(win *pixelgl.Window) {
@@ -97,7 +112,7 @@ func (component *Component) Draw(win *pixelgl.Window) {
 
 
 	for _, child := range component.children {
-		child.Pos(component.bounds.Center()).Center()
+		child.ParentPos(component.bounds.Min)
 		child.Render().Draw(win)
 	}
 }

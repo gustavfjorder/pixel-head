@@ -55,6 +55,10 @@ func (b *Button) Render() ComponentInterface {
 	if b.Text != "" {
 		txtComp := NewTextWithContent(b.Text)
 		txtComp.SetSize(10)
+		txtComp.Pos(pixel.V(
+			b.bounds.W() / 2,
+			b.bounds.H() / 2,
+		)).Center()
 
 		b.Child(txtComp)
 	}
