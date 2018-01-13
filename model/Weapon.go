@@ -43,7 +43,7 @@ func (weapon *Weapon) RefillMag() bool {
 	return dBullet > 0
 }
 
-func (weapon *Weapon) GenerateShoots(timestamp time.Duration, player Player) []Shot {
+func (weapon *Weapon) GenerateShoots(player Player) []Shot {
 	if weapon.MagazineCurrent <= 0 {
 		return []Shot{}
 	}
@@ -55,7 +55,7 @@ func (weapon *Weapon) GenerateShoots(timestamp time.Duration, player Player) []S
 	shoots := make([]Shot, weapon.BulletsPerShot())
 
 	for i := 0; i < weapon.BulletsPerShot(); i++ {
-		shoots[i] = NewShot(player, timestamp, angle)
+		shoots[i] = NewShot(player, angle)
 		angle += weapon.Spread()
 	}
 	weapon.MagazineCurrent--

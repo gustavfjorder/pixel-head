@@ -5,28 +5,33 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"fmt"
 	"time"
-	"sync"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
-func HandleEvents(spc *space.Space, state *model.State, lock *sync.Mutex) {
+func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Updates) {
 	//Handle loop
-	sec := time.Tick(time.Second)
+	sec := time.NewTicker(time.Second)
+	delay := time.NewTicker(config.Conf.ServerHandleSpeed)
+	defer sec.Stop()
+	defer delay.Stop()
+	var t time.Duration
+	var tempState model.State
 	count := 0
 	fmt.Println("Handling events")
 	for {
-
-		stateTuple, err := spc.Get("state", &model.State{})
-		if err != nil {
-			continue
+		_, err := spc.GetP("state", &t, &tempState)
+		if err == nil {
+			*state = tempState
 		}
-		tempState := stateTuple.GetFieldAt(1).(model.State)
-		lock.Lock()
-		*state = tempState
-		lock.Unlock()
+		updateTuples, err := spc.GetAll("update", &t, &model.Updates{})
+		for _, updateTuple := range updateTuples {
+			updates <- updateTuple.GetFieldAt(2).(model.Updates)
+		}
 
+		<-delay.C
 		count++
 		select {
-		case <-sec:
+		case <-sec.C:
 			fmt.Println("Handled:", count, "state updates")
 			count = 0
 		default:
@@ -40,7 +45,7 @@ func GetPlayer(players []model.Player, player *model.Player) {
 		return
 	}
 	for _, p := range players {
-		if player.Id == p.Id {
+		if player.ID() == p.ID() {
 			*player = p
 		}
 	}

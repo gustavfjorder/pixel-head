@@ -5,26 +5,24 @@ import (
 	"math"
 	"github.com/gustavfjorder/pixel-head/config"
 	"time"
-	"strconv"
+	"github.com/rs/xid"
 )
 
 type Zombie struct {
-	Id          string
-	Pos         pixel.Vec
-	Dir         float64
-	Attacking   bool
-	Stats       Stats
-	TargetId    string
+	Id        string
+	Pos       pixel.Vec
+	Dir       float64
+	Attacking bool
+	Stats     Stats
+	TargetId  string
 }
 
-var count = 0
 var attackDelays = make(map[string]time.Duration)
 
-func NewZombie(pos pixel.Vec) Zombie {
-	count++
+func NewZombie(vec pixel.Vec) Zombie {
 	return Zombie{
-		Id:    strconv.Itoa(count),
-		Pos:   pos,
+		Id:    xid.New().String(),
+		Pos:   vec,
 		Dir:   0,
 		Stats: NewStats(ZOMBIE),
 	}
@@ -45,13 +43,13 @@ func (zombie *Zombie) Move(players []Player) {
 	a := zombie.angle(closestPlayer.Pos)
 
 	if math.Abs(a) > math.Pi {
-		a = math.Copysign(math.Pi*2 - math.Abs(a), -a)
+		a = math.Copysign(math.Pi*2-math.Abs(a), -a)
 	}
 	zombie.Dir += math.Copysign(math.Min(math.Abs(a), zombie.GetTurnSpeed()), a)
 	zombie.Dir = math.Mod(zombie.Dir, math.Pi*2)
 
 	if closestPlayer.Pos.Sub(zombie.Pos).Len() > zombie.GetRange()/2 &&
-		math.Abs(a) <= math.Pi/2{
+		math.Abs(a) <= math.Pi/2 {
 		zombie.Pos = zombie.Pos.Add(pixel.V(zombie.Stats.GetMoveSpeed(), 0).Rotated(zombie.Dir))
 	}
 
@@ -60,7 +58,7 @@ func (zombie *Zombie) Move(players []Player) {
 func (zombie *Zombie) Attack(state State) {
 	zombie.Attacking = false
 	if zombie.TargetId != "" {
-		if zombie.AttackDelay() > state.Timestamp {
+		if zombie.AttackDelay() > Timestamp {
 			zombie.Attacking = true
 			return
 		} else {
@@ -68,7 +66,7 @@ func (zombie *Zombie) Attack(state State) {
 				player := &state.Players[i]
 				if player.Id == zombie.TargetId {
 					if zombie.Pos.Sub(player.Pos).Len() <= zombie.GetRange() &&
-						math.Abs(zombie.angle(player.Pos)) <= zombie.GetMaxAttackAngle(){
+						math.Abs(zombie.angle(player.Pos)) <= zombie.GetMaxAttackAngle() {
 						player.Stats.Health -= zombie.Stats.GetPower()
 					}
 					break
@@ -79,10 +77,10 @@ func (zombie *Zombie) Attack(state State) {
 	}
 	for _, player := range state.Players {
 		if zombie.Pos.Sub(player.Pos).Len() <= zombie.GetRange() &&
-			math.Abs(zombie.angle(player.Pos)) <= zombie.GetMaxAttackAngle(){
+			math.Abs(zombie.angle(player.Pos)) <= zombie.GetMaxAttackAngle() {
 			zombie.Dir = angle(zombie.Pos, player.Pos)
 			zombie.Attacking = true
-			zombie.SetAttackDelay(state.Timestamp)
+			zombie.SetAttackDelay()
 			zombie.TargetId = player.Id
 			break
 		}
@@ -94,19 +92,19 @@ func angle(this pixel.Vec, other pixel.Vec) float64 {
 }
 
 func (zombie Zombie) GetMaxAttackAngle() float64 {
-	return math.Pi/3
+	return math.Pi / 3
 }
 
-func (zombie Zombie) angle(p pixel.Vec) float64{
+func (zombie Zombie) angle(p pixel.Vec) float64 {
 	return angle(zombie.Pos, p) - zombie.Dir
 }
 
 func (zombie Zombie) GetRange() float64 {
-	return 80
+	return 100
 }
 
 func (zombie Zombie) GetHitbox() float64 {
-	return 30
+	return 50
 }
 
 //Time from attack is initiated till hit is calculated
@@ -121,10 +119,18 @@ func (zombie Zombie) GetTurnSpeed() (turnSpeed float64) {
 	return turnSpeed * config.Conf.ServerHandleSpeed.Seconds()
 }
 
-func (zombie Zombie) AttackDelay() time.Duration{
+func (zombie Zombie) AttackDelay() time.Duration {
 	return attackDelays[zombie.Id]
 }
 
-func (zombie *Zombie) SetAttackDelay(timestamp time.Duration) {
-	attackDelays[zombie.Id] = zombie.GetAttackDelay() + timestamp
+func (zombie *Zombie) SetAttackDelay() {
+	attackDelays[zombie.Id] = zombie.GetAttackDelay() + Timestamp
+}
+
+func (zombie Zombie) ID() string{
+	return zombie.Id
+}
+
+func (zombie Zombie) EntityType() EntityType {
+	return ZombieE
 }
