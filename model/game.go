@@ -70,6 +70,10 @@ func (game *Game) HandleRequests(requests []Request) {
 			player.Action = IDLE
 		}
 
+		if request.Lootbox != "" {
+			game.State.PickUpLoot(request.Lootbox, player)
+		}
+
 		//Action priority is like so: weapon change > reload > shoot > melee
 		player.Do(request, game)
 	}

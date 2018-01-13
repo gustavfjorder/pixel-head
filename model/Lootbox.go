@@ -19,7 +19,7 @@ func NewLootbox(x, y float64, weapon WeaponType) Lootbox {
 	}
 }
 
-func (player *Player) PickupLootbox(lootbox Lootbox){
-	player.WeaponList[lootbox.Weapon.WeaponType].Bullets+=lootbox.Weapon.MagazineCurrent
+func (player *Player) PickupLootbox(lootbox *Lootbox) {
+	player.WeaponList[lootbox.Weapon.WeaponType].Bullets += lootbox.Weapon.MagazineCurrent
 }
 
