@@ -20,11 +20,11 @@ type Zombie struct {
 var count = 0
 var attackDelays = make(map[string]time.Duration)
 
-func NewZombie(x, y float64) Zombie {
+func NewZombie(pos pixel.Vec) Zombie {
 	count++
 	return Zombie{
 		Id:    strconv.Itoa(count),
-		Pos:   pixel.V(x, y),
+		Pos:   pos,
 		Dir:   0,
 		Stats: NewStats(ZOMBIE),
 	}
@@ -102,11 +102,11 @@ func (zombie Zombie) angle(p pixel.Vec) float64{
 }
 
 func (zombie Zombie) GetRange() float64 {
-	return 100
+	return 80
 }
 
 func (zombie Zombie) GetHitbox() float64 {
-	return 50
+	return 30
 }
 
 //Time from attack is initiated till hit is calculated

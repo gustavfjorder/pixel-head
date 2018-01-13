@@ -1,10 +1,14 @@
 package model
 
 import (
-	"math/rand"
 	"fmt"
 	"github.com/faiface/pixel"
-)
+	"math/rand"
+	"time"
+	/*"github.com/faiface/pixel/text"
+	"golang.org/x/image/font/basicfont"
+*/
+	)
 
 type Game struct {
 	PlayerIds    map[string]bool // Is true if player is active in game
@@ -22,18 +26,44 @@ func NewGame(ids []string, mapName string) (game Game) {
 		game.State.Players[i] = NewPlayer(id)
 		game.PlayerIds[id] = true
 	}
-	game.State.Barrels=[]Barrel {NewBarrel("1",pixel.Vec{500,500})}
+	game.State.Barrels=[]Barrel {NewBarrel("1",pixel.Vec{500,500}),
+		NewBarrel("1",pixel.Vec{700,500}),
+		NewBarrel("1",pixel.Vec{400,500})}
 	return game
 }
 
 func (g *Game) PrepareLevel(end chan<- bool) {
 	level := Levels[g.CurrentLevel]
-	g.State.Zombies = make([]Zombie, level.NumberOfZombies)
-	for i := range g.State.Zombies {
-		g.State.Zombies[i] = NewZombie(rand.Float64()*900+100, rand.Float64()*900+100)
+	g.State.Zombies = make([]Zombie, 0)
+	waveticker := time.NewTicker(level.TimeBetweenWaves)
+	zombieticker:=time.NewTicker(level.TimeBetweenZombies)
+	fmt.Println("num zom",level.NumberOfZombiesPerWave,"num waves",level.NumberOfWaves)
+
+	for i:=0;i<level.NumberOfWaves;i++ {
+		fmt.Println("i:",i)
+		<-waveticker.C
+		for j:=0;j<level.NumberOfZombiesPerWave;j++ {
+			fmt.Println("j:",j)
+			fmt.Println("i*level.NumberOfZombiesPerWave+j",i*level.NumberOfZombiesPerWave+j)
+			fmt.Println(len(g.State.Zombies))
+			g.State.Zombies = append(g.State.Zombies,NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))]))
+			<-zombieticker.C
+			}
+
+
 	}
+	//todo print level complete
+
 	end<-true
 }
+/*
+func (g *Game) LevelDone(level int){
+	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
+	levelText := text.New(pixel.V(g.CurrentMap.SpawnPoint[0].X,g.CurrentMap.SpawnPoint[0].X), basicAtlas)
+	fmt.Fprintln(levelText, "Level",level, "complete")
+	levelText.Draw(,pixel.IM.Moved(pixel.Vec{500,500}))
+}
+*/
 
 func (g *Game) HandleRequests(requests []Request) {
 	// Load incoming requests
@@ -145,14 +175,15 @@ func (g *Game) HandleBarrels(){
 		for j:=len(g.State.Shots)-1;j>=0;j--{
 			shot:=g.State.Shots[j]
 			if shot.GetPos(g.State.Timestamp).Sub(barrel.Pos).Len()<barrel.GetHitBox(){
-				barrel.Explode(&g.State)
-
-				g.State.Barrels[i]=g.State.Barrels[len(g.State.Barrels)-1]
-				g.State.Barrels=g.State.Barrels[:len(g.State.Barrels)-1]
-
-				g.State.Shots[j]=g.State.Shots[len(g.State.Shots)-1]
-				g.State.Shots=g.State.Shots[:len(g.State.Shots)-1]
-
+				barrel.Explode(i,&g.State)
+				b :=Barrel{}
+				if g.State.Barrels[i] != b {
+					g.State.Barrels[i] = g.State.Barrels[len(g.State.Barrels)-1]
+					g.State.Barrels = g.State.Barrels[:len(g.State.Barrels)-1]
+					fmt.Println("barrel removed in handleBarrels")
+					g.State.Shots[j] = g.State.Shots[len(g.State.Shots)-1]
+					g.State.Shots = g.State.Shots[:len(g.State.Shots)-1]
+				}
 				break
 			}
 		}

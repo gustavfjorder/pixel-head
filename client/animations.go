@@ -74,8 +74,13 @@ func HandleAnimations(win *pixelgl.Window, state model.State, anims map[string]A
 	}
 	barrel:=anims["barrel"]
 	for _, b := range state.Barrels{
-		transofrmation:=pixel.IM.ScaledXY(pixel.ZV,pixel.V(0.5,0.5)).Moved(b.Pos)
-		barrel.Next().Draw(win,transofrmation)
+		barrelx:=barrel.Next().Picture().Bounds().Max.X
+
+		//b.GetHitBox()*2/barrelx
+
+		transformation :=pixel.IM.ScaledXY(pixel.ZV,pixel.V(b.GetHitBox()*2/barrelx,b.GetHitBox()*2/barrelx)).Moved(b.Pos)
+		barrel.Next().Draw(win, transformation)
+
 
 	}
 	for _, zombie := range state.Zombies {
@@ -168,3 +173,4 @@ func LoadMap(m model.Map) *imdraw.IMDraw {
 	}
 	return imd
 }
+

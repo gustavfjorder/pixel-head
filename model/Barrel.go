@@ -3,38 +3,42 @@ package model
 import (
 	"github.com/faiface/pixel"
 	"math"
+	"fmt"
 )
 
 type Barrel struct{
 	Id string
 	Pos pixel.Vec
+	Range float64
 }
 func NewBarrel(id string, pos pixel.Vec) Barrel{
 	return Barrel{
 		Id: id,
 		Pos: pos,
-
+		Range: 200,
 	}
 }
 
-func (barrel Barrel) Explode(s *State){
-	var(
-		Range=500.
-	)
+
+func (barrel Barrel) Explode(barrelIndex int, s *State){
+
 
 	for index,player := range s.Players{
-		if distanceBetween(player.Pos,barrel.Pos)<Range{
-			s.Players[index].Health-=barrel.GetPower()
+		if distanceBetween(player.Pos,barrel.Pos)<barrel.Range{
+			s.Players[index].Health-=int(barrel.GetPower()/distanceBetween(player.Pos,barrel.Pos))
 		}
 	}
 	for index,zombie := range s.Zombies{
-		if distanceBetween(zombie.Pos,barrel.Pos)<Range{
-			s.Zombies[index].Stats.Health-=barrel.GetPower()
-		}
+		if distanceBetween(zombie.Pos,barrel.Pos)<barrel.Range{
+			s.Zombies[index].Stats.Health-=int(barrel.GetPower()*(barrel.Range-distanceBetween(zombie.Pos,barrel.Pos))/barrel.Range)
+			}
 	}
-	for _,b := range s.Barrels{
-		if distanceBetween(b.Pos,barrel.Pos)<Range && distanceBetween(b.Pos,barrel.Pos)!=0{
-			barrel.Explode(s)
+	for index,b := range s.Barrels{
+		if distanceBetween(b.Pos,barrel.Pos)<barrel.Range && distanceBetween(b.Pos,barrel.Pos)!=0{
+			/*s.Barrels[barrelIndex]=s.Barrels[len(s.Barrels)-1]
+			s.Barrels=s.Barrels[:len(s.Barrels)-1]
+			barrel.Explode(index,s)*/
+			fmt.Println("barrel removed in Explode",index,b)
 		}
 	}
 }
@@ -47,6 +51,6 @@ func (b Barrel) GetHitBox() float64{
 	return 30
 }
 
-func (b Barrel) GetPower() int{
+func (b Barrel) GetPower() float64{
 	return 50
 }

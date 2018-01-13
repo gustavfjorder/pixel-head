@@ -7,6 +7,7 @@ import (
 
 type Map struct {
 	Walls []Wall
+	SpawnPoint []pixel.Vec
 }
 
 type Wall struct {
@@ -17,6 +18,7 @@ type Wall struct {
 var MapTemplates = map[string]Map{
 	"Test1": {
 		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
+		SpawnPoint: []pixel.Vec{pixel.Vec{200,450},pixel.Vec{900,450}},
 	},
 }
 

@@ -82,7 +82,10 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			<-t
 		}
 
+		//g.LevelDone(g.CurrentLevel)
+		fmt.Println("print level done",g.CurrentLevel)
 		g.CurrentLevel++
+
 	}
 endgame:
 	for _, spc := range clientSpaces {
