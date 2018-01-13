@@ -5,6 +5,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"github.com/pkg/errors"
+	"github.com/gustavfjorder/pixel-head/helper"
 )
 
 type ComponentInterface interface {
@@ -13,12 +14,13 @@ type ComponentInterface interface {
 	Center() ComponentInterface
 	Render() ComponentInterface
 	Draw(win *pixelgl.Window)
+	Bounds() pixel.Rect
 }
 
 type ClickableInterface interface {
 	AddListener(button pixelgl.Button, handler func())
 	RunListeners(button pixelgl.Button)
-	HandleEvents(win *pixelgl.Window)
+	DetermineEvent(win *pixelgl.Window)
 
 	OnLeftMouseClick(handler func())
 	OnRightMouseClick(handler func())
@@ -81,6 +83,10 @@ func (component *Component) CalculateBounds() {
 	}
 }
 
+func (component *Component) Bounds() pixel.Rect {
+	return component.bounds
+}
+
 func (component *Component) Child(child ...ComponentInterface) {
 	if len(component.children) == 0 {
 		component.children = make([]ComponentInterface, 0)
@@ -111,10 +117,14 @@ func (component *Component) Draw(win *pixelgl.Window) {
 		component.Batch.Clear()
 	}
 
-
 	for _, child := range component.children {
 		child.ParentPos(component.bounds.Min)
 		child.Render().Draw(win)
+
+		var clickableInterface ClickableInterface
+		if helper.TypeImplements(child, &clickableInterface) {
+			child.(ClickableInterface).DetermineEvent(win)
+		}
 	}
 }
 
@@ -176,12 +186,11 @@ func (c *Clickable) OnRightMouseClick(handler func()) {
 	c.AddListener(pixelgl.MouseButtonRight, handler)
 }
 
-func (c *Clickable) HandleEvents(win *pixelgl.Window) {
-	//mouse := win.MousePosition()
-	//if ! c.bounds.Contains(mouse) {
-	//	return
-	//}
+func (c *Clickable) DetermineEvent(win *pixelgl.Window) {
+	panic(errors.New("CLICKABLE IS NOT HANDLING EVENTS..."))
+}
 
+func (c *Clickable) DistributeEvent(win *pixelgl.Window) {
 	if win.JustPressed(pixelgl.MouseButtonLeft) {
 		c.Pressed = true
 		c.RunListeners(pixelgl.MouseButtonLeft)

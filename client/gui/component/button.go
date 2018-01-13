@@ -2,6 +2,7 @@ package component
 
 import (
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 type Button struct {
@@ -64,4 +65,12 @@ func (b *Button) Render() ComponentInterface {
 	}
 
 	return b
+}
+
+func (b *Button) DetermineEvent(win *pixelgl.Window) {
+	if ! b.bounds.Contains(win.MousePosition()) {
+		return
+	}
+
+	b.DistributeEvent(win)
 }
