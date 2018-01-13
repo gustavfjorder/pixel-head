@@ -2,18 +2,17 @@ package component
 
 import (
 	"github.com/faiface/pixel"
-	"fmt"
 )
 
 type Box struct {
 	Component
 }
 
-func NewBox(width, height float64) *Box {
+func NewBox(columns, rows float64) *Box {
 	box := &Box{
 		Component: Component{
-			columns: width + 2,
-			rows:    height + 2,
+			columns: columns + 2,
+			rows:    rows + 2,
 		},
 	}
 
@@ -23,26 +22,27 @@ func NewBox(width, height float64) *Box {
 }
 
 func (b *Box) Render() ComponentInterface {
-	fmt.Println("Render")
-	for row := 0.0; row < b.rows + 2; row++ {
-		for column := 0.0; column < b.columns + 2; column++ {
+	start := float64(1)
+
+	for row := start; row <= b.rows; row++ {
+		for column := start; column <= b.columns; column++ {
 			var rect pixel.Rect
 
-			if row == 0 { // bottom row
+			if row == start { // bottom row
 
-				if column == 0 {
+				if column == start {
 					rect = b.Rects[42]
-				} else if column == b.columns + 1 {
+				} else if column == b.columns {
 					rect = b.Rects[44]
 				} else {
 					rect = b.Rects[43]
 				}
 
-			} else if row == b.rows + 1 { // top row
+			} else if row == b.rows { // top row
 
-				if column == 0 {
+				if column == start {
 					rect = b.Rects[54]
-				} else if column == b.columns+1 {
+				} else if column == b.columns {
 					rect = b.Rects[56]
 				} else {
 					rect = b.Rects[55]
@@ -50,9 +50,9 @@ func (b *Box) Render() ComponentInterface {
 
 			} else { // middle rows
 
-				if column == 0 {
+				if column == start {
 					rect = b.Rects[48]
-				} else if column == b.columns + 1 {
+				} else if column == b.columns {
 					rect = b.Rects[50]
 				} else {
 					rect = b.Rects[49]
@@ -61,21 +61,21 @@ func (b *Box) Render() ComponentInterface {
 			}
 
 			// Yellow sprite
-			//if row == 0 { // bottom row
+			//if row == start { // bottom row
 			//
-			//	if column == 0 {
+			//	if column == start {
 			//		rect = b.Rects[36]
-			//	} else if column == b.columns + 1 {
+			//	} else if column == b.columns {
 			//		rect = b.Rects[38]
 			//	} else {
 			//		rect = b.Rects[37]
 			//	}
 			//
-			//} else if row == b.rows + 1 { // top row
+			//} else if row == b.rows { // top row
 			//
-			//	if column == 0 {
+			//	if column == start {
 			//		rect = b.Rects[48]
-			//	} else if column == b.columns+1 {
+			//	} else if column == b.columns {
 			//		rect = b.Rects[50]
 			//	} else {
 			//		rect = b.Rects[49]
@@ -83,9 +83,9 @@ func (b *Box) Render() ComponentInterface {
 			//
 			//} else { // middle rows
 			//
-			//	if column == 0 {
+			//	if column == start {
 			//		rect = b.Rects[42]
-			//	} else if column == b.columns + 1 {
+			//	} else if column == b.columns {
 			//		rect = b.Rects[44]
 			//	} else {
 			//		rect = b.Rects[43]
@@ -94,8 +94,8 @@ func (b *Box) Render() ComponentInterface {
 			//}
 
 			place := b.bounds.Min.Add(pixel.V(
-				float64(column) * rect.Size().X,
-				float64(row) * rect.Size().Y,
+				(column - 1) * rect.Size().X,
+				(row - 1) * rect.Size().Y,
 			)).Add(pixel.V(b.data.Width / 2, b.data.Height / 2))
 
 			sprite := pixel.NewSprite(b.pic, rect)

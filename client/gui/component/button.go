@@ -8,13 +8,13 @@ type Button struct {
 	Component
 	Clickable
 
-	Text    string
+	Text string
 }
 
-func NewButton(width float64) *Button {
+func NewButton(columns float64) *Button {
 	button := &Button{
 		Component: Component{
-			columns: width + 2,
+			columns: columns + 2,
 			rows:    1,
 		},
 	}
@@ -25,24 +25,25 @@ func NewButton(width float64) *Button {
 }
 
 func (b *Button) Render() ComponentInterface {
-	adder := 0
+	pressedState := 0
 	if b.Pressed {
-		adder = 3
+		pressedState = 3
 	}
 
-	for column := 0.0; column < b.columns + 2.0; column++ {
+	start := float64(1)
+	for column := start; column <= b.columns; column++ {
 		var rect pixel.Rect
 
-		if column == 0 {
-			rect = b.Rects[54 + adder]
-		} else if column == b.columns + 1.0 {
-			rect = b.Rects[56 + adder]
+		if column == start {
+			rect = b.Rects[54 + pressedState]
+		} else if column == b.columns {
+			rect = b.Rects[56 + pressedState]
 		} else {
-			rect = b.Rects[55 + adder]
+			rect = b.Rects[55 + pressedState]
 		}
 
 		place := b.bounds.Min.Add(pixel.V(
-			float64(column) * rect.Size().X,
+			(column - 1) * rect.Size().X,
 			0,
 		)).Add(pixel.V(b.data.Width / 2, b.data.Height / 2))
 
