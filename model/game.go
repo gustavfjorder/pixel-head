@@ -3,6 +3,7 @@ package model
 import (
 	"math/rand"
 	"fmt"
+	"github.com/faiface/pixel"
 )
 
 type Game struct {
@@ -18,6 +19,8 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
+	game.State.Barrels = make([]Barrel, 1)
+	game.State.Barrels[0] = NewBarrel(pixel.V(500,500))
 	for i, id := range ids {
 		game.State.Players[i] = NewPlayer(id)
 		game.PlayerIds[id] = true

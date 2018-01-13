@@ -22,17 +22,21 @@ type AnimationHandler struct {
 	center           pixel.Vec
 	state            model.State
 	ticker           *time.Ticker
+	me               model.Player
 }
 
 func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
 	ah.animations = Load("client/sprites", "", ANIM)
+	for prefix, anim := range Load(config.Conf.AbilityPath, "", IMG) {
+		ah.animations[prefix] = anim
+	}
 	ah.animations["bullet"], _ = LoadAnimation(config.Conf.BulletPath)
 	ah.animations["barrel"], _ = LoadAnimation(config.Conf.BarrelPath)
 	ah.animations["explosion"] = LoadSpriteSheet(1024/8, 1024/8, 8*8, config.Conf.ExplosionPath)
 	ah.activeAnimations = make(map[string]*Animation)
 	ah.center = pixel.ZV
 	ah.updateChan = updates
-
+	ah.me = model.NewPlayer(config.Conf.Id)
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
 	for k, v := range ah.animations {
 		fmt.Println(k, v)
@@ -46,11 +50,12 @@ func (ah *AnimationHandler) SetWindow(win *pixelgl.Window) {
 
 func (ah AnimationHandler) Draw(state model.State) {
 	ah.state = state
-	ah.handleUpdates()
+	GetPlayer(state.Players, &ah.me)
 	ah.collectBarrels()
 	ah.collectBulllets()
 	ah.collectZombies()
 	ah.collectPlayers()
+	ah.handleUpdates()
 	nextFrame := false
 	select {
 	case <-ah.ticker.C:
@@ -68,6 +73,8 @@ func (ah AnimationHandler) Draw(state model.State) {
 			continue
 		}
 	}
+	ah.DrawAbilities()
+	ah.DrawHealthbar()
 }
 
 func (ah AnimationHandler) handleUpdates() () {
@@ -88,8 +95,16 @@ func (ah AnimationHandler) handleUpdates() () {
 				case model.PlayerE:
 					delete(ah.activeAnimations, entity.ID)
 				case model.BarrelE:
-					if _, present := ah.activeAnimations[entity.ID]; present{
-						ah.activeAnimations[entity.ID].ChangeAnimation(ah.animations["explosion"], true, true)
+					fmt.Println(entity.ID)
+					if anim, present := ah.activeAnimations[entity.ID]; present {
+						exp := ah.animations["explosion"]
+						exp.Terminal = true
+						exp.Blocking = true
+						exp.Finished = false
+						exp.Cur = 0
+						exp.Scale = 20
+						exp.Pos = anim.Pos
+						ah.activeAnimations[entity.ID] = &exp
 					}
 				}
 			}
@@ -100,17 +115,19 @@ func (ah AnimationHandler) handleUpdates() () {
 }
 
 func (ah AnimationHandler) collectBarrels() {
-	//barrel := ah.animations["barrel"]
-	//for _, b := range ah.updates {
-	//	transofrmation := pixel.IM.ScaledXY(pixel.ZV, pixel.V(0.5, 0.5)).Moved(b.Pos)
-	//	barrel.Next().Draw(ah.win, transofrmation)
-	//}
+	for _, b := range ah.state.Barrels {
+		barrel := ah.animations["barrel"]
+		barrel.Pos = b.Pos
+		barrel.Scale = 1
+		ah.activeAnimations[b.ID()] = &barrel
+	}
 }
 func (ah AnimationHandler) collectBulllets() {
 	bullet := ah.animations["bullet"]
 	for _, shot := range ah.state.Shots {
-		p := shot.GetPos()
-		bullet.Transformation =  pixel.IM.Scaled(pixel.ZV, config.BulletScale).Rotated(pixel.ZV, shot.Angle-math.Pi/2).Moved(p)
+		bullet.Scale = config.BulletScale
+		bullet.Pos = shot.GetPos()
+		bullet.Rotation = shot.Angle-math.Pi/2
 		bullet.Draw(ah.win)
 	}
 }
@@ -140,7 +157,9 @@ func (ah AnimationHandler) collectZombies() {
 			}
 
 		}
-		v.Transformation = pixel.IM.Scaled(ah.center, config.ZombieScale).Rotated(ah.center, zombie.Dir).Moved(zombie.Pos)
+		v.Pos = zombie.Pos
+		v.Rotation = zombie.Dir
+		v.Scale = config.ZombieScale
 		ah.activeAnimations[zombie.ID()] = v
 	}
 }
@@ -179,7 +198,9 @@ func (ah AnimationHandler) collectPlayers() {
 				anim.ChangeAnimation(newAnim, blocking, false)
 			}
 		}
-		anim.Transformation = pixel.IM.Rotated(ah.center, player.Dir).Scaled(ah.center, config.HumanScale).Moved(player.Pos)
+		anim.Scale = config.HumanScale
+		anim.Rotation = player.Dir
+		anim.Pos = player.Pos
 		ah.activeAnimations[player.ID()] = anim
 	}
 }

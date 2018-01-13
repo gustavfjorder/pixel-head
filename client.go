@@ -56,8 +56,6 @@ func run() {
 		walls.Draw(win)
 		win.SetMatrix(pixel.IM.Moved(campos))
 		animationHandler.Draw(*state)
-		client.DrawAbilities(win, me)
-		client.DrawHealthbar(win, me)
 
 		win.Update()
 

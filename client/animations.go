@@ -11,21 +11,23 @@ import (
 )
 
 type Animation struct {
-	Prefix         string
-	Sprites        []*pixel.Sprite
-	Cur            int
-	NextAnim       *Animation
-	Transformation pixel.Matrix
-	Blocking       bool
-	Terminal       bool
-	Finished       bool
+	Prefix   string
+	Sprites  []*pixel.Sprite
+	Cur      int
+	NextAnim *Animation
+	Pos      pixel.Vec
+	Rotation float64
+	Scale    float64
+	Blocking bool
+	Terminal bool
+	Finished bool
 }
 
-func (a *Animation) Draw(win *pixelgl.Window){
+func (a *Animation) Draw(win *pixelgl.Window) {
 	if a.Cur >= len(a.Sprites) {
 		a.Cur = 0
 	}
-	a.Sprites[a.Cur].Draw(win, a.Transformation)
+	a.Sprites[a.Cur].Draw(win, pixel.IM.Rotated(pixel.ZV, a.Rotation).Scaled(pixel.ZV, a.Scale).Moved(a.Pos))
 }
 
 //inc is one element controlling how many frames to move in the animation (will only use first argument)
@@ -55,7 +57,8 @@ func (a *Animation) ChangeAnimation(other Animation, blocking, terminal bool) (e
 		a.NextAnim = &other
 		a.NextAnim.Blocking = blocking
 		a.NextAnim.Terminal = terminal
-		a.NextAnim.Transformation = a.Transformation
+		a.NextAnim.Scale = a.Scale
+		a.NextAnim.Pos = a.Pos
 	} else {
 		a.Sprites = other.Sprites
 		a.Blocking = blocking
