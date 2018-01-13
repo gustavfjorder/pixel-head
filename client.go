@@ -7,8 +7,9 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel"
 	"fmt"
-	"github.com/gustavfjorder/pixel-head/client"
 	"github.com/gustavfjorder/pixel-head/config"
+	"github.com/gustavfjorder/pixel-head/framework"
+	"github.com/gustavfjorder/pixel-head/client/controller"
 )
 
 func main() {
@@ -24,9 +25,6 @@ func run() {
 		fps                = time.Tick(config.Conf.Fps)
 	)
 
-	//Start state handler
-	go client.HandleEvents(&spc, state, updateChan)
-
 	//Make window
 	cfg := pixelgl.WindowConfig{
 		Title:  "Zombie Hunter 3000!",
@@ -38,7 +36,6 @@ func run() {
 		panic(err)
 	}
 	win.SetSmooth(true)
-	animationHandler.SetWindow(win)
 
 	container := framework.NewContainer()
 	container.SetService("window", win)

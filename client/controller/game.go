@@ -17,6 +17,7 @@ import (
 
 type Game struct {
 	framework.Controller
+	ah client.AnimationHandler
 
 	me    *model.Player
 	state *model.State
@@ -36,7 +37,7 @@ func (g *Game) Init() {
 
 func (g *Game) Run() {
 	var (
-		spc, gameMap, game = gotoLounge()
+		spc, gameMap = gotoLounge()
 	)
 
 	g.usedMap = client.LoadMap(gameMap)
@@ -45,13 +46,12 @@ func (g *Game) Run() {
 	g.animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
 
 	//Start state handler
-	if config.Conf.Online {
-		go client.HandleEvents(&spc, g.state, g.lock)
-	} else {
-		g.state = &game.State
-	}
+	updateChan := make(chan model.Updates)
+	go client.HandleEvents(&spc, g.state, updateChan)
+	g.ah = client.NewAnimationHandler(updateChan)
 
 	win := g.Container.Get("window").(*pixelgl.Window)
+	g.ah.SetWindow(win)
 
 	//Start control handler
 	go client.HandleControls(&spc, win)
@@ -66,20 +66,16 @@ func (g *Game) Update() {
 
 	g.usedMap.Draw(win)
 
-	g.lock.Lock()
 	win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(g.me.Pos)))
-	client.HandleAnimations(win, *g.state, g.animations, g.activeAnimations)
-	g.lock.Unlock()
 
-	client.DrawAbilities(win, *g.me)
-	client.DrawHealthbar(win, *g.me)
+	g.ah.Draw(*g.state)
 
 	win.Update()
 }
 
 
 
-func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
+func gotoLounge() (spc space.Space, m model.Map) {
 	if config.Conf.Online {
 		var myUri string
 		servspc := space.NewRemoteSpace(config.Conf.LoungeUri)
@@ -97,7 +93,6 @@ func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
 		// Load map from server
 	} else {
 		g := model.NewGame([]string{config.Conf.Id}, "Test1")
-		game = &g
 		m = model.MapTemplates["Test1"]
 		uri := config.Conf.LoungeUri
 		clientSpace := server.ClientSpace{
@@ -106,7 +101,7 @@ func gotoLounge() (spc space.Space, m model.Map, game *model.Game) {
 			Space: server.SetupSpace(uri),
 		}
 		c := make(chan bool, 1)
-		go server.Start(game, []server.ClientSpace{clientSpace}, c)
+		go server.Start(&g, []server.ClientSpace{clientSpace}, c)
 		spc = space.NewRemoteSpace(uri)
 	}
 	spc.Get("map", &m)
