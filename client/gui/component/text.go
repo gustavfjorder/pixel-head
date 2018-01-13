@@ -35,6 +35,8 @@ func NewTextWithContents(content []string) *Text {
 
 	txt.loadFontFace()
 
+	txt.Center()
+
 	return txt
 }
 

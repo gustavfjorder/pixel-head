@@ -58,7 +58,7 @@ func (b *Button) Render() ComponentInterface {
 		txtComp.Pos(pixel.V(
 			b.bounds.W() / 2,
 			b.bounds.H() / 2,
-		)).Center()
+		))
 
 		b.Child(txtComp)
 	}

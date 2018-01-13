@@ -105,7 +105,8 @@ func (component *Component) Draw(win *pixelgl.Window) {
 		}
 		component.Text.Draw(win, pixel.IM.Moved(pos))
 		component.Text.Clear()
-	} else {
+	}
+	if component.Batch != nil {
 		component.Batch.Draw(win)
 		component.Batch.Clear()
 	}
