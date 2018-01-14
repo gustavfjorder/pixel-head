@@ -21,6 +21,7 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.CurrentMap = MapTemplates[mapName]
 	game.State.Barrels = make([]Barrel, 1)
 	game.State.Barrels[0] = NewBarrel(pixel.V(500,500))
+	game.State.Barrels[0] = NewBarrel(pixel.V(700,700))
 	for i, id := range ids {
 		game.State.Players[i] = NewPlayer(id)
 		game.PlayerIds[id] = true
