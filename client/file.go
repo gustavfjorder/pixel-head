@@ -87,25 +87,23 @@ func Prefix(aps ...string) (res string) {
 	return
 }
 
-func LoadSpriteSheet(deltax float64, deltay float64, total int, path string) (anim Animation) {
+func LoadSpriteSheet(deltax float64, deltay float64, total int, path string) (sprites []*pixel.Sprite) {
 	pic, err := LoadPicture(path)
 	if err != nil {
 		panic(err)
 	}
-	sprites := make([]*pixel.Sprite, total)
+	sprites = make([]*pixel.Sprite, total)
 	index := 0
 	for y := pic.Bounds().Max.Y - deltay; y >= pic.Bounds().Min.Y; y = y - deltay {
 		for x := pic.Bounds().Min.X; x <= pic.Bounds().Max.X; x = x + deltax {
 			sprites[index] = pixel.NewSprite(pic, pixel.R(x, y, x+deltax, y+deltay))
 			index++
 			if index >= total {
-				goto loopdone
+				return sprites
 			}
 		}
 	}
-loopdone:
-	anim = NewAnimation("",sprites, NonBlocking)
-	return
+	return sprites
 }
 
 type ByString []os.FileInfo

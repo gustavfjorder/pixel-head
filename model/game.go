@@ -74,16 +74,16 @@ func (game *Game) HandleZombies() {
 				zombie.Stats.Health -= shoot.WeaponType.Power()
 				game.Remove(Entry{shoot, j})
 			}
-		}
-
-		//Remove all zombies at zero health
-		if zombie.Stats.Health <= 0 {
-			game.Remove(Entry{*zombie, i})
-			continue
+			//Remove all zombies at zero health
+			if zombie.Stats.Health <= 0 {
+				game.Remove(Entry{*zombie, i})
+				goto endloop
+			}
 		}
 
 		zombie.Move(game.State.Players)
 		zombie.Attack(game.State)
+		endloop:
 	}
 }
 

@@ -29,7 +29,9 @@ type AnimationHandler struct {
 func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
 	spritePath := "client/sprites/"
 	ah.animations = LoadAll(spritePath + "animations", spritePath + "images")
-	ah.animations["explosion"] = LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath + "images/explosion/explosion.png")
+	ah.animations["explosion"] = NewAnimation( "explosion",
+		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath + "images/explosion/explosion.png"),
+			Terminal)
 	ah.activeAnimations = make(map[string]Animation)
 	ah.center = pixel.ZV
 	ah.updateChan = updates
@@ -83,7 +85,9 @@ func (ah AnimationHandler) handleUpdates() () {
 				case model.BarrelE:
 					if anim, present := ah.activeAnimations[entity.ID]; present {
 						exp := ah.animations["explosion"]
-						ah.activeAnimations[entity.ID] = anim.ChangeAnimation(exp)
+						exp.SetAnimationSpeed(time.Second/120)
+						anim = anim.ChangeAnimation(exp)
+						ah.activeAnimations[entity.ID] = anim
 					}
 				}
 			}

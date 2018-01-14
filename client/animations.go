@@ -29,6 +29,7 @@ type Animation interface {
 	Next() Animation
 	ChangeAnimation(animation Animation) Animation
 	SetTransformation(transformation Transformation)
+	SetAnimationSpeed(duration time.Duration)
 	Prefix() string
 	CurrentSprite() *pixel.Sprite
 }
@@ -145,6 +146,10 @@ func (nba *NonBlockingAnimation) SetTransformation(transformation Transformation
 	nba.transformation = transformation
 }
 
+func (nba *NonBlockingAnimation) SetAnimationSpeed(duration time.Duration){
+	nba.animationSpeed.Speed = duration
+}
+
 type BLockingAnimation struct {
 	prefix         string
 	Sprites        []*pixel.Sprite
@@ -197,6 +202,10 @@ func (ba *BLockingAnimation) SetTransformation(transformation Transformation) {
 	ba.transformation = transformation
 }
 
+func (ba *BLockingAnimation) SetAnimationSpeed(duration time.Duration){
+	ba.animationSpeed.Speed = duration
+}
+
 type StillAnimation struct {
 	prefix         string
 	Sprite         *pixel.Sprite
@@ -231,6 +240,8 @@ func (sa StillAnimation) ChangeAnimation(animation Animation) Animation {
 func (sa *StillAnimation) SetTransformation(transformation Transformation) {
 	sa.transformation = transformation
 }
+
+func (nba *StillAnimation) SetAnimationSpeed(duration time.Duration){}
 
 type TerminalAnimation struct {
 	prefix         string
@@ -272,6 +283,10 @@ func (ta TerminalAnimation) ChangeAnimation(animation Animation) Animation {
 
 func (ta *TerminalAnimation) SetTransformation(transformation Transformation) {
 	ta.transformation = transformation
+}
+
+func (ta *TerminalAnimation) SetAnimationSpeed(duration time.Duration){
+	ta.animationSpeed.Speed = duration
 }
 
 func LoadMap(m model.Map) *imdraw.IMDraw {
