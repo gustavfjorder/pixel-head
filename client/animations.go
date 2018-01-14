@@ -10,6 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"reflect"
 	"fmt"
+	"time"
+	"math"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 type AnimationType int
@@ -30,23 +33,30 @@ type Animation interface {
 	CurrentSprite() *pixel.Sprite
 }
 
-func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType AnimationType) Animation {
+func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType AnimationType, speeds ...time.Duration) Animation {
 	if len(sprites) <= 0 {
 		panic(errors.New("unable to make animation from no sprites for:" + prefix))
 	}
+	speed := config.Conf.AnimationSpeed
+	if len(speeds) > 0{
+		speed = speeds[0]
+	}
+	as := AnimationSpeed{Speed:speed}
 	switch animationType {
 	case NonBlocking:
 		return &NonBlockingAnimation{
 			prefix:  prefix,
-			Sprites: sprites,
-			Cur:     0,
+			sprites: sprites,
+			cur:     0,
+			animationSpeed:as,
 		}
 	case Blocking:
 		return &BLockingAnimation{
 			prefix:        prefix,
 			Sprites:       sprites,
-			Cur:           0,
-			NextAnimation: nil,
+			cur:           0,
+			nextAnimation: nil,
+			animationSpeed:as,
 		}
 	case Still:
 		return &StillAnimation{
@@ -55,16 +65,17 @@ func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType Animatio
 		}
 	case Terminal:
 		return &TerminalAnimation{
-			prefix:prefix,
-			Cur:0,
-			Sprites:sprites,
+			prefix:  prefix,
+			cur:     0,
+			Sprites: sprites,
+			animationSpeed:as,
 		}
 
 	default:
 		return &NonBlockingAnimation{
 			prefix:  prefix,
-			Sprites: sprites,
-			Cur:     0,
+			sprites: sprites,
+			cur:     0,
 		}
 	}
 }
@@ -75,15 +86,36 @@ type Transformation struct {
 	Rotation float64
 }
 
+type AnimationSpeed struct {
+	Speed     time.Duration
+	LastFrame time.Time
+	diff      float64
+}
+
+func (as *AnimationSpeed) IncFrames() int {
+	zerotime := time.Time{}
+	if as.LastFrame == zerotime {
+		as.LastFrame = time.Now()
+		return 0
+	}
+	duration := time.Since(as.LastFrame)
+	diff := duration.Seconds() / as.Speed.Seconds() + as.diff
+	as.LastFrame = time.Now()
+	frames := math.Floor(diff)
+	as.diff = diff - frames
+	return int(frames)
+}
+
 type NonBlockingAnimation struct {
 	prefix         string
-	Sprites        []*pixel.Sprite
-	Transformation Transformation
-	Cur            int
+	sprites        []*pixel.Sprite
+	transformation Transformation
+	animationSpeed AnimationSpeed
+	cur            int
 }
 
 func (nba NonBlockingAnimation) CurrentSprite() *pixel.Sprite {
-	return nba.Sprites[nba.Cur]
+	return nba.sprites[nba.cur]
 }
 
 func (nba NonBlockingAnimation) Prefix() string {
@@ -91,37 +123,39 @@ func (nba NonBlockingAnimation) Prefix() string {
 }
 
 func (nba NonBlockingAnimation) Draw(win *pixelgl.Window) {
-	nba.Sprites[nba.Cur].Draw(win,
+	nba.sprites[nba.cur].Draw(win,
 		pixel.IM.
-			Rotated(pixel.ZV, nba.Transformation.Rotation).
-			Scaled(pixel.ZV, nba.Transformation.Scale).
-			Moved(nba.Transformation.Pos))
+			Rotated(pixel.ZV, nba.transformation.Rotation).
+			Scaled(pixel.ZV, nba.transformation.Scale).
+			Moved(nba.transformation.Pos))
 }
 
 func (nba NonBlockingAnimation) Next() Animation {
-	nba.Cur = (nba.Cur + 1) % len(nba.Sprites)
+	inc := nba.animationSpeed.IncFrames()
+	nba.cur = (nba.cur + inc) % len(nba.sprites)
 	return &nba
 }
 
 func (nba NonBlockingAnimation) ChangeAnimation(animation Animation) Animation {
-	animation.SetTransformation(nba.Transformation)
+	animation.SetTransformation(nba.transformation)
 	return animation
 }
 
 func (nba *NonBlockingAnimation) SetTransformation(transformation Transformation) {
-	nba.Transformation = transformation
+	nba.transformation = transformation
 }
 
 type BLockingAnimation struct {
 	prefix         string
 	Sprites        []*pixel.Sprite
-	Transformation Transformation
-	Cur            int
-	NextAnimation  Animation
+	transformation Transformation
+	cur            int
+	nextAnimation  Animation
+	animationSpeed AnimationSpeed
 }
 
 func (ba BLockingAnimation) CurrentSprite() *pixel.Sprite {
-	return ba.Sprites[ba.Cur]
+	return ba.Sprites[ba.cur]
 }
 
 func (ba BLockingAnimation) Prefix() string {
@@ -129,38 +163,38 @@ func (ba BLockingAnimation) Prefix() string {
 }
 
 func (ba BLockingAnimation) Draw(win *pixelgl.Window) {
-	ba.Sprites[ba.Cur].Draw(win,
+	ba.Sprites[ba.cur].Draw(win,
 		pixel.IM.
-			Rotated(pixel.ZV, ba.Transformation.Rotation).
-			Scaled(pixel.ZV, ba.Transformation.Scale).
-			Moved(ba.Transformation.Pos))
+			Rotated(pixel.ZV, ba.transformation.Rotation).
+			Scaled(pixel.ZV, ba.transformation.Scale).
+			Moved(ba.transformation.Pos))
 }
 
 func (ba BLockingAnimation) Next() Animation {
-	next := (ba.Cur + 1) % len(ba.Sprites)
-	if next <= ba.Cur && ba.NextAnimation != nil {
-		ba.NextAnimation.SetTransformation(ba.Transformation)
-		return ba.NextAnimation
+	inc := ba.cur + ba.animationSpeed.IncFrames()
+	if inc >= len(ba.Sprites) && ba.nextAnimation != nil {
+		ba.nextAnimation.SetTransformation(ba.transformation)
+		return ba.nextAnimation
 	}
-	ba.Cur = next
+	ba.cur = inc % len(ba.Sprites)
 	return &ba
 }
 
 func (ba BLockingAnimation) ChangeAnimation(animation Animation) Animation {
-	if reflect.TypeOf(animation) == reflect.TypeOf(&TerminalAnimation{}){
+	if reflect.TypeOf(animation) == reflect.TypeOf(&TerminalAnimation{}) {
 		fmt.Println("Made terminal animation")
-		animation.SetTransformation(ba.Transformation)
+		animation.SetTransformation(ba.transformation)
 		return animation
 	}
-	if ba.Cur+1 >= len(ba.Sprites) {
+	if ba.cur+1 >= len(ba.Sprites) {
 		return animation
 	}
-	ba.NextAnimation = animation
+	ba.nextAnimation = animation
 	return &ba
 }
 
 func (ba *BLockingAnimation) SetTransformation(transformation Transformation) {
-	ba.Transformation = transformation
+	ba.transformation = transformation
 }
 
 type StillAnimation struct {
@@ -202,11 +236,12 @@ type TerminalAnimation struct {
 	prefix         string
 	Sprites        []*pixel.Sprite
 	transformation Transformation
-	Cur            int
+	cur            int
+	animationSpeed AnimationSpeed
 }
 
 func (ta TerminalAnimation) CurrentSprite() *pixel.Sprite {
-	return ta.Sprites[ta.Cur]
+	return ta.Sprites[ta.cur]
 }
 
 func (ta TerminalAnimation) Prefix() string {
@@ -214,7 +249,7 @@ func (ta TerminalAnimation) Prefix() string {
 }
 
 func (ta TerminalAnimation) Draw(win *pixelgl.Window) {
-	ta.Sprites[ta.Cur].Draw(win,
+	ta.Sprites[ta.cur].Draw(win,
 		pixel.IM.
 			Rotated(pixel.ZV, ta.transformation.Rotation).
 			Scaled(pixel.ZV, ta.transformation.Scale).
@@ -222,11 +257,12 @@ func (ta TerminalAnimation) Draw(win *pixelgl.Window) {
 }
 
 func (ta TerminalAnimation) Next() Animation {
-	if ta.Cur + 1 >= len(ta.Sprites){
+	inc := ta.cur + ta.animationSpeed.IncFrames()
+	if inc >= len(ta.Sprites) {
 		fmt.Println("Removed")
 		return nil
 	}
-	ta.Cur = (ta.Cur + 1) % len(ta.Sprites)
+	ta.cur = inc % len(ta.Sprites)
 	return &ta
 }
 
