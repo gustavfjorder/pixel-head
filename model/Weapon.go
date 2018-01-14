@@ -145,7 +145,7 @@ func (weaponType WeaponType) BulletsPerShot() int {
 func (weaponType WeaponType) Spread() float64 {
 	switch weaponType {
 	case SHOTGUN:
-		return math.Pi / 30
+		return math.Pi / 40
 	default:
 		return 0
 

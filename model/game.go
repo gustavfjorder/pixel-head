@@ -21,8 +21,8 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
 	game.Add(NewBarrel(pixel.V(500,500)), NewBarrel(pixel.V(600,600)), NewBarrel(pixel.V(700,700)), NewBarrel(pixel.V(900,900)), NewBarrel(pixel.V(1000,1000)))
-	for i, id := range ids {
-		game.State.Players[i] = NewPlayer(id)
+	for _, id := range ids {
+		game.Add( NewPlayer(id))
 		game.PlayerIds[id] = true
 	}
 	return game
@@ -31,8 +31,8 @@ func NewGame(ids []string, mapName string) (game Game) {
 func (game *Game) PrepareLevel(end chan<- bool) {
 	level := Levels[game.CurrentLevel]
 	game.State.Zombies = make([]Zombie, level.NumberOfZombies)
-	for i := range game.State.Zombies {
-		game.State.Zombies[i] = NewZombie(rand.Float64()*900+100, rand.Float64()*900+100)
+	for range game.State.Zombies {
+		game.Add( NewZombie(rand.Float64()*900+100, rand.Float64()*900+100) )
 	}
 	end <- true
 }
@@ -108,7 +108,7 @@ func (game *Game) HandlePlayers() {
 }
 
 func (game *Game) HandleBarrels() {
-	for i,_ := range game.State.Barrels {
+	for i := range game.State.Barrels {
 		barrel := &game.State.Barrels[i]
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shot := game.State.Shots[j]
@@ -134,6 +134,8 @@ func (game *Game) Add(entities ...EntityI) {
 		switch entity.EntityType() {
 		case BarrelE: game.State.Barrels = append(game.State.Barrels, entity.(Barrel))
 		case ShotE: game.State.Shots = append(game.State.Shots, entity.(Shot))
+		case ZombieE: game.State.Zombies = append(game.State.Zombies, entity.(Zombie))
+		case PlayerE: game.State.Players = append(game.State.Players, entity.(Player))
 		}
 	}
 	game.Updates.Add(entities...)
