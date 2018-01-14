@@ -28,7 +28,7 @@ func run() {
 	//Make window
 	cfg := pixelgl.WindowConfig{
 		Title:  "Zombie Hunter 3000!",
-		Bounds: pixel.R(0, 0, 1024, 700),
+		Bounds: pixel.R(0, 0, 600, 500),
 		//VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
@@ -70,6 +70,7 @@ func run() {
 func registerModels() {
 	// Register models for encoding to space
 	gob.Register(model.Request{})
+	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
 	gob.Register([]model.Player{})
 	gob.Register(model.Zombie{})
@@ -80,12 +81,9 @@ func registerModels() {
 	gob.Register(model.Wall{})
 	gob.Register(model.Segment{})
 	gob.Register(model.Point{})
-	gob.Register(model.Map{})
-	gob.Register(model.Wall{})
-	gob.Register(model.Segment{})
-	gob.Register(model.Point{})
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
+	gob.Register(model.Barrel{})
 	var t time.Duration
 	gob.Register(t)
 }

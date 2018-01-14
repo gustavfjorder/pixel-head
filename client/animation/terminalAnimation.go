@@ -57,3 +57,11 @@ func (ta *TerminalAnimation) Copy() Animation{
 	cpy := *ta
 	return &cpy
 }
+
+func (ta *TerminalAnimation) SetDir(dir float64) {
+	ta.transformation.Rotation = dir
+}
+
+func (ta *TerminalAnimation) SetPos(pos pixel.Vec) {
+	ta.transformation.Pos = pos
+}

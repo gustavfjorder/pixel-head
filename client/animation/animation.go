@@ -27,6 +27,8 @@ type Animation interface {
 	Next() Animation
 	ChangeAnimation(animation Animation) Animation
 	SetTransformation(transformation Transformation)
+	SetDir(dir float64)
+	SetPos(pos pixel.Vec)
 	SetAnimationSpeed(duration time.Duration)
 	Prefix() string
 	CurrentSprite() *pixel.Sprite

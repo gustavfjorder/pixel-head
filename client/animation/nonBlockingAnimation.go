@@ -53,3 +53,10 @@ func (nba *NonBlockingAnimation) Copy() Animation{
 	cpy := *nba
 	return &cpy
 }
+func (nba *NonBlockingAnimation) SetDir(dir float64) {
+	nba.transformation.Rotation = dir
+}
+
+func (nba *NonBlockingAnimation) SetPos(pos pixel.Vec) {
+	nba.transformation.Pos = pos
+}

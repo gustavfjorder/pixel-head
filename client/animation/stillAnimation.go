@@ -47,3 +47,11 @@ func (sa *StillAnimation) Copy() Animation{
 	cpy := *sa
 	return &cpy
 }
+
+func (sa *StillAnimation) SetDir(dir float64) {
+	sa.transformation.Rotation = dir
+}
+
+func (sa *StillAnimation) SetPos(pos pixel.Vec) {
+	sa.transformation.Pos = pos
+}

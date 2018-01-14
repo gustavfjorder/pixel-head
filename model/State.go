@@ -18,6 +18,12 @@ type Entry struct {
 	index int
 }
 
+func (state State) Compress() (compressed State) {
+	compressed.Players = state.Players
+	compressed.Zombies = state.Zombies
+	return
+}
+
 type ByIndexDescending []Entry
 
 func (s ByIndexDescending) Len() int {

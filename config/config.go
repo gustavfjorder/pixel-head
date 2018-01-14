@@ -27,7 +27,7 @@ var Conf = Config{
 	RifleKey:          pixelgl.Key3,
 	ShotgunKey:        pixelgl.Key4,
 	ReloadKey:         pixelgl.KeyR,
-	Online:            false,
+	Online:            true,
 	LoungeUri:         "tcp://localhost:31415/lounge",
 }
 

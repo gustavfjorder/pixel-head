@@ -67,3 +67,11 @@ func (ba *BLockingAnimation) Copy() Animation{
 	cpy := *ba
 	return &cpy
 }
+
+func (ba *BLockingAnimation) SetDir(dir float64) {
+	ba.transformation.Rotation = dir
+}
+
+func (ba *BLockingAnimation) SetPos(pos pixel.Vec) {
+	ba.transformation.Pos = pos
+}
