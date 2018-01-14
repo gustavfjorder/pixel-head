@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"fmt"
 	"github.com/faiface/pixel"
+	"sort"
 )
 
 type Game struct {
@@ -19,9 +20,12 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
-	game.State.Barrels = make([]Barrel, 1)
+	game.State.Barrels = make([]Barrel, 5)
 	game.State.Barrels[0] = NewBarrel(pixel.V(500,500))
-	game.State.Barrels[0] = NewBarrel(pixel.V(700,700))
+	game.State.Barrels[1] = NewBarrel(pixel.V(600,600))
+	game.State.Barrels[2] = NewBarrel(pixel.V(700,700))
+	game.State.Barrels[3] = NewBarrel(pixel.V(900,900))
+	game.State.Barrels[4] = NewBarrel(pixel.V(1000,1000))
 	for i, id := range ids {
 		game.State.Players[i] = NewPlayer(id)
 		game.PlayerIds[id] = true
@@ -109,46 +113,63 @@ func (game *Game) HandlePlayers() {
 }
 
 func (game *Game) HandleBarrels() {
-	for i := len(game.State.Barrels) - 1; i >= 0; i-- {
-		barrel := game.State.Barrels[i]
+	for i,_ := range game.State.Barrels {
+		barrel := &game.State.Barrels[i]
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shot := game.State.Shots[j]
 			if shot.GetPos().Sub(barrel.Pos).Len() < barrel.GetHitBox() {
 				//Update objects
 				barrel.Explode(&game.State)
-				shot.Hit = true
-
-				//Add to updates and remove from state
-				game.Remove(Entry{barrel, i}, Entry{shot, j})
+				game.Remove(Entry{shot, j})
 				break
 			}
 		}
 	}
+	barrelEntries := make([]Entry, 0, len(game.State.Barrels))
+	for i,barrel := range game.State.Barrels{
+		if barrel.Exploded{
+			barrelEntries = append(barrelEntries, Entry{elem:barrel, index: i})
+		}
+	}
+	game.Remove(barrelEntries...)
 }
 
 func (game *Game) Remove(entries ...Entry){
+	shots := make([]Entry, 0,minInt(len(entries), len(game.State.Shots)))
+	players := make([]Entry, 0,minInt(len(entries), len(game.State.Players)))
+	zombies := make([]Entry, 0,minInt(len(entries), len(game.State.Zombies)))
+	barrels := make([]Entry, 0,minInt(len(entries), len(game.State.Barrels)))
 	for _, entry := range entries {
-		switch entry.elem.(type){
-		case Player:
-			last := len(game.State.Players) - 1
-			game.State.Players[entry.index] = game.State.Players[last]
-			game.State.Players = game.State.Players[:last]
-			game.Updates.Remove(entry.elem.(Player))
-		case Shot:
-			last := len(game.State.Shots) - 1
-			game.State.Shots[entry.index] = game.State.Shots[last]
-			game.State.Shots = game.State.Shots[:last]
-			game.Updates.Remove(entry.elem.(Shot))
-		case Zombie:
-			last := len(game.State.Zombies) - 1
-			game.State.Zombies[entry.index] = game.State.Zombies[last]
-			game.State.Zombies = game.State.Zombies[:last]
-			game.Updates.Remove(entry.elem.(Zombie))
-		case Barrel:
-			last := len(game.State.Barrels) - 1
-			game.State.Barrels[entry.index] = game.State.Barrels[last]
-			game.State.Barrels = game.State.Barrels[:last]
-			game.Updates.Remove(entry.elem.(Barrel))
+		switch entry.elem.EntityType(){
+		case ShotE: shots = append(shots, entry)
+		case PlayerE: players = append(players, entry)
+		case ZombieE: zombies = append(zombies, entry)
+		case BarrelE: barrels = append(barrels, entry)
 		}
+		game.Updates.Remove(entry.elem)
+	}
+	sort.Sort(ByIndexDescending(shots))
+	sort.Sort(ByIndexDescending(players))
+	sort.Sort(ByIndexDescending(zombies))
+	sort.Sort(ByIndexDescending(barrels))
+	for _, entry := range shots {
+		last := len(game.State.Shots) - 1
+		game.State.Shots[entry.index] = game.State.Shots[last]
+		game.State.Shots = game.State.Shots[:last]
+	}
+	for _, entry := range players {
+		last := len(game.State.Players) - 1
+		game.State.Players[entry.index] = game.State.Players[last]
+		game.State.Players = game.State.Players[:last]
+	}
+	for _, entry := range zombies {
+		last := len(game.State.Zombies) - 1
+		game.State.Zombies[entry.index] = game.State.Zombies[last]
+		game.State.Zombies = game.State.Zombies[:last]
+	}
+	for _, entry := range barrels {
+		last := len(game.State.Barrels) - 1
+		game.State.Barrels[entry.index] = game.State.Barrels[last]
+		game.State.Barrels = game.State.Barrels[:last]
 	}
 }
