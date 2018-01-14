@@ -30,6 +30,8 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 	fmt.Println("Starting game loop")
 	t := time.Tick(config.Conf.ServerHandleSpeed)
+	sec := time.Tick(time.Second)
+	speed := config.Conf.ServerHandleSpeed
 	for g.CurrentLevel < len(model.Levels) {
 		fmt.Println("Starting level " + strconv.Itoa(g.CurrentLevel))
 
@@ -83,6 +85,14 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 				break
 			}
 			<-t
+			select {
+			case <-sec:
+				config.Conf.ServerHandleSpeed = time.Second / speed
+				fmt.Println("Set handle speed to", speed)
+				speed = 0
+			default:
+				speed++
+			}
 		}
 
 		g.CurrentLevel++
