@@ -23,3 +23,11 @@ func (player *Player) PickupLootbox(lootbox *Lootbox) {
 	player.WeaponList[lootbox.Weapon.WeaponType].Bullets += lootbox.Weapon.MagazineCurrent
 }
 
+func (lootbox Lootbox) ID() string {
+	return lootbox.Id
+}
+
+func (lootbox Lootbox) EntityType() EntityType {
+	return LootboxE
+}
+

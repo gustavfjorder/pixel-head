@@ -12,7 +12,6 @@ type Request struct {
 	Dir       float64
 	Move      bool
 	Action    Action
-	Lootbox   string
 }
 
 func (request Request) GetRotation() pixel.Matrix {

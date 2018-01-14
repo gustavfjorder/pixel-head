@@ -50,17 +50,3 @@ func (state *State) HasLootboxAt(point Point) bool {
 
 	return result
 }
-
-func (state *State) PickUpLoot(id string, player *Player) {
-	for i := range state.Lootboxes {
-		box := &state.Lootboxes[i]
-		if box.Id == id {
-			player.PickupLootbox(box)
-
-			state.Lootboxes[i] = state.Lootboxes[len(state.Lootboxes) - 1]
-			state.Lootboxes = state.Lootboxes[:len(state.Lootboxes) - 1]
-
-			break
-		}
-	}
-}

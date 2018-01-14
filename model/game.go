@@ -70,10 +70,6 @@ func (game *Game) HandleRequests(requests []Request) {
 			player.Action = IDLE
 		}
 
-		if request.Lootbox != "" {
-			game.State.PickUpLoot(request.Lootbox, player)
-		}
-
 		//Action priority is like so: weapon change > reload > shoot > melee
 		player.Do(request, game)
 	}
@@ -81,6 +77,21 @@ func (game *Game) HandleRequests(requests []Request) {
 
 var lastTime = time.Now()
 func (g *Game) HandleLoot() {
+	for i := len(g.State.Players) - 1; i >= 0; i-- {
+		player := &g.State.Players[i]
+
+		for j := len(g.State.Lootboxes) - 1; j >= 0; j-- {
+			lootbox := g.State.Lootboxes[j]
+
+			fmt.Println("Distance", PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)))
+			if PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)) < 30 {
+				player.PickupLootbox(&lootbox)
+				g.Remove(Entry{lootbox, j})
+			}
+		}
+	}
+
+	// Place lootboxes
 	if lastTime.Add(time.Second * 10).Before(time.Now()) && float64(rand.Intn(100)) <= 3.8 {
 		min := 0
 		max := len(g.CurrentMap.LootPoints)
@@ -182,12 +193,14 @@ func (game *Game) Remove(entries ...Entry){
 	players := make([]Entry, 0,minInt(len(entries), len(game.State.Players)))
 	zombies := make([]Entry, 0,minInt(len(entries), len(game.State.Zombies)))
 	barrels := make([]Entry, 0,minInt(len(entries), len(game.State.Barrels)))
+	lootboxes := make([]Entry, 0,minInt(len(entries), len(game.State.Lootboxes)))
 	for _, entry := range entries {
 		switch entry.elem.EntityType(){
 		case ShotE: shots = append(shots, entry)
 		case PlayerE: players = append(players, entry)
 		case ZombieE: zombies = append(zombies, entry)
 		case BarrelE: barrels = append(barrels, entry)
+		case LootboxE: lootboxes = append(lootboxes, entry)
 		}
 		game.Updates.Remove(entry.elem)
 	}
@@ -195,6 +208,7 @@ func (game *Game) Remove(entries ...Entry){
 	sort.Sort(ByIndexDescending(players))
 	sort.Sort(ByIndexDescending(zombies))
 	sort.Sort(ByIndexDescending(barrels))
+	sort.Sort(ByIndexDescending(lootboxes))
 	for _, entry := range shots {
 		last := len(game.State.Shots) - 1
 		game.State.Shots[entry.index] = game.State.Shots[last]
@@ -214,5 +228,10 @@ func (game *Game) Remove(entries ...Entry){
 		last := len(game.State.Barrels) - 1
 		game.State.Barrels[entry.index] = game.State.Barrels[last]
 		game.State.Barrels = game.State.Barrels[:last]
+	}
+	for _, entry := range lootboxes {
+		last := len(game.State.Lootboxes) - 1
+		game.State.Lootboxes[entry.index] = game.State.Lootboxes[last]
+		game.State.Lootboxes = game.State.Lootboxes[:last]
 	}
 }
