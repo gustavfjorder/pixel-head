@@ -38,7 +38,7 @@ func Load(path, prefix string) (res []Animation){
 			sprites, names := LoadSprites(path + "/" + elem.Name())
 			if len(sprites) <= 0 {
 				continue
-			} else if animationType == Image{
+			} else if animationType == Still {
 				for i, sprite := range sprites {
 					res = append(res, NewAnimation(elem.Name() + "." + names[i], []*pixel.Sprite{sprite}, animationType))
 				}
@@ -152,8 +152,8 @@ var AnimationIndex = map[string]AnimationType{
 	"run":         NonBlocking,
 	"saunter":     NonBlocking,
 	"walk":        NonBlocking,
-	"abilities":   Image,
-	"barrel":      Image,
-	"bullet":      Image,
-	"health":      Image,
+	"abilities":   Still,
+	"barrel":      Still,
+	"bullet":      Still,
+	"health":      Still,
 }

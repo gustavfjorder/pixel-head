@@ -13,7 +13,7 @@ import (
 var Conf = Config{
 	AnimationSpeed:    time.Second / 30,
 	ServerHandleSpeed: time.Second / 200,
-	Fps:               time.Second / 60,
+	Fps:               time.Second / 300,
 	LeftKey:           pixelgl.KeyA,
 	RightKey:          pixelgl.KeyD,
 	UpKey:             pixelgl.KeyW,

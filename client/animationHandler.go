@@ -52,7 +52,12 @@ func (ah AnimationHandler) Draw(state model.State) {
 	ah.handleUpdates()
 	for id, animation := range ah.activeAnimations {
 		animation.Draw(ah.win)
-		ah.activeAnimations[id] = animation.Next()
+		next := animation.Next()
+		if next == nil {
+			delete(ah.activeAnimations,id)
+		} else {
+			ah.activeAnimations[id] = next
+		}
 	}
 	ah.DrawAbilities()
 	ah.DrawHealthbar()
@@ -68,25 +73,18 @@ func (ah AnimationHandler) handleUpdates() () {
 				case model.ShotE:
 					delete(ah.activeAnimations, entity.ID)
 				case model.ZombieE:
-					_, present := ah.activeAnimations[entity.ID]
+					v, present := ah.activeAnimations[entity.ID]
 					if present {
 						prefix := Prefix("zombie", "death0"+strconv.Itoa(rand.Intn(2)+1))
-						ah.activeAnimations[entity.ID].ChangeAnimation(ah.animations[prefix])
+						ah.activeAnimations[entity.ID] = v.ChangeAnimation(ah.animations[prefix])
 					}
 				case model.PlayerE:
 					delete(ah.activeAnimations, entity.ID)
 				case model.BarrelE:
-					//fmt.Println(entity.ID)
-					//if anim, present := ah.activeAnimations[entity.ID]; present {
-					//	exp := ah.animations["explosion"]
-					//	exp.Terminal = true
-					//	exp.Blocking = true
-					//	exp.Finished = false
-					//	exp.Cur = 0
-					//	exp.Scale = 20
-					//	exp.Pos = anim.Pos
-					//	ah.activeAnimations[entity.ID] = &exp
-					//}
+					if anim, present := ah.activeAnimations[entity.ID]; present {
+						exp := ah.animations["explosion"]
+						ah.activeAnimations[entity.ID] = anim.ChangeAnimation(exp)
+					}
 				}
 			}
 		default:
