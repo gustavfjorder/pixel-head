@@ -35,7 +35,7 @@ func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
 	ah.activeAnimations = make(map[string]Animation)
 	ah.center = pixel.ZV
 	ah.updateChan = updates
-	ah.me = model.NewPlayer(config.Conf.Id)
+	ah.me = model.NewPlayer(config.ID)
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
 	return
 }
@@ -107,6 +107,7 @@ func (ah AnimationHandler) collectBarrels() {
 func (ah AnimationHandler) collectBulllets() {
 	bullet := ah.animations[Prefix("bullet","bullet")]
 	for _, shot := range ah.state.Shots {
+		fmt.Println("Made bullet:", shot)
 		bullet.SetTransformation(Transformation{Scale:config.BulletScale, Pos:shot.GetPos(), Rotation:shot.Angle-math.Pi/2})
 		bullet.Draw(ah.win)
 	}

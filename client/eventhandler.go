@@ -21,6 +21,8 @@ func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Up
 	for {
 		_, err := spc.GetP("state", &t, &tempState)
 		if err == nil {
+			count++
+			model.Timestamp = t
 			*state = tempState
 		}
 		updateTuples, err := spc.GetAll("update", &t, &model.Updates{})
@@ -29,7 +31,6 @@ func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Up
 		}
 
 		<-delay.C
-		count++
 		select {
 		case <-sec.C:
 			fmt.Println("Handled:", count, "state updates")

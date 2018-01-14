@@ -241,7 +241,7 @@ func (sa *StillAnimation) SetTransformation(transformation Transformation) {
 	sa.transformation = transformation
 }
 
-func (nba *StillAnimation) SetAnimationSpeed(duration time.Duration){}
+func (sa *StillAnimation) SetAnimationSpeed(duration time.Duration){}
 
 type TerminalAnimation struct {
 	prefix         string

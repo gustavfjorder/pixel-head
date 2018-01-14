@@ -10,6 +10,8 @@ import (
 	"github.com/rs/xid"
 )
 
+var ID = xid.New().String()
+
 var Conf = Config{
 	AnimationSpeed:    time.Second / 30,
 	ServerHandleSpeed: time.Second / 200,
@@ -25,17 +27,8 @@ var Conf = Config{
 	RifleKey:          pixelgl.Key3,
 	ShotgunKey:        pixelgl.Key4,
 	ReloadKey:         pixelgl.KeyR,
-	Id:                xid.New().String(),
-	Online:            false,
+	Online:            true,
 	LoungeUri:         "tcp://localhost:31415/lounge",
-	LocalUri:          "game",
-	AnimationPath:     "client/sprites",
-	AbilityPath:       "client/images/abilities",
-	BulletPath:        "client/images/bullet",
-	HealthPath:        "client/images/health",
-	BarrelPath:        "client/images/barrel",
-	//LootboxPath:       "client/images/",
-	ExplosionPath:      "client/images/explosion/explosion.png",
 }
 
 type Config struct {
@@ -53,17 +46,8 @@ type Config struct {
 	RifleKey          pixelgl.Button
 	ShotgunKey        pixelgl.Button
 	ReloadKey         pixelgl.Button
-	Id                string
 	Online            bool
 	LoungeUri         string
-	LocalUri          string
-	AnimationPath     string
-	AbilityPath       string
-	BulletPath        string
-	HealthPath        string
-	BarrelPath        string
-	//LootboxPath       string
-	ExplosionPath     string
 }
 
 func LoadJson(file string, config interface{}) {

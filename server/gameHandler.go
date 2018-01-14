@@ -68,9 +68,9 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 				spc.Put("state",model.Timestamp ,g.State)
 				if !g.Updates.Empty(){
 					spc.Put("update",model.Timestamp,g.Updates)
-					g.Updates.Clear()
 				}
 			}
+			g.Updates.Clear()
 
 
 			//If all players died end game
