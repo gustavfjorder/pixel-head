@@ -190,6 +190,7 @@ func (sa StillAnimation) Next() Animation {
 }
 
 func (sa StillAnimation) ChangeAnimation(animation Animation) Animation {
+	animation.SetTransformation(sa.transformation)
 	return animation
 }
 
@@ -236,49 +237,6 @@ func (ta TerminalAnimation) ChangeAnimation(animation Animation) Animation {
 func (ta *TerminalAnimation) SetTransformation(transformation Transformation) {
 	ta.transformation = transformation
 }
-
-
-//func (a *Animation) Draw(win *pixelgl.Window) {
-//	a.Sprites[a.Cur].Draw(win, pixel.IM.Rotated(pixel.ZV, a.Rotation).Scaled(pixel.ZV, a.Scale).Moved(a.Pos))
-//}
-//
-////inc is one element controlling how many frames to move in the animation (will only use first argument)
-//func (a *Animation) Next() {
-//	a.Finished = a.Terminal && a.Cur+1 >= len(a.Sprites)
-//	if a.Finished {
-//		return
-//	}
-//	if !a.Terminal && a.Cur+1 >= len(a.Sprites) && a.NextAnim != nil && len(a.NextAnim.Sprites) > 0 {
-//		a.Blocking = a.NextAnim.Blocking
-//		a.Sprites = a.NextAnim.Sprites
-//		*a.NextAnim = Animation{}
-//	}
-//	a.Cur = (a.Cur + 1) % len(a.Sprites)
-//}
-//
-//func (a *Animation) ChangeAnimation(other Animation, blocking, terminal bool) (e error) {
-//	if a.Terminal || (a.NextAnim != nil && a.NextAnim.Terminal) {
-//		e = errors.New("cannot change terminal animation")
-//		return
-//	}
-//	if len(other.Sprites) <= 0 {
-//		e = errors.New("need non empty animation")
-//		return
-//	}
-//	if a.Blocking {
-//		a.NextAnim = &other
-//		a.NextAnim.Blocking = blocking
-//		a.NextAnim.Terminal = terminal
-//		a.NextAnim.Scale = a.Scale
-//		a.NextAnim.Pos = a.Pos
-//	} else {
-//		a.Sprites = other.Sprites
-//		a.Blocking = blocking
-//		a.Terminal = terminal
-//		a.Cur = 0
-//	}
-//	return
-//}
 
 func LoadMap(m model.Map) *imdraw.IMDraw {
 	imd := imdraw.New(nil)
