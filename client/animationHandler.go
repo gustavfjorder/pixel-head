@@ -4,13 +4,13 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/gustavfjorder/pixel-head/config"
+	."github.com/gustavfjorder/pixel-head/client/animation"
 	"github.com/faiface/pixel"
 	"math"
 	"fmt"
 	"strconv"
 	"math/rand"
 	"time"
-	"os"
 )
 
 type AnimationHandler struct {
@@ -73,6 +73,7 @@ func (ah AnimationHandler) handleUpdates() () {
 	for {
 		select {
 		case update = <-ah.updateChan:
+			fmt.Println(update)
 			for _, entity := range update.Removed {
 				switch entity.EntityType {
 				case model.ShotE:
@@ -81,13 +82,13 @@ func (ah AnimationHandler) handleUpdates() () {
 					v, present := ah.activeAnimations[entity.ID]
 					if present {
 						prefix := Prefix("zombie", "death0"+strconv.Itoa(rand.Intn(2)+1))
-						ah.activeAnimations[entity.ID] = v.ChangeAnimation(ah.animations[prefix])
+						ah.activeAnimations[entity.ID] = v.ChangeAnimation(ah.Get(prefix))
 					}
 				case model.PlayerE:
 					delete(ah.activeAnimations, entity.ID)
 				case model.BarrelE:
 					if anim, present := ah.activeAnimations[entity.ID]; present {
-						exp := ah.animations["explosion"]
+						exp := ah.Get("explosion")
 						exp.SetAnimationSpeed(time.Second/120)
 						anim = anim.ChangeAnimation(exp)
 						ah.activeAnimations[entity.ID] = anim
@@ -102,8 +103,8 @@ func (ah AnimationHandler) handleUpdates() () {
 
 func (ah AnimationHandler) collectBarrels() {
 	for _, b := range ah.state.Barrels {
-		barrel := ah.animations[Prefix("barrel","barrel")]
-		barrel.SetTransformation(Transformation{Pos:b.Pos, Scale:1, Rotation:0})
+		barrel := ah.Get("barrel","barrel")
+		barrel.SetTransformation(Transformation{Pos:b.Pos, Scale:b.GetHitBox()/barrel.CurrentSprite().Frame().Max.X, Rotation:0})
 		ah.activeAnimations[b.ID()] = barrel
 	}
 }
@@ -124,14 +125,8 @@ func (ah AnimationHandler) collectZombies() {
 			prefix = Prefix("zombie", "walk")
 		}
 		v, ok := ah.activeAnimations[zombie.ID()]
-		if !ok {
-			newanim, _ := ah.animations[prefix]
-			v = newanim
-		}
-		if prefix != v.Prefix() {
-			if newanim, ok := ah.animations[prefix]; ok {
-				v = v.ChangeAnimation(newanim)
-			}
+		if !ok || prefix != v.Prefix(){
+			v = ah.Get(prefix)
 		}
 		v.SetTransformation(Transformation{Pos:zombie.Pos, Rotation:zombie.Dir, Scale:config.ZombieScale})
 		ah.activeAnimations[zombie.ID()] = v
@@ -153,22 +148,15 @@ func (ah AnimationHandler) collectPlayers() {
 
 		prefix := Prefix("survivor", player.WeaponType.Name(), movement)
 		anim, ok := ah.activeAnimations[player.ID()]
-		if !ok {
-			newAnim, ok := ah.animations[prefix]
-			if !ok {
-				fmt.Fprint(os.Stderr, "Invalid animation present")
-				continue
-			}
-			anim = newAnim
+		if !ok || anim.Prefix() != prefix {
+			anim = ah.Get(prefix)
 		}
-		if anim.Prefix() != prefix {
-			newAnim, found := ah.animations[prefix]
-			if found {
-				anim = anim.ChangeAnimation(newAnim)
-			}
-		}
-
 		anim.SetTransformation(Transformation{Pos:player.Pos, Scale:config.HumanScale, Rotation:player.Dir})
 		ah.activeAnimations[player.ID()] = anim
 	}
+}
+
+
+func (ah AnimationHandler) Get(prefix ...string) (Animation){
+	return ah.animations[Prefix(prefix...)].Copy()
 }

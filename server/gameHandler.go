@@ -88,7 +88,6 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			select {
 			case <-sec:
 				config.Conf.ServerHandleSpeed = time.Second / speed
-				fmt.Println("Set handle speed to", speed)
 				speed = 0
 			default:
 				speed++

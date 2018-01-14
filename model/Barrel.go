@@ -4,6 +4,7 @@ import (
 	"github.com/faiface/pixel"
 	"math"
 	"github.com/rs/xid"
+	"fmt"
 )
 
 type Barrel struct {
@@ -19,31 +20,37 @@ func NewBarrel(pos pixel.Vec) Barrel {
 	}
 }
 
-func (barrel *Barrel) Explode(s *State) {
-	var (
-		Range = 500.
-	)
+func (barrel *Barrel) Explode(s *State){
+	if barrel.Exploded {
+		return
+	}
+	barrel.Exploded = true
+	fmt.Println(barrel.ID())
 
 	for index, player := range s.Players {
-		if distanceBetween(player.Pos, barrel.Pos) < Range {
+		if distanceBetween(player.Pos, barrel.Pos) <= barrel.GetRange() {
 			s.Players[index].Health -= barrel.GetPower()
 		}
 	}
 	for index, zombie := range s.Zombies {
-		if distanceBetween(zombie.Pos, barrel.Pos) < Range {
+		if distanceBetween(zombie.Pos, barrel.Pos) < barrel.GetRange() {
 			s.Zombies[index].Stats.Health -= barrel.GetPower()
 		}
 	}
-	for _, b := range s.Barrels {
-		if distanceBetween(b.Pos, barrel.Pos) < Range && distanceBetween(b.Pos, barrel.Pos) != 0 {
-			barrel.Explode(s)
+	for i := range s.Barrels {
+		b := &s.Barrels[i]
+		if distanceBetween(b.Pos, barrel.Pos) < barrel.GetRange() && b.ID() != barrel.ID(){
+			b.Explode(s)
 		}
 	}
-	barrel.Exploded = true
 }
 
 func distanceBetween(pos1 pixel.Vec, pos2 pixel.Vec) float64 {
 	return math.Sqrt(math.Abs(pos1.X-pos2.X)*math.Abs(pos1.X-pos2.X) + math.Abs(pos1.Y-pos2.Y)*math.Abs(pos1.Y-pos2.Y))
+}
+
+func (barrel Barrel) GetRange() float64{
+	return 200
 }
 
 func (barrel Barrel) GetHitBox() float64 {
@@ -51,7 +58,7 @@ func (barrel Barrel) GetHitBox() float64 {
 }
 
 func (barrel Barrel) GetPower() int {
-	return 50
+	return 1
 }
 
 func (barrel Barrel) ID() string {

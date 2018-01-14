@@ -12,6 +12,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/server"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel"
+	"github.com/gustavfjorder/pixel-head/client/animation"
 )
 
 type Game struct {
@@ -44,7 +45,7 @@ func (g *Game) Run() {
 		spc, gameMap = gotoLounge()
 	)
 
-	g.usedMap = client.LoadMap(gameMap)
+	g.usedMap = animation.LoadMap(gameMap)
 	updateChan := make(chan model.Updates, config.Conf.ServerHandleSpeed)
 
 	win := g.Container.Get("window").(*pixelgl.Window)

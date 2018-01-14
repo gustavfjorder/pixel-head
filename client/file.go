@@ -10,6 +10,7 @@ import (
 	"image"
 	"strings"
 	_ "image/png"
+	."github.com/gustavfjorder/pixel-head/client/animation"
 )
 
 func LoadAll(paths ...string) (res map[string]Animation) {
