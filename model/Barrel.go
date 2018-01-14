@@ -11,12 +11,14 @@ type Barrel struct {
 	Id       string
 	Pos      pixel.Vec
 	Exploded bool
+	Dir float64
 }
 
 func NewBarrel(pos pixel.Vec) Barrel {
 	return Barrel{
 		Id:  xid.New().String(),
 		Pos: pos,
+		Dir: 0,
 	}
 }
 
@@ -53,7 +55,7 @@ func (barrel Barrel) GetRange() float64{
 	return 200
 }
 
-func (barrel Barrel) GetHitBox() float64 {
+func (barrel Barrel) GetHitbox() float64 {
 	return 30
 }
 
@@ -67,4 +69,12 @@ func (barrel Barrel) ID() string {
 
 func (barrel Barrel) EntityType()EntityType {
 	return BarrelE
+}
+
+func (barrel Barrel) GetPos() pixel.Vec{
+	return barrel.Pos
+}
+
+func (barrel Barrel) GetDir() float64{
+	return barrel.Dir
 }

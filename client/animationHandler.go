@@ -6,7 +6,6 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 	."github.com/gustavfjorder/pixel-head/client/animation"
 	"github.com/faiface/pixel"
-	"math"
 	"fmt"
 	"strconv"
 	"math/rand"
@@ -50,7 +49,6 @@ func (ah *AnimationHandler) SetUpdateChan(ch chan model.Updates){
 func (ah AnimationHandler) Draw(state model.State) {
 	ah.state = state
 	GetPlayer(state.Players, &ah.me)
-	ah.collectBarrels()
 	ah.collectBulllets()
 	ah.collectZombies()
 	ah.collectPlayers()
@@ -95,24 +93,31 @@ func (ah AnimationHandler) handleUpdates() () {
 					}
 				}
 			}
+			for _, entity := range update.Added {
+				transformation := Transformation{Pos:entity.GetPos(), Scale:1, Rotation:entity.GetDir()}
+				switch entity.EntityType(){
+				case model.BarrelE:
+					barrel := ah.Get("barrel","barrel")
+					barrel.SetTransformation(transformation)
+					ah.activeAnimations[entity.ID()] = barrel
+				case model.ShotE:
+					bullet := ah.Get("bullet","bullet")
+					transformation.Scale = config.BulletScale
+					bullet.SetTransformation(transformation)
+					ah.activeAnimations[entity.ID()] = bullet
+				}
+			}
 		default:
 			return
 		}
 	}
 }
 
-func (ah AnimationHandler) collectBarrels() {
-	for _, b := range ah.state.Barrels {
-		barrel := ah.Get("barrel","barrel")
-		barrel.SetTransformation(Transformation{Pos:b.Pos, Scale:b.GetHitBox()/barrel.CurrentSprite().Frame().Max.X, Rotation:0})
-		ah.activeAnimations[b.ID()] = barrel
-	}
-}
 func (ah AnimationHandler) collectBulllets() {
-	bullet := ah.animations[Prefix("bullet","bullet")]
 	for _, shot := range ah.state.Shots {
-		bullet.SetTransformation(Transformation{Scale:config.BulletScale, Pos:shot.GetPos(), Rotation:shot.Angle-math.Pi/2})
-		bullet.Draw(ah.win)
+		if anim, present := ah.activeAnimations[shot.ID()]; present {
+			anim.SetTransformation(Transformation{Scale:config.BulletScale, Pos:shot.GetPos(), Rotation:shot.GetDir()})
+		}
 	}
 }
 func (ah AnimationHandler) collectZombies() {

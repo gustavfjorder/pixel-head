@@ -134,3 +134,11 @@ func (zombie Zombie) ID() string{
 func (zombie Zombie) EntityType() EntityType {
 	return ZombieE
 }
+
+func (zombie Zombie) GetPos() pixel.Vec {
+	return zombie.Pos
+}
+
+func (zombie Zombie) GetDir() float64{
+	return zombie.Dir
+}

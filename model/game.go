@@ -20,12 +20,7 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
-	game.State.Barrels = make([]Barrel, 5)
-	game.State.Barrels[0] = NewBarrel(pixel.V(500,500))
-	game.State.Barrels[1] = NewBarrel(pixel.V(600,600))
-	game.State.Barrels[2] = NewBarrel(pixel.V(700,700))
-	game.State.Barrels[3] = NewBarrel(pixel.V(900,900))
-	game.State.Barrels[4] = NewBarrel(pixel.V(1000,1000))
+	game.Add(NewBarrel(pixel.V(500,500)), NewBarrel(pixel.V(600,600)), NewBarrel(pixel.V(700,700)), NewBarrel(pixel.V(900,900)), NewBarrel(pixel.V(1000,1000)))
 	for i, id := range ids {
 		game.State.Players[i] = NewPlayer(id)
 		game.PlayerIds[id] = true
@@ -117,7 +112,7 @@ func (game *Game) HandleBarrels() {
 		barrel := &game.State.Barrels[i]
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shot := game.State.Shots[j]
-			if shot.GetPos().Sub(barrel.Pos).Len() < barrel.GetHitBox() {
+			if shot.GetPos().Sub(barrel.Pos).Len() < barrel.GetHitbox() {
 				//Update objects
 				barrel.Explode(&game.State)
 				game.Remove(Entry{shot, j})
@@ -133,6 +128,17 @@ func (game *Game) HandleBarrels() {
 	}
 	game.Remove(barrelEntries...)
 }
+
+func (game *Game) Add(entities ...EntityI) {
+	for _, entity := range entities {
+		switch entity.EntityType() {
+		case BarrelE: game.State.Barrels = append(game.State.Barrels, entity.(Barrel))
+		case ShotE: game.State.Shots = append(game.State.Shots, entity.(Shot))
+		}
+	}
+	game.Updates.Add(entities...)
+}
+
 
 func (game *Game) Remove(entries ...Entry){
 	shots := make([]Entry, 0,minInt(len(entries), len(game.State.Shots)))

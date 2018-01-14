@@ -146,6 +146,7 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
+	gob.Register(model.Barrel{})
 	var t time.Duration
 	gob.Register(t)
 

@@ -73,7 +73,7 @@ func (weaponType WeaponType) ShootDelay() time.Duration {
 	case HANDGUN:
 		return time.Second / 2
 	case SHOTGUN:
-		return time.Second
+		return time.Second / 10
 	default:
 		return 0
 	}
