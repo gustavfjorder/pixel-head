@@ -26,7 +26,7 @@ type AnimationHandler struct {
 }
 
 
-func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
+func NewAnimationHandler() (ah AnimationHandler) {
 	spritePath := "client/sprites/"
 	ah.animations = LoadAll(spritePath + "animations", spritePath + "images")
 	ah.animations["explosion"] = NewAnimation( "explosion",
@@ -34,7 +34,6 @@ func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
 			Terminal)
 	ah.activeAnimations = make(map[string]Animation)
 	ah.center = pixel.ZV
-	ah.updateChan = updates
 	ah.me = model.NewPlayer(config.ID)
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
 	return
@@ -42,6 +41,10 @@ func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
 
 func (ah *AnimationHandler) SetWindow(win *pixelgl.Window) {
 	ah.win = win
+}
+
+func (ah *AnimationHandler) SetUpdateChan(ch chan model.Updates){
+	ah.updateChan = ch
 }
 
 func (ah AnimationHandler) Draw(state model.State) {
@@ -107,7 +110,6 @@ func (ah AnimationHandler) collectBarrels() {
 func (ah AnimationHandler) collectBulllets() {
 	bullet := ah.animations[Prefix("bullet","bullet")]
 	for _, shot := range ah.state.Shots {
-		fmt.Println("Made bullet:", shot)
 		bullet.SetTransformation(Transformation{Scale:config.BulletScale, Pos:shot.GetPos(), Rotation:shot.Angle-math.Pi/2})
 		bullet.Draw(ah.win)
 	}

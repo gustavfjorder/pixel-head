@@ -33,8 +33,8 @@ var turnDelays = make(map[string]time.Duration)
 
 func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
 	player.WeaponList = make([]Weapon, nWeapon)
-	player.WeaponType = HANDGUN
-	player.NewWeapon(NewWeapon(KNIFE), NewWeapon(player.WeaponType), NewWeapon(SHOTGUN))
+	player.WeaponType = KNIFE
+	player.NewWeapon(NewWeapon(player.WeaponType), NewWeapon(RIFLE), NewWeapon(SHOTGUN))
 	player.Id = id
 	player.Stats = NewStats(HUMAN)
 	player.Dir = 0

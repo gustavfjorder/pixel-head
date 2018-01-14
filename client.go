@@ -28,7 +28,7 @@ func run() {
 	//Make window
 	cfg := pixelgl.WindowConfig{
 		Title:  "Zombie Hunter 3000!",
-		Bounds: pixel.R(0, 0, 600, 500),
+		Bounds: pixel.R(0, 0, 1024, 700),
 		//VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
@@ -43,8 +43,9 @@ func run() {
 	app := framework.NewApplication(container)
 
 	app.AddController("main", &controller.MainMenu{})
-	app.AddController("game", &controller.Game{})
-
+	gameCntrl := &controller.Game{}
+	gameCntrl.Init()
+	app.AddController("game", gameCntrl)
 	app.SetController("main")
 	app.Run()
 
