@@ -16,7 +16,7 @@ import (
 type AnimationHandler struct {
 	win              *pixelgl.Window
 	animations       map[string]Animation
-	activeAnimations map[string]*Animation
+	activeAnimations map[string]Animation
 	updateChan       <-chan model.Updates
 	stateChan        <-chan model.State
 	center           pixel.Vec
@@ -30,7 +30,7 @@ func NewAnimationHandler(updates <-chan model.Updates) (ah AnimationHandler) {
 	spritePath := "client/sprites/"
 	ah.animations = LoadAll(spritePath + "animations", spritePath + "images")
 	ah.animations["explosion"] = LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath + "images/explosion/explosion.png")
-	ah.activeAnimations = make(map[string]*Animation)
+	ah.activeAnimations = make(map[string]Animation)
 	ah.center = pixel.ZV
 	ah.updateChan = updates
 	ah.me = model.NewPlayer(config.Conf.Id)
@@ -50,23 +50,9 @@ func (ah AnimationHandler) Draw(state model.State) {
 	ah.collectZombies()
 	ah.collectPlayers()
 	ah.handleUpdates()
-	nextFrame := false
-	select {
-	case <-ah.ticker.C:
-		nextFrame = true
-	default:
-		break
-	}
 	for id, animation := range ah.activeAnimations {
-		fmt.Println(animation.Prefix)
 		animation.Draw(ah.win)
-		if nextFrame {
-			animation.Next()
-		}
-		if animation.Terminal && animation.Finished {
-			delete(ah.activeAnimations, id)
-			continue
-		}
+		ah.activeAnimations[id] = animation.Next()
 	}
 	ah.DrawAbilities()
 	ah.DrawHealthbar()
@@ -85,22 +71,22 @@ func (ah AnimationHandler) handleUpdates() () {
 					_, present := ah.activeAnimations[entity.ID]
 					if present {
 						prefix := Prefix("zombie", "death0"+strconv.Itoa(rand.Intn(2)+1))
-						ah.activeAnimations[entity.ID].ChangeAnimation(ah.animations[prefix], true, true)
+						ah.activeAnimations[entity.ID].ChangeAnimation(ah.animations[prefix])
 					}
 				case model.PlayerE:
 					delete(ah.activeAnimations, entity.ID)
 				case model.BarrelE:
-					fmt.Println(entity.ID)
-					if anim, present := ah.activeAnimations[entity.ID]; present {
-						exp := ah.animations["explosion"]
-						exp.Terminal = true
-						exp.Blocking = true
-						exp.Finished = false
-						exp.Cur = 0
-						exp.Scale = 20
-						exp.Pos = anim.Pos
-						ah.activeAnimations[entity.ID] = &exp
-					}
+					//fmt.Println(entity.ID)
+					//if anim, present := ah.activeAnimations[entity.ID]; present {
+					//	exp := ah.animations["explosion"]
+					//	exp.Terminal = true
+					//	exp.Blocking = true
+					//	exp.Finished = false
+					//	exp.Cur = 0
+					//	exp.Scale = 20
+					//	exp.Pos = anim.Pos
+					//	ah.activeAnimations[entity.ID] = &exp
+					//}
 				}
 			}
 		default:
@@ -112,66 +98,50 @@ func (ah AnimationHandler) handleUpdates() () {
 func (ah AnimationHandler) collectBarrels() {
 	for _, b := range ah.state.Barrels {
 		barrel := ah.animations[Prefix("barrel","barrel")]
-		barrel.Pos = b.Pos
-		barrel.Scale = 1
-		ah.activeAnimations[b.ID()] = &barrel
+		barrel.SetTransformation(Transformation{Pos:b.Pos, Scale:1, Rotation:0})
+		ah.activeAnimations[b.ID()] = barrel
 	}
 }
 func (ah AnimationHandler) collectBulllets() {
 	bullet := ah.animations[Prefix("bullet","bullet")]
 	for _, shot := range ah.state.Shots {
-		bullet.Scale = config.BulletScale
-		bullet.Pos = shot.GetPos()
-		bullet.Rotation = shot.Angle-math.Pi/2
+		bullet.SetTransformation(Transformation{Scale:config.BulletScale, Pos:shot.GetPos(), Rotation:shot.Angle-math.Pi/2})
 		bullet.Draw(ah.win)
 	}
 }
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
-		v, ok := ah.activeAnimations[zombie.ID()]
-		prefix := Prefix("zombie", "walk")
-		if !ok {
-			newanim, ok := ah.animations[prefix]
-			if ok {
-				ah.activeAnimations[zombie.ID()] = &newanim
-				v = &newanim
-			} else {
-				fmt.Println("Did not find animation:", prefix)
-				continue
-			}
-		}
+		var prefix string
 		if zombie.Attacking {
 			n := rand.Int()%3 + 1
 			prefix = Prefix("zombie", "attack0"+strconv.Itoa(n))
+		} else {
+			prefix = Prefix("zombie", "walk")
 		}
-
-		if prefix != v.Prefix {
+		v, ok := ah.activeAnimations[zombie.ID()]
+		if !ok {
+			newanim, _ := ah.animations[prefix]
+			v = newanim
+		}
+		if prefix != v.Prefix() {
 			if newanim, ok := ah.animations[prefix]; ok {
-				ah.activeAnimations[zombie.ID()].ChangeAnimation(newanim, true, false)
-				ah.activeAnimations[zombie.ID()].Prefix = prefix
+				v = v.ChangeAnimation(newanim)
 			}
-
 		}
-		v.Pos = zombie.Pos
-		v.Rotation = zombie.Dir
-		v.Scale = config.ZombieScale
+		v.SetTransformation(Transformation{Pos:zombie.Pos, Rotation:zombie.Dir, Scale:config.ZombieScale})
 		ah.activeAnimations[zombie.ID()] = v
 	}
 }
 func (ah AnimationHandler) collectPlayers() {
 	for _, player := range ah.state.Players {
 		movement := "idle"
-		blocking := false
 		switch player.Action {
 		case model.RELOAD:
 			movement = "reload"
-			blocking = true
 		case model.SHOOT:
 			movement = "shoot"
-			blocking = true
 		case model.MELEE:
 			movement = "melee"
-			blocking = true
 		case model.IDLE:
 			movement = "move"
 		}
@@ -184,18 +154,16 @@ func (ah AnimationHandler) collectPlayers() {
 				fmt.Fprint(os.Stderr, "Invalid animation present")
 				continue
 			}
-			anim = &newAnim
+			anim = newAnim
 		}
-		if anim.Prefix != prefix {
+		if anim.Prefix() != prefix {
 			newAnim, found := ah.animations[prefix]
 			if found {
-				anim.Prefix = prefix
-				anim.ChangeAnimation(newAnim, blocking, false)
+				anim = anim.ChangeAnimation(newAnim)
 			}
 		}
-		anim.Scale = config.HumanScale
-		anim.Rotation = player.Dir
-		anim.Pos = player.Pos
+
+		anim.SetTransformation(Transformation{Pos:player.Pos, Scale:config.HumanScale, Rotation:player.Dir})
 		ah.activeAnimations[player.ID()] = anim
 	}
 }

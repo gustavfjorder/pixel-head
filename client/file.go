@@ -16,7 +16,7 @@ func LoadAll(paths ...string) (res map[string]Animation) {
 	res = make(map[string]Animation)
 	for _, path := range paths {
 		for _, animation := range Load(path, "") {
-			res[animation.Prefix] = animation
+			res[animation.Prefix()] = animation
 		}
 	}
 	return res
@@ -40,10 +40,10 @@ func Load(path, prefix string) (res []Animation){
 				continue
 			} else if animationType == Image{
 				for i, sprite := range sprites {
-					res = append(res, NewAnimation(elem.Name() + "." + names[i], []*pixel.Sprite{sprite}))
+					res = append(res, NewAnimation(elem.Name() + "." + names[i], []*pixel.Sprite{sprite}, animationType))
 				}
 			} else {
-				res = append(res, NewAnimation(prefix+del+elem.Name(), sprites))
+				res = append(res, NewAnimation(prefix+del+elem.Name(), sprites,animationType))
 			}
 		} else {
 			loaded := Load(path + "/" + elem.Name(), prefix + del + elem.Name())
@@ -104,8 +104,7 @@ func LoadSpriteSheet(deltax float64, deltay float64, total int, path string) (an
 		}
 	}
 loopdone:
-	anim.NextAnim = &Animation{}
-	anim.Sprites = sprites
+	anim = NewAnimation("",sprites, NonBlocking)
 	return
 }
 
