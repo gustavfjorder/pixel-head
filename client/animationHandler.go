@@ -4,7 +4,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/gustavfjorder/pixel-head/config"
-	."github.com/gustavfjorder/pixel-head/client/animation"
+	. "github.com/gustavfjorder/pixel-head/client/animation"
 	"github.com/faiface/pixel"
 	"fmt"
 	"strconv"
@@ -16,6 +16,7 @@ type AnimationHandler struct {
 	win              *pixelgl.Window
 	animations       map[string]Animation
 	activeAnimations map[string]Animation
+	tracked          map[string]model.EntityI
 	updateChan       <-chan model.Updates
 	stateChan        <-chan model.State
 	center           pixel.Vec
@@ -24,14 +25,14 @@ type AnimationHandler struct {
 	me               model.Player
 }
 
-
 func NewAnimationHandler() (ah AnimationHandler) {
 	spritePath := "client/sprites/"
-	ah.animations = LoadAll(spritePath + "animations", spritePath + "images")
-	ah.animations["explosion"] = NewAnimation( "explosion",
-		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath + "images/explosion/explosion.png"),
-			Terminal)
+	ah.animations = LoadAll(spritePath+"animations", spritePath+"images")
+	ah.animations["explosion"] = NewAnimation("explosion",
+		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath+"images/explosion/explosion.png"),
+		Terminal)
 	ah.activeAnimations = make(map[string]Animation)
+	ah.tracked = make(map[string]model.EntityI)
 	ah.center = pixel.ZV
 	ah.me = model.NewPlayer(config.ID)
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
@@ -42,22 +43,22 @@ func (ah *AnimationHandler) SetWindow(win *pixelgl.Window) {
 	ah.win = win
 }
 
-func (ah *AnimationHandler) SetUpdateChan(ch chan model.Updates){
+func (ah *AnimationHandler) SetUpdateChan(ch chan model.Updates) {
 	ah.updateChan = ch
 }
 
 func (ah AnimationHandler) Draw(state model.State) {
 	ah.state = state
 	GetPlayer(state.Players, &ah.me)
-	ah.collectBulllets()
 	ah.collectZombies()
 	ah.collectPlayers()
 	ah.handleUpdates()
+	ah.handleTracked()
 	for id, animation := range ah.activeAnimations {
 		animation.Draw(ah.win)
 		next := animation.Next()
 		if next == nil {
-			delete(ah.activeAnimations,id)
+			delete(ah.activeAnimations, id)
 		} else {
 			ah.activeAnimations[id] = next
 		}
@@ -76,6 +77,8 @@ func (ah AnimationHandler) handleUpdates() () {
 				switch entity.EntityType {
 				case model.ShotE:
 					delete(ah.activeAnimations, entity.ID)
+					delete(ah.tracked, entity.ID)
+
 				case model.ZombieE:
 					v, present := ah.activeAnimations[entity.ID]
 					if present {
@@ -87,24 +90,27 @@ func (ah AnimationHandler) handleUpdates() () {
 				case model.BarrelE:
 					if anim, present := ah.activeAnimations[entity.ID]; present {
 						exp := ah.Get("explosion")
-						exp.SetAnimationSpeed(time.Second/120)
+						exp.SetAnimationSpeed(time.Second / 120)
 						anim = anim.ChangeAnimation(exp)
 						ah.activeAnimations[entity.ID] = anim
 					}
 				}
 			}
 			for _, entity := range update.Added {
-				transformation := Transformation{Pos:entity.GetPos(), Scale:1, Rotation:entity.GetDir()}
-				switch entity.EntityType(){
+				transformation := Transformation{Pos: entity.GetPos(), Scale: 1, Rotation: entity.GetDir()}
+				switch entity.EntityType() {
 				case model.BarrelE:
-					barrel := ah.Get("barrel","barrel")
+					barrel := ah.Get("barrel", "barrel")
 					barrel.SetTransformation(transformation)
 					ah.activeAnimations[entity.ID()] = barrel
 				case model.ShotE:
-					bullet := ah.Get("bullet","bullet")
+					bullet := ah.Get("bullet", "bullet")
 					transformation.Scale = config.BulletScale
 					bullet.SetTransformation(transformation)
 					ah.activeAnimations[entity.ID()] = bullet
+					ah.tracked[entity.ID()] = entity
+				case model.ZombieE:
+					ah.activeAnimations[entity.ID()] = ah.Get("zombie", "walk")
 				}
 			}
 		default:
@@ -113,15 +119,27 @@ func (ah AnimationHandler) handleUpdates() () {
 	}
 }
 
+func (ah AnimationHandler) handleTracked(){
+	for _, entity := range ah.tracked {
+		if anim, ok := ah.activeAnimations[entity.ID()]; ok {
+			anim.SetPos(entity.GetPos())
+		}
+	}
+}
+
 func (ah AnimationHandler) collectBulllets() {
 	for _, shot := range ah.state.Shots {
 		if anim, present := ah.activeAnimations[shot.ID()]; present {
-			anim.SetTransformation(Transformation{Scale:config.BulletScale, Pos:shot.GetPos(), Rotation:shot.GetDir()})
+			anim.SetTransformation(Transformation{Scale: config.BulletScale, Pos: shot.GetPos(), Rotation: shot.GetDir()})
 		}
 	}
 }
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
+		v, ok := ah.activeAnimations[zombie.ID()]
+		if !ok {
+			continue
+		}
 		var prefix string
 		if zombie.Attacking {
 			n := rand.Int()%3 + 1
@@ -129,11 +147,10 @@ func (ah AnimationHandler) collectZombies() {
 		} else {
 			prefix = Prefix("zombie", "walk")
 		}
-		v, ok := ah.activeAnimations[zombie.ID()]
-		if !ok || prefix != v.Prefix(){
-			v = ah.Get(prefix)
+		if prefix != v.Prefix() {
+			v = v.ChangeAnimation(ah.Get(prefix))
 		}
-		v.SetTransformation(Transformation{Pos:zombie.Pos, Rotation:zombie.Dir, Scale:config.ZombieScale})
+		v.SetTransformation(Transformation{Pos: zombie.Pos, Rotation: zombie.Dir, Scale: config.ZombieScale})
 		ah.activeAnimations[zombie.ID()] = v
 	}
 }
@@ -142,7 +159,9 @@ func (ah AnimationHandler) collectPlayers() {
 		movement := "idle"
 		switch player.Action {
 		case model.RELOAD:
+			if player.WeaponType != model.KNIFE{
 			movement = "reload"
+			}
 		case model.SHOOT:
 			movement = "shoot"
 		case model.MELEE:
@@ -156,12 +175,11 @@ func (ah AnimationHandler) collectPlayers() {
 		if !ok || anim.Prefix() != prefix {
 			anim = ah.Get(prefix)
 		}
-		anim.SetTransformation(Transformation{Pos:player.Pos, Scale:config.HumanScale, Rotation:player.Dir})
+		anim.SetTransformation(Transformation{Pos: player.Pos, Scale: config.HumanScale, Rotation: player.Dir})
 		ah.activeAnimations[player.ID()] = anim
 	}
 }
 
-
-func (ah AnimationHandler) Get(prefix ...string) (Animation){
+func (ah AnimationHandler) Get(prefix ...string) (Animation) {
 	return ah.animations[Prefix(prefix...)].Copy()
 }
