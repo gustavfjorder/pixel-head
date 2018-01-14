@@ -153,6 +153,7 @@ var AnimationIndex = map[string]AnimationType{
 	"walk":        NonBlocking,
 	"abilities":   Still,
 	"barrel":      Still,
+	"lootbox":     Still,
 	"bullet":      Still,
 	"health":      Still,
 }

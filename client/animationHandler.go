@@ -50,6 +50,7 @@ func (ah AnimationHandler) Draw(state model.State) {
 	ah.state = state
 	GetPlayer(state.Players, &ah.me)
 	ah.handleUpdates()
+	ah.collectLootboxes()
 	ah.collectZombies()
 	ah.collectPlayers()
 	ah.handleTracked()
@@ -93,6 +94,8 @@ func (ah AnimationHandler) handleUpdates() () {
 						anim.SetScale(model.Barrel{}.GetRange()*8/exp.CurrentSprite().Picture().Bounds().Max.X)
 						ah.activeAnimations[entity.ID] = anim
 					}
+				case model.LootboxE:
+					delete(ah.activeAnimations, entity.ID)
 				}
 			}
 			for _, entity := range update.Added {
@@ -129,11 +132,12 @@ func (ah AnimationHandler) handleTracked(){
 	}
 }
 
-func (ah AnimationHandler) collectBulllets() {
-	for _, shot := range ah.state.Shots {
-		if anim, present := ah.activeAnimations[shot.ID()]; present {
-			anim.SetTransformation(Transformation{Scale: config.BulletScale, Pos: shot.GetPos(), Rotation: shot.GetDir()})
-		}
+func (ah AnimationHandler) collectLootboxes() {
+	for _, lb := range ah.state.Lootboxes {
+		lootbox := ah.animations["lootbox.lootbox"]
+		lootbox.SetPos(lb.Pos)
+		lootbox.SetScale(0.2)
+		ah.activeAnimations[lb.Id] = &lootbox
 	}
 }
 func (ah AnimationHandler) collectZombies() {
