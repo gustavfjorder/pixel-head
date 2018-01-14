@@ -65,9 +65,10 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 			//Send new game state to clients
 			var ts time.Duration
+			compressed := g.State.Compress()
 			for _, spc := range clientSpaces {
 				spc.GetP("state",&ts, &model.State{})
-				spc.Put("state",model.Timestamp ,g.State)
+				spc.Put("state",model.Timestamp ,compressed)
 				if !g.Updates.Empty(){
 					spc.Put("update",model.Timestamp,g.Updates)
 				}
