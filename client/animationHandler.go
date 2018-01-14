@@ -6,7 +6,6 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 	. "github.com/gustavfjorder/pixel-head/client/animation"
 	"github.com/faiface/pixel"
-	"fmt"
 	"strconv"
 	"math/rand"
 	"time"
@@ -50,9 +49,9 @@ func (ah *AnimationHandler) SetUpdateChan(ch chan model.Updates) {
 func (ah AnimationHandler) Draw(state model.State) {
 	ah.state = state
 	GetPlayer(state.Players, &ah.me)
+	ah.handleUpdates()
 	ah.collectZombies()
 	ah.collectPlayers()
-	ah.handleUpdates()
 	ah.handleTracked()
 	for id, animation := range ah.activeAnimations {
 		animation.Draw(ah.win)
@@ -72,7 +71,6 @@ func (ah AnimationHandler) handleUpdates() () {
 	for {
 		select {
 		case update = <-ah.updateChan:
-			fmt.Println(update)
 			for _, entity := range update.Removed {
 				switch entity.EntityType {
 				case model.ShotE:
@@ -111,6 +109,8 @@ func (ah AnimationHandler) handleUpdates() () {
 					ah.tracked[entity.ID()] = entity
 				case model.ZombieE:
 					ah.activeAnimations[entity.ID()] = ah.Get("zombie", "walk")
+				case model.PlayerE:
+					ah.activeAnimations[entity.ID()] = ah.Get("survivor", "knife", "idle")
 				}
 			}
 		default:
@@ -156,24 +156,20 @@ func (ah AnimationHandler) collectZombies() {
 }
 func (ah AnimationHandler) collectPlayers() {
 	for _, player := range ah.state.Players {
+		anim, ok := ah.activeAnimations[player.ID()]
+		if !ok {
+			continue
+		}
 		movement := "idle"
 		switch player.Action {
-		case model.RELOAD:
-			if player.WeaponType != model.KNIFE{
-			movement = "reload"
-			}
-		case model.SHOOT:
-			movement = "shoot"
-		case model.MELEE:
-			movement = "melee"
-		case model.IDLE:
-			movement = "move"
+		case model.RELOAD: if player.WeaponType != model.KNIFE{	movement = "reload"	}
+		case model.SHOOT: movement = "shoot"
+		case model.MELEE: movement = "melee"
+		case model.IDLE: movement = "move"
 		}
-
 		prefix := Prefix("survivor", player.WeaponType.Name(), movement)
-		anim, ok := ah.activeAnimations[player.ID()]
-		if !ok || anim.Prefix() != prefix {
-			anim = ah.Get(prefix)
+		if prefix != anim.Prefix() {
+			anim = anim.ChangeAnimation(ah.Get(prefix))
 		}
 		anim.SetTransformation(Transformation{Pos: player.Pos, Scale: config.HumanScale, Rotation: player.Dir})
 		ah.activeAnimations[player.ID()] = anim
