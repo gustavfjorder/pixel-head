@@ -3,6 +3,7 @@ package model
 import (
 	"math"
 	"github.com/faiface/pixel"
+	"math/rand"
 )
 
 type Map struct {
@@ -22,7 +23,7 @@ type Wall struct {
 var MapTemplates = map[string]Map{
 	"Test1": {
 		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
-		SpawnPoint: []pixel.Vec{{200,450},{900,450}},
+		SpawnPoint: randomSpawnPoints(pixel.R(100,100,1000,1000), 10),
 		LootPoints: []Point{
 			NewPoint(150, 150),
 			NewPoint(150, 250),
@@ -65,4 +66,16 @@ func NewWall(p, q Point, thickness float64) Wall {
 		NewLine(p, q),
 		thickness,
 	}
+}
+
+func randomSpawnPoints(bounds pixel.Rect, n int) []pixel.Vec{
+	res := make([]pixel.Vec,n)
+	diffX := bounds.Max.X - bounds.Min.X
+	diffY := bounds.Max.Y - bounds.Min.Y
+	for i := range res {
+		x := rand.Float64()*diffX + bounds.Min.X
+		y := rand.Float64()*diffY + bounds.Min.Y
+		res[i] = pixel.V(x,y)
+	}
+	return res
 }

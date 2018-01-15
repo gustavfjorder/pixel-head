@@ -69,7 +69,7 @@ func (weaponType WeaponType) ReloadSpeed() time.Duration {
 func (weaponType WeaponType) ShootDelay() time.Duration {
 	switch weaponType {
 	case RIFLE:
-		return time.Second / 5
+		return time.Second / 30
 	case HANDGUN:
 		return time.Second / 2
 	case SHOTGUN:
@@ -82,11 +82,11 @@ func (weaponType WeaponType) ShootDelay() time.Duration {
 func (weaponType WeaponType) MagazineCapacity() int {
 	switch weaponType {
 	case RIFLE:
-		return 30
+		return 100
 	case HANDGUN:
 		return 10
 	case SHOTGUN:
-		return math.MaxInt32
+		return 10
 	default:
 		return 0
 	}
@@ -155,9 +155,11 @@ func (weaponType WeaponType) Spread() float64 {
 func (weaponType WeaponType) Capacity() int {
 	switch weaponType {
 	case SHOTGUN:
-		return 20
-	default:
 		return 150
+	case RIFLE:
+		return 10000
+	default:
+		return 1000
 	}
 }
 

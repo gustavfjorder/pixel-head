@@ -2,7 +2,6 @@ package animation
 
 import (
 	"reflect"
-	"fmt"
 )
 
 //Animation that will block until it has shown all frames
@@ -31,7 +30,6 @@ func (ba *BLockingAnimation) Next() Animation {
 
 func (ba *BLockingAnimation) ChangeAnimation(animation Animation) Animation {
 	if reflect.TypeOf(animation) == reflect.TypeOf(&TerminalAnimation{}) {
-		fmt.Println("Made terminal animation")
 		animation.SetTransformation(ba.transformation)
 		return animation
 	}

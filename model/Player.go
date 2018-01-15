@@ -222,3 +222,7 @@ func (player Player) GetPos() pixel.Vec{
 func (player Player) GetDir() float64{
 	return player.Dir
 }
+
+func (player *Player) Regen(){
+	player.Health+= MinInt(player.GetMaxHealth() - player.Health, 3)
+}
