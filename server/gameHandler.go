@@ -8,6 +8,7 @@ import (
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/config"
 	"encoding/gob"
+	"github.com/faiface/pixel"
 )
 
 type ClientSpace struct {
@@ -62,10 +63,12 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			g.HandleZombies()
 			g.HandleShots()
 			g.HandlePlayers()
+			g.HandleCorpses()
 
 			//Send new game state to clients
 			var ts time.Duration
 			compressed := g.State.Compress()
+			fmt.Println("putting state")
 			for _, spc := range clientSpaces {
 				spc.GetP("state",&ts, &model.State{})
 				spc.Put("state",model.Timestamp ,compressed)
@@ -73,6 +76,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 					spc.Put("update",model.Timestamp,g.Updates)
 				}
 			}
+			fmt.Println("F")
 			g.Updates.Clear()
 
 
@@ -140,8 +144,6 @@ func SetupSpace(uri string) space.Space {
 	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
 	gob.Register([]model.Player{})
-	gob.Register(model.Zombie{})
-	gob.Register([]model.Zombie{})
 	gob.Register(model.Shot{})
 	gob.Register([]model.Shot{})
 	gob.Register(model.Map{})
@@ -151,6 +153,9 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
+	z := model.NewZombie(pixel.ZV,model.ZOMBIE)
+	gob.Register(z)
+	gob.Register([]model.ZombieI{z})
 	var t time.Duration
 	gob.Register(t)
 

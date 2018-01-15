@@ -2,11 +2,11 @@ package model
 
 import (
 	"time"
-)
+  )
 
 type State struct {
 	Players   []Player
-	Zombies   []Zombie
+	Zombies   []ZombieI
 	Shots     []Shot
 	Barrels   []Barrel
 }

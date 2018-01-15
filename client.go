@@ -73,8 +73,6 @@ func registerModels() {
 	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
 	gob.Register([]model.Player{})
-	gob.Register(model.Zombie{})
-	gob.Register([]model.Zombie{})
 	gob.Register(model.Shot{})
 	gob.Register([]model.Shot{})
 	gob.Register(model.Map{})
@@ -84,6 +82,9 @@ func registerModels() {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
+	z := model.NewZombie(pixel.ZV,model.ZOMBIE)
+	gob.Register(z)
+	gob.Register([]model.ZombieI{z})
 	var t time.Duration
 	gob.Register(t)
 }

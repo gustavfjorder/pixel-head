@@ -1,6 +1,8 @@
 package model
 
-import "github.com/gustavfjorder/pixel-head/config"
+import (
+	"github.com/gustavfjorder/pixel-head/config"
+)
 
 type Stats struct {
 	Health    int
@@ -11,6 +13,9 @@ type Being int
 const (
 	HUMAN Being = iota
 	ZOMBIE
+	FASTZOMBIE
+	SLOWZOMBIE
+	BOMBZOMBIE
 	nBeing
 )
 
@@ -29,6 +34,12 @@ func (being Being) GetMaxHealth() int{
 		return 100
 	case ZOMBIE:
 		return 20
+	case FASTZOMBIE:
+		return 5
+	case SLOWZOMBIE:
+		return 200
+	case BOMBZOMBIE:
+		return 20
 	}
 	return 0
 }
@@ -40,6 +51,12 @@ func (being Being) GetMoveSpeed() (speed float64){
 		speed = 400
 	case ZOMBIE:
 		speed =  50
+	case FASTZOMBIE:
+		speed = 200
+	case SLOWZOMBIE:
+		speed = 5
+	case BOMBZOMBIE:
+		speed = 10
 	}
 	return speed * config.Conf.ServerHandleSpeed.Seconds()
 }
@@ -49,6 +66,12 @@ func (being Being) GetPower() int {
 	case HUMAN:
 		return 5
 	case ZOMBIE:
+		return 3
+	case FASTZOMBIE:
+		return 1
+	case SLOWZOMBIE:
+		return 15
+	case BOMBZOMBIE:
 		return 3
 	}
 	return 0

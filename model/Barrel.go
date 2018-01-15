@@ -34,9 +34,9 @@ func (barrel *Barrel) Explode(s *State) {
 			s.Players[index].Health -= int(barrel.GetPower() * (barrel.GetRange() - distanceBetween(player.Pos, barrel.Pos)) / barrel.GetRange())
 		}
 	}
-	for index, zombie := range s.Zombies {
-		if distanceBetween(zombie.Pos, barrel.Pos) < barrel.GetRange() {
-			s.Zombies[index].Stats.Health -= int(barrel.GetPower() * (barrel.GetRange() - distanceBetween(zombie.Pos, barrel.Pos)) / barrel.GetRange())
+	for _, zombie := range s.Zombies {
+		if distanceBetween(zombie.GetPos(), barrel.Pos) < barrel.GetRange() {
+			zombie.SubHealth(int(barrel.GetPower() * (barrel.GetRange() - distanceBetween(zombie.GetPos(), barrel.Pos)) / barrel.GetRange()))
 		}
 	}
 	for i := range s.Barrels {
@@ -55,11 +55,11 @@ func (barrel Barrel) GetHitbox() float64 {
 }
 
 func (b Barrel) GetPower() float64 {
-	return 50
+	return 5
 }
 
 func (b Barrel) GetRange() float64 {
-	return 500
+	return 100
 }
 
 func (barrel Barrel) ID() string {

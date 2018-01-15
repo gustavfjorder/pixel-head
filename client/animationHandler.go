@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"math/rand"
 	"time"
+	"fmt"
 )
 
 type AnimationHandler struct {
@@ -138,21 +139,29 @@ func (ah AnimationHandler) collectBulllets() {
 }
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
+		fmt.Println(zombie.ID(), zombie.GetPos())
 		v, ok := ah.activeAnimations[zombie.ID()]
 		if !ok {
 			continue
 		}
 		var prefix string
-		if zombie.Attacking {
+		if zombie.IsAttacking() {
 			n := rand.Int()%3 + 1
 			prefix = Prefix("zombie", "attack0"+strconv.Itoa(n))
+		} else if zombie.GetStats().Being == model.FASTZOMBIE {
+			prefix = Prefix("zombie", "run")
 		} else {
 			prefix = Prefix("zombie", "walk")
 		}
 		if prefix != v.Prefix() {
 			v = v.ChangeAnimation(ah.Get(prefix))
 		}
-		v.SetTransformation(Transformation{Pos: zombie.Pos, Rotation: zombie.Dir, Scale: config.ZombieScale})
+		if zombie.GetStats().Being == model.FASTZOMBIE {
+			v.SetAnimationSpeed(time.Second/100)
+		} else {
+			v.SetAnimationSpeed(time.Second/30)
+		}
+		v.SetTransformation(Transformation{Pos: zombie.GetPos(), Rotation: zombie.GetDir(), Scale: config.ZombieScale})
 		ah.activeAnimations[zombie.ID()] = v
 	}
 }

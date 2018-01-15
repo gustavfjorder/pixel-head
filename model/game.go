@@ -6,6 +6,7 @@ import (
 	"github.com/faiface/pixel"
 	"time"
 	"sort"
+	"github.com/gustavfjorder/pixel-head/helper"
 )
 
 type Game struct {
@@ -31,7 +32,7 @@ func NewGame(ids []string, mapName string) (game Game) {
 
 func (g *Game) PrepareLevel(end chan<- bool) {
 	level := Levels[g.CurrentLevel]
-	g.State.Zombies = make([]Zombie, 0)
+	g.State.Zombies = make([]ZombieI, 0)
 	waveticker := time.NewTicker(level.TimeBetweenWaves)
 	zombieticker := time.NewTicker(level.TimeBetweenZombies)
 	fmt.Println("num zom", level.NumberOfZombiesPerWave, "num waves", level.NumberOfWaves)
@@ -43,7 +44,7 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 			fmt.Println("j:", j)
 			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
 			fmt.Println(len(g.State.Zombies))
-			g.Add(NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))]))
+			g.Add(NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))],FASTZOMBIE))
 			<-zombieticker.C
 		}
 	}
@@ -77,24 +78,25 @@ func (game *Game) HandleRequests(requests []Request) {
 
 func (game *Game) HandleZombies() {
 	for i := len(game.State.Zombies) - 1; i >= 0; i-- {
-		zombie := &game.State.Zombies[i]
+		zombie := game.State.Zombies[i]
 
 		// Any shoots hitting the zombie
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shoot := game.State.Shots[j]
-			if shoot.GetPos().Sub(zombie.Pos).Len() <= zombie.GetHitbox() {
-				zombie.Stats.Health -= shoot.WeaponType.Power()
+
+			if shoot.GetPos().Sub(zombie.GetPos()).Len() <= zombie.GetHitbox() {
+				zombie.SubHealth(shoot.WeaponType.Power())
 				game.Remove(Entry{shoot, j})
 			}
 			//Remove all zombies at zero health
-			if zombie.Stats.Health <= 0 {
-				game.Remove(Entry{*zombie, i})
+			if zombie.GetStats().Health <= 0 {
+				game.Remove(Entry{zombie, i})
 				goto endloop
 			}
 		}
 
-		zombie.Move(game.State.Players)
-		zombie.Attack(game.State)
+		zombie.Move(game)
+		zombie.Attack(game)
 		endloop:
 	}
 }
@@ -110,12 +112,23 @@ func (game *Game) HandleShots() {
 }
 
 func (game *Game) HandlePlayers() {
+
+}
+
+func (game *Game) HandleCorpses(){
 	for i := len(game.State.Players) - 1; i >= 0; i-- {
 		player := game.State.Players[i]
 		if player.Stats.Health <= 0 {
 			//Remove player from game
 			game.PlayerIds[player.Id] = false
 			game.Remove(Entry{player, i})
+		}
+	}
+	for i := len(game.State.Zombies) - 1; i >= 0; i-- {
+		zombie := game.State.Zombies[i]
+		if zombie.GetStats().Health <= 0 {
+			//Remove zombie from game
+			game.Remove(Entry{zombie, i})
 		}
 	}
 }
@@ -144,10 +157,11 @@ func (game *Game) HandleBarrels() {
 
 func (game *Game) Add(entities ...EntityI) {
 	for _, entity := range entities {
+		fmt.Println(helper.RealType(entity))
 		switch entity.EntityType() {
 		case BarrelE: game.State.Barrels = append(game.State.Barrels, entity.(Barrel))
 		case ShotE: game.State.Shots = append(game.State.Shots, entity.(Shot))
-		case ZombieE: game.State.Zombies = append(game.State.Zombies, entity.(Zombie))
+		case ZombieE: game.State.Zombies = append(game.State.Zombies, entity.(ZombieI))
 		case PlayerE: game.State.Players = append(game.State.Players, entity.(Player))
 		}
 	}
