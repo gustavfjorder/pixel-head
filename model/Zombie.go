@@ -5,7 +5,6 @@ import (
 	"math"
 	"github.com/gustavfjorder/pixel-head/config"
 	"time"
-
 )
 
 type Zombie struct {
@@ -26,6 +25,7 @@ type ZombieI interface {
 	SetPos(pos pixel.Vec)
 	SetHealth(health int)
 	SubHealth(health int)
+	Hit(shot Shot, state *State)
 	IsAttacking() bool
 	Attack(game *Game)
 }
@@ -35,8 +35,6 @@ func (zombie Zombie) GetStats() Stats {
 }
 
 var attackDelays = make(map[string]time.Duration)
-
-
 
 //func NewBombZombie(vec pixel.Vec)
 
@@ -66,7 +64,7 @@ func (zombie *Zombie) Move(game *Game) {
 	}
 }
 
-func (zombie *Zombie) Attack(game *Game)  {
+func (zombie *Zombie) Attack(game *Game) {
 	zombie.Attacking = false
 	if zombie.TargetId != "" {
 		if zombie.AttackDelay() > Timestamp {
@@ -90,18 +88,12 @@ func (zombie *Zombie) Attack(game *Game)  {
 	for _, player := range game.State.Players {
 		if zombie.GetPos().Sub(player.GetPos()).Len() <= zombie.GetRange() &&
 			math.Abs(zombie.angle(player.GetPos())) <= zombie.GetMaxAttackAngle() {
-			if zombie.Type == BOMBZOMBIE {
-				barrel := NewBarrel(zombie.GetPos())
-				barrel.Explode(&game.State)
-				zombie.SetHealth(0)
-				break
-			} else {
-				zombie.Dir = angle(zombie.GetPos(), player.GetPos())
-				zombie.Attacking = true
-				zombie.SetAttackDelay()
-				zombie.TargetId = player.Id
-				break
-			}
+			zombie.Dir = angle(zombie.GetPos(), player.GetPos())
+			zombie.Attacking = true
+			zombie.SetAttackDelay()
+			zombie.TargetId = player.Id
+			break
+
 		}
 	}
 }
@@ -193,25 +185,46 @@ func (zombie Zombie) IsAttacking() bool {
 	return zombie.Attacking
 }
 
-func (zombie *Zombie) SubHealth(health int){
-	zombie.Stats.Health-=health
+func (zombie *Zombie) SubHealth(health int) {
+	zombie.Stats.Health -= health
 }
 
-type FastZombie struct{
-	Zombie
-
+func (zombie *Zombie) Hit(shot Shot, state *State) {
+	zombie.SubHealth(shot.WeaponType.Power())
 }
-type BombZombie struct{
+
+type FastZombie struct {
 	Zombie
-	Barrel *Barrel
+}
+type BombZombie struct {
+	Zombie
+	Barrel BarrelI
 }
 
 func (zombie *BombZombie) Move(game *Game) {
+	if zombie.Barrel.IsExploded(){
+		zombie.SetHealth(0)
+		return
+	}
 	zombie.Zombie.Move(game)
-	zombie.Barrel.Pos=zombie.Zombie.Pos
+	zombie.Barrel.SetPos(zombie.Zombie.Pos)
 }
 
-type SlowZombie struct{
-	Zombie
+func (zombie *BombZombie) Attack(game *Game){
+	for _, player := range game.State.Players {
+		if zombie.GetPos().Sub(player.GetPos()).Len() <= zombie.GetRange() {
+			barrel := NewBarrel(zombie.GetPos())
+			barrel.Explode(&game.State)
+			zombie.SetHealth(0)
+		}
+	}
+}
 
+func (zombie *BombZombie) Hit(shot Shot, state *State) {
+	zombie.SetHealth(0)
+	zombie.Barrel.Explode(state)
+}
+
+type SlowZombie struct {
+	Zombie
 }

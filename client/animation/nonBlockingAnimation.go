@@ -8,14 +8,14 @@ import (
 
 type NonBlockingAnimation struct {
 	prefix         string
-	sprites        []*pixel.Sprite
+	Sprites        []*pixel.Sprite
 	transformation Transformation
 	animationSpeed AnimationSpeed
 	cur            int
 }
 
 func (nba *NonBlockingAnimation) CurrentSprite() *pixel.Sprite {
-	return nba.sprites[nba.cur]
+	return nba.Sprites[nba.cur]
 }
 
 func (nba *NonBlockingAnimation) Prefix() string {
@@ -23,7 +23,7 @@ func (nba *NonBlockingAnimation) Prefix() string {
 }
 
 func (nba *NonBlockingAnimation) Draw(win *pixelgl.Window) {
-	nba.sprites[nba.cur].Draw(win,
+	nba.Sprites[nba.cur].Draw(win,
 		pixel.IM.
 			Rotated(pixel.ZV, nba.transformation.Rotation).
 			Scaled(pixel.ZV, nba.transformation.Scale).
@@ -32,7 +32,7 @@ func (nba *NonBlockingAnimation) Draw(win *pixelgl.Window) {
 
 func (nba *NonBlockingAnimation) Next() Animation {
 	inc := nba.animationSpeed.IncFrames()
-	nba.cur = (nba.cur + inc) % len(nba.sprites)
+	nba.cur = (nba.cur + inc) % len(nba.Sprites)
 	return nba
 }
 

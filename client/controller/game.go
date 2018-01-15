@@ -21,6 +21,7 @@ type Game struct {
 
 	me         *model.Player
 	state      *model.State
+	Ready      bool
 	LoadChan   chan bool
 	LoadedAnim bool
 	usedMap    *imdraw.IMDraw
@@ -30,6 +31,7 @@ func (g *Game) Init() {
 	g.me = &model.Player{Id: config.ID}
 	g.state = &model.State{}
 	g.LoadChan = make(chan bool)
+	g.Ready = false
 	if !g.LoadedAnim {
 		go func() {
 			g.LoadedAnim = true
@@ -40,41 +42,42 @@ func (g *Game) Init() {
 }
 
 func (g *Game) Run() {
-	<-g.LoadChan
-	var (
-		spc, gameMap = gotoLounge()
-	)
+	go func() {
+		<-g.LoadChan
+		var (
+			spc, gameMap = gotoLounge()
+		)
 
-	g.usedMap = animation.LoadMap(gameMap)
-	updateChan := make(chan model.Updates, config.Conf.ServerHandleSpeed)
+		g.usedMap = animation.LoadMap(gameMap)
+		updateChan := make(chan model.Updates, config.Conf.ServerHandleSpeed)
 
-	win := g.Container.Get("window").(*pixelgl.Window)
-	g.ah.SetWindow(win)
-	g.ah.SetUpdateChan(updateChan)
+		win := g.Container.Get("window").(*pixelgl.Window)
+		g.ah.SetWindow(win)
+		g.ah.SetUpdateChan(updateChan)
 
-	//Start state handler
-	go client.HandleEvents(&spc, g.state, updateChan)
-	//Start control handler
-	go client.HandleControls(&spc, win)
+		//Start state handler
+		go client.HandleEvents(&spc, g.state, updateChan)
+		//Start control handler
+		go client.HandleControls(&spc, win)
+		g.Ready = true
+	}()
 }
 
 func (g *Game) Update() {
 	win := g.Container.Get("window").(*pixelgl.Window)
-
-	client.GetPlayer(g.state.Players, g.me)
-
 	win.Clear(colornames.Darkolivegreen)
+	if g.Ready {
+		client.GetPlayer(g.state.Players, g.me)
 
-	g.usedMap.Draw(win)
+		g.usedMap.Draw(win)
 
-	win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(g.me.Pos)))
+		win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(g.me.Pos)))
 
-	g.ah.Draw(*g.state)
+		g.ah.Draw(*g.state)
+	}
 
 	win.Update()
 }
-
-
 
 func gotoLounge() (spc space.Space, m model.Map) {
 	if config.Conf.Online {
@@ -110,4 +113,3 @@ func gotoLounge() (spc space.Space, m model.Map) {
 
 	return
 }
-

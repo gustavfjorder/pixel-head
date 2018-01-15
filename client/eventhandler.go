@@ -29,7 +29,6 @@ func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Up
 		for _, updateTuple := range updateTuples {
 			updates <- updateTuple.GetFieldAt(2).(model.Updates)
 		}
-
 		<-delay.C
 		select {
 		case <-sec.C:

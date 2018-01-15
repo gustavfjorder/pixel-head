@@ -56,7 +56,7 @@ func (being Being) GetMoveSpeed() (speed float64){
 	case SLOWZOMBIE:
 		speed = 5
 	case BOMBZOMBIE:
-		speed = 10
+		speed = 200
 	}
 	return speed * config.Conf.ServerHandleSpeed.Seconds()
 }

@@ -10,14 +10,16 @@ import (
 	"net"
 	"os"
 	"github.com/pkg/errors"
+	"github.com/gustavfjorder/pixel-head/setup"
 )
 
 const MaxRooms = 10
-const PlayersPerRoom = 4
+const PlayersPerRoom = 2
 
 var startPort = 31415
 
 func main() {
+	setup.RegisterModels()
 	ip := getIp()
 	fmt.Println(ip)
 	lounge := NewSpace(config.Conf.LoungeUri)
@@ -67,6 +69,8 @@ func getIp() string {
 
 	for _, a := range addrs {
 		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			fmt.Println(ipnet.String())
+
 			if ipnet.IP.To4() != nil {
 				return ipnet.IP.String()
 			}

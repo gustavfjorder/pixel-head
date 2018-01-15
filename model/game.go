@@ -6,8 +6,9 @@ import (
 	"github.com/faiface/pixel"
 	"time"
 	"sort"
-	"github.com/gustavfjorder/pixel-head/helper"
 	"github.com/rs/xid"
+	"os"
+	"reflect"
 )
 
 type Game struct {
@@ -23,9 +24,9 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.State.Players = make([]Player, len(ids))
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
-	game.Add(NewBarrel(pixel.V(500,500)), NewBarrel(pixel.V(600,600)), NewBarrel(pixel.V(700,700)), NewBarrel(pixel.V(900,900)), NewBarrel(pixel.V(1000,1000)))
+	game.Add(NewBarrel(pixel.V(500, 500)), NewBarrel(pixel.V(600, 600)), NewBarrel(pixel.V(700, 700)), NewBarrel(pixel.V(900, 900)), NewBarrel(pixel.V(1000, 1000)))
 	for _, id := range ids {
-		game.Add( NewPlayer(id))
+		game.Add(NewPlayer(id))
 		game.PlayerIds[id] = true
 	}
 	return
@@ -46,21 +47,21 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
 			fmt.Println(len(g.State.Zombies))
 			var ZOM Being
-			switch rand.Intn(4){
-			case 0:
-				ZOM = ZOMBIE
+			switch rand.Intn(1) {
 			case 1:
+				ZOM = ZOMBIE
+			case 0:
 				ZOM = BOMBZOMBIE
 			case 2:
 				ZOM = FASTZOMBIE
 			case 3:
 				ZOM = SLOWZOMBIE
 			}
-			g.NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))],ZOM)
+			g.NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))], ZOM)
 			<-zombieticker.C
 		}
 	}
-	end<-true
+	end <- true
 }
 
 func (game *Game) HandleRequests(requests []Request) {
@@ -73,7 +74,6 @@ func (game *Game) HandleRequests(requests []Request) {
 			fmt.Println(err)
 			continue
 		}
-
 
 		if request.Moved() {
 			player.Move(request.Dir, game)
@@ -89,6 +89,7 @@ func (game *Game) HandleRequests(requests []Request) {
 }
 
 var lastTime = time.Now()
+
 func (g *Game) HandleLoot() {
 	for i := len(g.State.Players) - 1; i >= 0; i-- {
 		player := &g.State.Players[i]
@@ -96,7 +97,6 @@ func (g *Game) HandleLoot() {
 		for j := len(g.State.Lootboxes) - 1; j >= 0; j-- {
 			lootbox := g.State.Lootboxes[j]
 
-			fmt.Println("Distance", PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)))
 			if PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)) < 30 {
 				player.PickupLootbox(&lootbox)
 				g.Remove(Entry{lootbox, j})
@@ -109,7 +109,7 @@ func (g *Game) HandleLoot() {
 		min := 0
 		max := len(g.CurrentMap.LootPoints)
 
-		lootPoint := rand.Intn(max - min) + min
+		lootPoint := rand.Intn(max-min) + min
 		point := g.CurrentMap.LootPoints[lootPoint]
 
 		if ! g.State.HasLootboxAt(point) {
@@ -129,7 +129,7 @@ func (game *Game) HandleZombies() {
 			shoot := game.State.Shots[j]
 
 			if shoot.GetPos().Sub(zombie.GetPos()).Len() <= zombie.GetHitbox() {
-				zombie.SubHealth(shoot.WeaponType.Power())
+				zombie.Hit(shoot, &game.State)
 				game.Remove(Entry{shoot, j})
 			}
 			//Remove all zombies at zero health
@@ -141,7 +141,7 @@ func (game *Game) HandleZombies() {
 
 		zombie.Move(game)
 		zombie.Attack(game)
-		endloop:
+	endloop:
 	}
 }
 
@@ -159,7 +159,7 @@ func (game *Game) HandlePlayers() {
 
 }
 
-func (game *Game) HandleCorpses(){
+func (game *Game) HandleCorpses() {
 	for i := len(game.State.Players) - 1; i >= 0; i-- {
 		player := game.State.Players[i]
 		if player.Stats.Health <= 0 {
@@ -177,7 +177,7 @@ func (game *Game) HandleCorpses(){
 	}
 	for i := len(game.State.Barrels) - 1; i >= 0; i-- {
 		barrel := game.State.Barrels[i]
-		if  barrel.Exploded{
+		if barrel.IsExploded(){
 			//Remove zombie from game
 			game.Remove(Entry{barrel, i})
 		}
@@ -186,10 +186,10 @@ func (game *Game) HandleCorpses(){
 
 func (game *Game) HandleBarrels() {
 	for i := range game.State.Barrels {
-		barrel := &game.State.Barrels[i]
+		barrel := game.State.Barrels[i]
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shot := game.State.Shots[j]
-			if shot.GetPos().Sub(barrel.Pos).Len() < barrel.GetHitbox() {
+			if shot.GetPos().Sub(barrel.GetPos()).Len() < barrel.GetHitbox() {
 				//Update objects
 				barrel.Explode(&game.State)
 				game.Remove(Entry{shot, j})
@@ -197,43 +197,37 @@ func (game *Game) HandleBarrels() {
 			}
 		}
 	}
-	barrelEntries := make([]Entry, 0, len(game.State.Barrels))
-	for i,barrel := range game.State.Barrels{
-		if barrel.Exploded{
-			barrelEntries = append(barrelEntries, Entry{elem:barrel, index: i})
-		}
-	}
-	game.Remove(barrelEntries...)
+
 }
 
 func (game *Game) Add(entities ...EntityI) {
 	for _, entity := range entities {
-		fmt.Println(helper.RealType(entity))
-		switch entity.EntityType() {
-		case BarrelE: game.State.Barrels = append(game.State.Barrels, entity.(Barrel))
-		case ShotE: game.State.Shots = append(game.State.Shots, entity.(Shot))
-		case ZombieE: game.State.Zombies = append(game.State.Zombies, entity.(ZombieI))
-		case PlayerE: game.State.Players = append(game.State.Players, entity.(Player))
-		case LootboxE: game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
+		switch entity.(type) {
+		case BarrelI:game.State.Barrels = append(game.State.Barrels, entity.(BarrelI))
+		case Shot:game.State.Shots = append(game.State.Shots, entity.(Shot))
+		case ZombieI:game.State.Zombies = append(game.State.Zombies, entity.(ZombieI))
+		case Player:game.State.Players = append(game.State.Players, entity.(Player))
+		case Lootbox:game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
+		default: fmt.Fprintln(os.Stderr, "ADD: Unable to find:", entity, "with type", reflect.TypeOf(entity)); continue
 		}
+		game.Updates.Add(entity)
 	}
-	game.Updates.Add(entities...)
 }
 
-
-func (game *Game) Remove(entries ...Entry){
-	shots := make([]Entry, 0,minInt(len(entries), len(game.State.Shots)))
-	players := make([]Entry, 0,minInt(len(entries), len(game.State.Players)))
-	zombies := make([]Entry, 0,minInt(len(entries), len(game.State.Zombies)))
-	barrels := make([]Entry, 0,minInt(len(entries), len(game.State.Barrels)))
-	lootboxes := make([]Entry, 0,minInt(len(entries), len(game.State.Lootboxes)))
+func (game *Game) Remove(entries ...Entry) {
+	shots := make([]Entry, 0, minInt(len(entries), len(game.State.Shots)))
+	players := make([]Entry, 0, minInt(len(entries), len(game.State.Players)))
+	zombies := make([]Entry, 0, minInt(len(entries), len(game.State.Zombies)))
+	barrels := make([]Entry, 0, minInt(len(entries), len(game.State.Barrels)))
+	lootboxes := make([]Entry, 0, minInt(len(entries), len(game.State.Lootboxes)))
 	for _, entry := range entries {
-		switch entry.elem.EntityType(){
-		case ShotE: shots = append(shots, entry)
-		case PlayerE: players = append(players, entry)
-		case ZombieE: zombies = append(zombies, entry)
-		case BarrelE: barrels = append(barrels, entry)
-		case LootboxE: lootboxes = append(lootboxes, entry)
+		switch entry.elem.(type) {
+		case Shot: shots = append(shots, entry)
+		case Player: players = append(players, entry)
+		case ZombieI: zombies = append(zombies, entry)
+		case BarrelI: barrels = append(barrels, entry)
+		case Lootbox: lootboxes = append(lootboxes, entry)
+		default:fmt.Fprintln(os.Stderr, "REMOVE: Unable to find:", entry, "with type:",reflect.TypeOf(entry.elem)); continue
 		}
 		game.Updates.Remove(entry.elem)
 	}
@@ -280,26 +274,25 @@ func (game *Game) NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
 		Type:  zombieType,
 	}
 
-	switch zombieType{
+	switch zombieType {
 	case FASTZOMBIE:
-		zom= &FastZombie{
+		zom = &FastZombie{
 			zombie,
 		}
 	case BOMBZOMBIE:
-		barrel := NewBarrel(vec)
-		z:=BombZombie{
+		game.Add(NewBarrel(vec))
+		z := BombZombie{
 			zombie,
-			&barrel,
+			game.State.Barrels[len(game.State.Barrels)-1],
 		}
-		game.Add(*z.Barrel)
-		zom=&z
+		zom = &z
 	case SLOWZOMBIE:
-		zom=&SlowZombie{
+		zom = &SlowZombie{
 			zombie,
-	}
+		}
 	case ZOMBIE:
-		zom=&zombie
-}
+		zom = &zombie
+	}
 	game.Add(zom)
 	return zom
 }

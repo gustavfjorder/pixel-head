@@ -9,12 +9,16 @@ import (
 	"strconv"
 	"math/rand"
 	"time"
+	"github.com/pkg/errors"
+	"fmt"
+	"os"
 )
+
 
 type AnimationHandler struct {
 	win              *pixelgl.Window
 	animations       map[string]Animation
-	activeAnimations map[string]Animation
+	activeAnimations []map[string]Animation
 	tracked          map[string]model.EntityI
 	updateChan       <-chan model.Updates
 	stateChan        <-chan model.State
@@ -30,12 +34,26 @@ func NewAnimationHandler() (ah AnimationHandler) {
 	ah.animations["explosion"] = NewAnimation("explosion",
 		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath+"images/explosion/explosion.png"),
 		Terminal)
-	ah.activeAnimations = make(map[string]Animation)
+	ah.activeAnimations = make([]map[string]Animation,5)
+	for i := range ah.activeAnimations {
+		ah.activeAnimations[i] = make(map[string]Animation)
+	}
 	ah.tracked = make(map[string]model.EntityI)
 	ah.center = pixel.ZV
 	ah.me = model.NewPlayer(config.ID)
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
 	return
+}
+
+func Layer(entityType model.EntityType) int{
+	switch entityType {
+	case model.BarrelE: return 3
+	case model.PlayerE: return 4
+	case model.ZombieE: return 1
+	case model.LootboxE: return 0
+	case model.ShotE: return 2
+	}
+	return 0
 }
 
 func (ah *AnimationHandler) SetWindow(win *pixelgl.Window) {
@@ -53,13 +71,15 @@ func (ah AnimationHandler) Draw(state model.State) {
 	ah.collectZombies()
 	ah.collectPlayers()
 	ah.handleTracked()
-	for id, animation := range ah.activeAnimations {
-		animation.Draw(ah.win)
-		next := animation.Next()
-		if next == nil {
-			delete(ah.activeAnimations, id)
-		} else {
-			ah.activeAnimations[id] = next
+	for i, animations := range ah.activeAnimations {
+		for id, animation := range animations {
+			animation.Draw(ah.win)
+			next := animation.Next()
+			if next == nil {
+				delete(ah.activeAnimations[i], id)
+			} else {
+				ah.activeAnimations[i][id] = next
+			}
 		}
 	}
 	ah.DrawAbilities()
@@ -74,52 +94,70 @@ func (ah AnimationHandler) handleUpdates() () {
 			for _, entity := range update.Removed {
 				switch entity.EntityType {
 				case model.ShotE:
-					delete(ah.activeAnimations, entity.ID)
+					delete(ah.activeAnimations[Layer(entity.EntityType)], entity.ID)
 					delete(ah.tracked, entity.ID)
 
 				case model.ZombieE:
-					v, present := ah.activeAnimations[entity.ID]
+					zombie, present := ah.activeAnimations[Layer(entity.EntityType)][entity.ID]
 					if present {
 						prefix := Prefix("zombie", "death0"+strconv.Itoa(rand.Intn(2)+1))
-						ah.activeAnimations[entity.ID] = v.ChangeAnimation(ah.Get(prefix))
+						animation, err := ah.Get(prefix)
+						if err != nil {
+							fmt.Fprint(os.Stderr, err.Error())
+							delete(ah.activeAnimations[entity.EntityType], entity.ID)
+							continue
+						}
+						ah.activeAnimations[Layer(entity.EntityType)][entity.ID] = zombie.ChangeAnimation(animation)
 					}
 				case model.PlayerE:
-					delete(ah.activeAnimations, entity.ID)
+					delete(ah.activeAnimations[Layer(entity.EntityType)], entity.ID) //todo:No death animation
 				case model.BarrelE:
-					if anim, present := ah.activeAnimations[entity.ID]; present {
-						exp := ah.Get("explosion")
+					if barrel, present := ah.activeAnimations[Layer(entity.EntityType)][entity.ID]; present {
+						exp, err := ah.Get("explosion")
+						if err != nil {
+							fmt.Fprint(os.Stderr, err.Error())
+							delete(ah.activeAnimations[Layer(entity.EntityType)],entity.ID)
+							continue
+						}
 						exp.SetAnimationSpeed(time.Second / 120)
-						anim = anim.ChangeAnimation(exp)
-						anim.SetScale(model.Barrel{}.GetRange()*8/exp.CurrentSprite().Picture().Bounds().Max.X)
-						ah.activeAnimations[entity.ID] = anim
+						exp = barrel.ChangeAnimation(exp)
+						exp.SetScale(model.Barrel{}.GetRange()*8/exp.CurrentSprite().Picture().Bounds().Max.X) //Times 8 as the spritesheet is bigger
+						ah.activeAnimations[Layer(entity.EntityType)][entity.ID] = exp
 					}
 				case model.LootboxE:
-					delete(ah.activeAnimations, entity.ID)
+					delete(ah.activeAnimations[Layer(entity.EntityType)], entity.ID)
 				}
 			}
 			for _, entity := range update.Added {
 				transformation := Transformation{Pos: entity.GetPos(), Scale: 1, Rotation: entity.GetDir()}
 				switch entity.EntityType() {
 				case model.BarrelE:
-					barrel := ah.Get("barrel", "barrel")
-					transformation.Scale = entity.GetHitbox()*2 / barrel.CurrentSprite().Picture().Bounds().Max.X
+					barrel, err := ah.Get("barrel", "barrel")
+					if err != nil {fmt.Fprint(os.Stderr, err.Error());continue}
+					transformation.Scale = entity.GetHitbox() / barrel.CurrentSprite().Picture().Bounds().Max.X
 					barrel.SetTransformation(transformation)
-					ah.activeAnimations[entity.ID()] = barrel
+					ah.activeAnimations[Layer(entity.EntityType())][entity.ID()] = barrel
 				case model.ShotE:
-					bullet := ah.Get("bullet", "bullet")
+					bullet, err := ah.Get("bullet", "bullet")
+					if err != nil {fmt.Fprint(os.Stderr,err.Error()); continue}
 					transformation.Scale = config.BulletScale
 					bullet.SetTransformation(transformation)
-					ah.activeAnimations[entity.ID()] = bullet
+					ah.activeAnimations[Layer(entity.EntityType())][entity.ID()] = bullet
 					ah.tracked[entity.ID()] = entity
 				case model.ZombieE:
-					ah.activeAnimations[entity.ID()] = ah.Get("zombie", "walk")
+					zombie, err := ah.Get("zombie", "walk")
+					if err != nil {fmt.Fprint(os.Stderr,err.Error()); continue}
+					ah.activeAnimations[Layer(entity.EntityType())][entity.ID()] = zombie
 				case model.PlayerE:
-					ah.activeAnimations[entity.ID()] = ah.Get("survivor", "knife", "idle")
+					player, err := ah.Get("survivor", "knife", "idle")
+					if err != nil {fmt.Fprint(os.Stderr,err.Error()); continue}
+					ah.activeAnimations[Layer(entity.EntityType())][entity.ID()] = player
 				case model.LootboxE:
-					lootbox := ah.Get("lootbox", "lootbox")
+					lootbox, err := ah.Get("lootbox", "lootbox")
+					if err != nil {fmt.Fprint(os.Stderr,err.Error()); continue}
 					lootbox.SetPos(entity.GetPos())
 					lootbox.SetScale(0.2)
-					ah.activeAnimations[entity.ID()] = lootbox
+					ah.activeAnimations[Layer(entity.EntityType())][entity.ID()] = lootbox
 				}
 			}
 		default:
@@ -130,7 +168,7 @@ func (ah AnimationHandler) handleUpdates() () {
 
 func (ah AnimationHandler) handleTracked(){
 	for _, entity := range ah.tracked {
-		if anim, ok := ah.activeAnimations[entity.ID()]; ok {
+		if anim, ok := ah.activeAnimations[Layer(entity.EntityType())][entity.ID()]; ok {
 			anim.SetPos(entity.GetPos())
 		}
 	}
@@ -138,7 +176,7 @@ func (ah AnimationHandler) handleTracked(){
 
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
-		v, ok := ah.activeAnimations[zombie.ID()]
+		animation, ok := ah.activeAnimations[Layer(zombie.EntityType())][zombie.ID()]
 		if !ok {
 			continue
 		}
@@ -151,29 +189,35 @@ func (ah AnimationHandler) collectZombies() {
 		} else {
 			prefix = Prefix("zombie", "walk")
 		}
-		if prefix != v.Prefix() {
-			v = v.ChangeAnimation(ah.Get(prefix))
+		if prefix != animation.Prefix() {
+			zombieAnimation, err := ah.Get(prefix)
+			if err != nil {
+				fmt.Fprint(os.Stderr, err.Error())
+			} else {
+				animation = animation.ChangeAnimation(zombieAnimation)
+			}
 		}
 		switch zombie.(type) {
 		case *model.FastZombie:
-			v.SetAnimationSpeed(time.Second/100)
+			animation.SetAnimationSpeed(time.Second/100)
 		case *model.BombZombie:
 			bz := zombie.(*model.BombZombie)
-			if barrel, present :=ah.activeAnimations[bz.Barrel.ID()];present {
+			if barrel, present :=ah.activeAnimations[Layer(bz.Barrel.EntityType())][bz.Barrel.ID()];present {
 				barrel.SetPos(bz.GetPos())
 			}
 		}
 		if zombie.GetStats().Being == model.FASTZOMBIE {
 		} else {
-			v.SetAnimationSpeed(time.Second/30)
+			animation.SetAnimationSpeed(time.Second/30)
 		}
-		v.SetTransformation(Transformation{Pos: zombie.GetPos(), Rotation: zombie.GetDir(), Scale: config.ZombieScale})
-		ah.activeAnimations[zombie.ID()] = v
+		animation.SetTransformation(Transformation{Pos: zombie.GetPos(), Rotation: zombie.GetDir(), Scale: config.ZombieScale})
+		ah.activeAnimations[Layer(zombie.EntityType())][zombie.ID()] = animation
 	}
 }
+
 func (ah AnimationHandler) collectPlayers() {
 	for _, player := range ah.state.Players {
-		anim, ok := ah.activeAnimations[player.ID()]
+		anim, ok := ah.activeAnimations[Layer(player.EntityType())][player.ID()]
 		if !ok {
 			continue
 		}
@@ -186,13 +230,21 @@ func (ah AnimationHandler) collectPlayers() {
 		}
 		prefix := Prefix("survivor", player.WeaponType.Name(), movement)
 		if prefix != anim.Prefix() {
-			anim = anim.ChangeAnimation(ah.Get(prefix))
+			player, err := ah.Get(prefix)
+			if err != nil {
+				fmt.Fprint(os.Stderr, err.Error())
+			} else {
+				anim = anim.ChangeAnimation(player)
+			}
 		}
 		anim.SetTransformation(Transformation{Pos: player.Pos, Scale: config.HumanScale, Rotation: player.Dir})
-		ah.activeAnimations[player.ID()] = anim
+		ah.activeAnimations[Layer(player.EntityType())][player.ID()] = anim
 	}
 }
 
-func (ah AnimationHandler) Get(prefix ...string) (Animation) {
-	return ah.animations[Prefix(prefix...)].Copy()
+func (ah AnimationHandler) Get(prefix ...string) (Animation, error){
+	if animation, present := ah.animations[Prefix(prefix...)]; present {
+		return animation.Copy(), nil
+	}
+	return nil, errors.New("Unable to find animation" + Prefix(prefix...))
 }

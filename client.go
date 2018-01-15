@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/gustavfjorder/pixel-head/model"
-	"encoding/gob"
 	"time"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel"
@@ -10,6 +8,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/gustavfjorder/pixel-head/framework"
 	"github.com/gustavfjorder/pixel-head/client/controller"
+	"github.com/gustavfjorder/pixel-head/setup"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 }
 
 func run() {
-	registerModels()
+	setup.RegisterModels()
 
 	var (
 		frames             = 0
@@ -28,7 +27,7 @@ func run() {
 	//Make window
 	cfg := pixelgl.WindowConfig{
 		Title:  "Zombie Hunter 3000!",
-		Bounds: pixel.R(0, 0, 600, 500),
+		Bounds: pixel.R(0, 0, 1024, 800),
 		//VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
@@ -64,32 +63,4 @@ func run() {
 		<-fps
 	}
 	config.SaveConfig("settings.json")
-}
-
-func registerModels() {
-	// Register models for encoding to space
-	gob.Register(model.Request{})
-	gob.Register([]model.Request{})
-	gob.Register(model.Player{})
-	gob.Register([]model.Player{})
-	gob.Register(model.Shot{})
-	gob.Register([]model.Shot{})
-	gob.Register(model.Map{})
-	gob.Register(model.Wall{})
-	gob.Register(model.Segment{})
-	gob.Register(model.Point{})
-	gob.Register(model.State{})
-	gob.Register(model.Updates{})
-	gob.Register(model.Barrel{})
-	gob.Register([]model.FastZombie{})
-	gob.Register([]model.SlowZombie{})
-	gob.Register([]model.BombZombie{})
-	gob.Register([]model.Zombie{})
-	gob.Register(&model.FastZombie{})
-	gob.Register(&model.SlowZombie{})
-	gob.Register(&model.BombZombie{})
-	gob.Register(&model.Zombie{})
-	gob.Register(model.Lootbox{})
-	var t time.Duration
-	gob.Register(t)
 }

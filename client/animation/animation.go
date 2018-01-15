@@ -41,46 +41,33 @@ func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType Animatio
 		panic(errors.New("unable to make animation from no sprites for:" + prefix))
 	}
 	speed := config.Conf.AnimationSpeed
-	if len(speeds) > 0{
+	if len(speeds) > 0 {
 		speed = speeds[0]
 	}
-	as := AnimationSpeed{Speed:speed}
+	as := AnimationSpeed{Speed: speed}
 	switch animationType {
-	case NonBlocking:
-		return &NonBlockingAnimation{
-			prefix:  prefix,
-			sprites: sprites,
-			cur:     0,
-			animationSpeed:as,
+	case NonBlocking, Blocking, Terminal:
+		nba := NonBlockingAnimation{
+			prefix:         prefix,
+			Sprites:        sprites,
+			cur:            0,
+			animationSpeed: as,
 		}
-	case Blocking:
-		return &BLockingAnimation{
-			prefix:        prefix,
-			Sprites:       sprites,
-			cur:           0,
-			nextAnimation: nil,
-			animationSpeed:as,
+		switch animationType {
+		case Blocking:
+			return &BLockingAnimation{nba, nil}
+		case Terminal:
+			return &TerminalAnimation{nba}
+		default:
+			return &nba
 		}
 	case Still:
 		return &StillAnimation{
 			prefix: prefix,
 			Sprite: sprites[0],
 		}
-	case Terminal:
-		return &TerminalAnimation{
-			prefix:  prefix,
-			cur:     0,
-			Sprites: sprites,
-			animationSpeed:as,
-		}
-
-	default:
-		return &NonBlockingAnimation{
-			prefix:  prefix,
-			sprites: sprites,
-			cur:     0,
-		}
 	}
+	return nil
 }
 
 type Transformation struct {
@@ -102,7 +89,7 @@ func (as *AnimationSpeed) IncFrames() int {
 		return 0
 	}
 	duration := time.Since(as.LastFrame)
-	diff := duration.Seconds() / as.Speed.Seconds() + as.diff
+	diff := duration.Seconds()/as.Speed.Seconds() + as.diff
 	as.LastFrame = time.Now()
 	frames := math.Floor(diff)
 	as.diff = diff - frames
