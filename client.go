@@ -44,6 +44,7 @@ func run() {
 
 	app.AddController("main", &controller.MainMenu{})
 	app.AddController("game", &controller.Game{})
+	app.AddController("game_over", &controller.GameOver{})
 
 	app.SetController("main")
 	app.Run()

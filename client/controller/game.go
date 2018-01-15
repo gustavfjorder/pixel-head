@@ -81,9 +81,9 @@ func (g *Game) Update() {
 
 		select {
 		case <- g.GameDone:
-			g.App.SetController("main")
-			win.SetMatrix(pixel.IM)
 			g.ah.Clear()
+			win.SetMatrix(pixel.IM)
+			g.App.ChangeTo("game_over")
 		default:
 		}
 	}
