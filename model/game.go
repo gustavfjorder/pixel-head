@@ -100,8 +100,7 @@ func (g *Game) HandleLoot() {
 		point := g.CurrentMap.LootPoints[lootPoint]
 
 		if ! g.State.HasLootboxAt(point) {
-			lootbox := NewLootbox(point.X, point.Y)
-			g.State.Lootboxes = append(g.State.Lootboxes, lootbox)
+			g.Add(NewLootbox(point.X, point.Y))
 
 			lastTime = time.Now()
 		}
@@ -182,6 +181,7 @@ func (game *Game) Add(entities ...EntityI) {
 		case ShotE: game.State.Shots = append(game.State.Shots, entity.(Shot))
 		case ZombieE: game.State.Zombies = append(game.State.Zombies, entity.(Zombie))
 		case PlayerE: game.State.Players = append(game.State.Players, entity.(Player))
+		case LootboxE: game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
 		}
 	}
 	game.Updates.Add(entities...)

@@ -152,6 +152,7 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
+	gob.Register(model.Lootbox{})
 	var t time.Duration
 	gob.Register(t)
 
@@ -172,6 +173,8 @@ func SetupSpace(uri string) space.Space {
 	spc.QueryP(&model.Point{})
 	spc.QueryP(&model.State{})
 	spc.QueryP(&model.Updates{})
+	gob.Register(model.Barrel{})
+	gob.Register(model.Lootbox{})
 	spc.QueryP(&t)
 
 	return spc

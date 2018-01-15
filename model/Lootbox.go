@@ -34,3 +34,15 @@ func (lootbox Lootbox) EntityType() EntityType {
 	return LootboxE
 }
 
+func (lootbox Lootbox) GetPos() pixel.Vec {
+	return lootbox.Pos
+}
+
+func (lootbox Lootbox) GetDir() float64 {
+	return 0
+}
+
+func (lootbox Lootbox) GetHitbox() float64 {
+	return 0
+}
+

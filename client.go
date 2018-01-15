@@ -84,6 +84,7 @@ func registerModels() {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
+	gob.Register(model.Lootbox{})
 	var t time.Duration
 	gob.Register(t)
 }

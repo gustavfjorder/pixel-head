@@ -50,7 +50,6 @@ func (ah AnimationHandler) Draw(state model.State) {
 	ah.state = state
 	GetPlayer(state.Players, &ah.me)
 	ah.handleUpdates()
-	ah.collectLootboxes()
 	ah.collectZombies()
 	ah.collectPlayers()
 	ah.handleTracked()
@@ -116,6 +115,11 @@ func (ah AnimationHandler) handleUpdates() () {
 					ah.activeAnimations[entity.ID()] = ah.Get("zombie", "walk")
 				case model.PlayerE:
 					ah.activeAnimations[entity.ID()] = ah.Get("survivor", "knife", "idle")
+				case model.LootboxE:
+					lootbox := ah.Get("lootbox", "lootbox")
+					lootbox.SetPos(entity.GetPos())
+					lootbox.SetScale(0.2)
+					ah.activeAnimations[entity.ID()] = lootbox
 				}
 			}
 		default:
@@ -132,14 +136,6 @@ func (ah AnimationHandler) handleTracked(){
 	}
 }
 
-func (ah AnimationHandler) collectLootboxes() {
-	for _, lb := range ah.state.Lootboxes {
-		lootbox := ah.animations["lootbox.lootbox"]
-		lootbox.SetPos(lb.Pos)
-		lootbox.SetScale(0.2)
-		ah.activeAnimations[lb.Id] = &lootbox
-	}
-}
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
 		v, ok := ah.activeAnimations[zombie.ID()]
