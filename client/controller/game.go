@@ -10,49 +10,50 @@ import (
 	"github.com/pspaces/gospace/space"
 	"fmt"
 	"github.com/gustavfjorder/pixel-head/server"
-	"sync"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel"
+	"github.com/gustavfjorder/pixel-head/client/animation"
 )
 
 type Game struct {
 	framework.Controller
 	ah client.AnimationHandler
 
-	me    *model.Player
-	state *model.State
-	lock  *sync.Mutex
-
-	usedMap          *imdraw.IMDraw
-	animations       map[string]client.Animation
-	activeAnimations map[string]*client.Animation
+	me         *model.Player
+	state      *model.State
+	LoadChan   chan bool
+	LoadedAnim bool
+	usedMap    *imdraw.IMDraw
 }
 
 func (g *Game) Init() {
-	g.me = &model.Player{Id: config.Conf.Id}
+	g.me = &model.Player{Id: config.ID}
 	g.state = &model.State{}
-	g.lock = &sync.Mutex{}
-	g.activeAnimations = make(map[string]*client.Animation)
+	g.LoadChan = make(chan bool)
+	if !g.LoadedAnim {
+		go func() {
+			g.LoadedAnim = true
+			g.ah = client.NewAnimationHandler()
+			g.LoadChan <- true
+		}()
+	}
 }
 
 func (g *Game) Run() {
+	<-g.LoadChan
 	var (
 		spc, gameMap = gotoLounge()
 	)
 
-	g.usedMap = client.LoadMap(gameMap)
-
-	g.animations = client.Load("client/sprites", "", client.ANIM)
-	g.animations["bullet"], _ = client.LoadAnimation(config.Conf.BulletPath)
-
-	//Start state handler
-	updateChan := make(chan model.Updates)
-	go client.HandleEvents(&spc, g.state, updateChan)
-	g.ah = client.NewAnimationHandler(updateChan)
+	g.usedMap = animation.LoadMap(gameMap)
+	updateChan := make(chan model.Updates, config.Conf.ServerHandleSpeed)
 
 	win := g.Container.Get("window").(*pixelgl.Window)
 	g.ah.SetWindow(win)
+	g.ah.SetUpdateChan(updateChan)
 
+	//Start state handler
+	go client.HandleEvents(&spc, g.state, updateChan)
 	//Start control handler
 	go client.HandleControls(&spc, win)
 }
@@ -79,12 +80,12 @@ func gotoLounge() (spc space.Space, m model.Map) {
 	if config.Conf.Online {
 		var myUri string
 		servspc := space.NewRemoteSpace(config.Conf.LoungeUri)
-		_, err := servspc.Put("request", config.Conf.Id)
+		_, err := servspc.Put("request", config.ID)
 		if err != nil {
 			panic(err)
 		}
 
-		k, err := servspc.Get("join", config.Conf.Id, &myUri)
+		k, err := servspc.Get("join", config.ID, &myUri)
 		fmt.Println(k)
 		if err != nil {
 			panic(err)
@@ -92,11 +93,11 @@ func gotoLounge() (spc space.Space, m model.Map) {
 		spc = space.NewRemoteSpace(myUri)
 		// Load map from server
 	} else {
-		g := model.NewGame([]string{config.Conf.Id}, "Test1")
+		g := model.NewGame([]string{config.ID}, "Test1")
 		m = model.MapTemplates["Test1"]
 		uri := config.Conf.LoungeUri
 		clientSpace := server.ClientSpace{
-			Id:    config.Conf.Id,
+			Id:    config.ID,
 			Uri:   uri,
 			Space: server.SetupSpace(uri),
 		}

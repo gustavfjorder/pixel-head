@@ -30,6 +30,8 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 	fmt.Println("Starting game loop")
 	t := time.Tick(config.Conf.ServerHandleSpeed)
+	sec := time.Tick(time.Second)
+	speed := config.Conf.ServerHandleSpeed
 	for g.CurrentLevel < len(model.Levels) {
 		fmt.Println("Starting level " + strconv.Itoa(g.CurrentLevel))
 
@@ -63,14 +65,15 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 			//Send new game state to clients
 			var ts time.Duration
+			compressed := g.State.Compress()
 			for _, spc := range clientSpaces {
 				spc.GetP("state",&ts, &model.State{})
-				spc.Put("state",model.Timestamp ,g.State)
+				spc.Put("state",model.Timestamp ,compressed)
 				if !g.Updates.Empty(){
 					spc.Put("update",model.Timestamp,g.Updates)
-					g.Updates.Clear()
 				}
 			}
+			g.Updates.Clear()
 
 
 			//If all players died end game
@@ -83,6 +86,13 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 				break
 			}
 			<-t
+			select {
+			case <-sec:
+				config.Conf.ServerHandleSpeed = time.Second / speed
+				speed = 0
+			default:
+				speed++
+			}
 		}
 
 		//g.LevelDone(g.CurrentLevel)
@@ -140,6 +150,7 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.Point{})
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
+	gob.Register(model.Barrel{})
 	var t time.Duration
 	gob.Register(t)
 

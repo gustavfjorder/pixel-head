@@ -1,7 +1,10 @@
 package model
 
+import "github.com/faiface/pixel"
+
 type Updates struct {
 	Removed []Entity
+	Added []EntityI
 }
 
 type EntityType int
@@ -21,40 +24,26 @@ type Entity struct {
 type EntityI interface {
 	ID() string
 	EntityType() EntityType
+	GetPos() pixel.Vec
+	GetHitbox() float64
+	GetDir() float64
 }
 
 func (updates *Updates) Clear() {
 	updates.Removed = make([]Entity, 0)
+	updates.Added = make([]EntityI,0)
+}
+
+func (updates *Updates) Add(entities ...EntityI){
+	updates.Added = append(updates.Added, entities...)
 }
 
 func (updates *Updates) Remove(entities ...EntityI) {
 	for _, entity  := range entities {
-		updates.Removed = append(updates.Removed, Entity{entity.ID(), entity.EntityType()})
+		updates.Removed = append(updates.Removed, Entity{ID:entity.ID(), EntityType:entity.EntityType()})
 	}
 }
 
 func (updates Updates) Empty() bool {
-	return len(updates.Removed) <= 0
+	return len(updates.Removed) <= 0 && len(updates.Added) <= 0
 }
-//
-//
-//func (updates Updates) Size() int{
-//	return len(updates.Zombies) + len(updates.Players) + len(updates.Barrels) + len(updates.Shots)
-//}
-//
-//func (updates *Updates) Add(elems ...interface{}) {
-//	for _, elem := range elems {
-//		switch elem.(type) {
-//		case Zombie:
-//			updates.Zombies = append(updates.Zombies, elem.(Zombie))
-//		case Player:
-//			updates.Players = append(updates.Players, elem.(Player))
-//		case Shot:
-//			updates.Shots = append(updates.Shots, elem.(Shot))
-//		case Barrel:
-//			updates.Barrels = append(updates.Barrels, elem.(Barrel))
-//		default:
-//			fmt.Fprint(os.Stderr, "Invalid interface for add got:", elem)
-//		}
-//	}
-//}

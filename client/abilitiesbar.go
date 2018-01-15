@@ -3,7 +3,6 @@ package client
 import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/faiface/pixel"
-	"github.com/gustavfjorder/pixel-head/config"
 	"fmt"
 	"github.com/faiface/pixel/text"
 	"golang.org/x/image/font/basicfont"
@@ -21,10 +20,10 @@ func (ah AnimationHandler) DrawAbilities() {
 	}
 	var (
 		//abilities bar
-		abilitiesBar = ah.animations["abilitiesBar.png"].Sprites[0]
+		abilitiesBar = ah.animations[Prefix("abilities","abilitiesBar")].CurrentSprite()
 
 		//knife - used as reference
-		knife = ah.animations["knife.png"].Sprites[0]
+		knife = ah.animations[Prefix("abilities","knife")].CurrentSprite()
 
 		//dimensions of abilities bar
 
@@ -43,10 +42,10 @@ func (ah AnimationHandler) DrawAbilities() {
 		myWep           = me.WeaponType
 	)
 
-	ah.animations[getSpriteName(me, model.KNIFE)].Sprites[0].Draw(win, scaled.Moved(knifeLocation))
-	ah.animations[getSpriteName(me, model.HANDGUN)].Sprites[0].Draw(win, scaled.Moved(handgunLocation))
-	ah.animations[getSpriteName(me, model.RIFLE)].Sprites[0].Draw(win, scaled.Moved(rifleLocation))
-	ah.animations[getSpriteName(me, model.SHOTGUN)].Sprites[0].Draw(win, scaled.Moved(shotgunLocation))
+	ah.animations[abilitySpriteName(me, model.KNIFE)].CurrentSprite().Draw(win, scaled.Moved(knifeLocation))
+	ah.animations[abilitySpriteName(me, model.HANDGUN)].CurrentSprite().Draw(win, scaled.Moved(handgunLocation))
+	ah.animations[abilitySpriteName(me, model.RIFLE)].CurrentSprite().Draw(win, scaled.Moved(rifleLocation))
+	ah.animations[abilitySpriteName(me, model.SHOTGUN)].CurrentSprite().Draw(win, scaled.Moved(shotgunLocation))
 
 	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
 	weaponText := text.New(pixel.V(abPos.X+abilitiesBar.Picture().Bounds().Max.X/2, abPos.Y), basicAtlas)
@@ -65,42 +64,39 @@ func (ah AnimationHandler) DrawAbilities() {
 
 }
 
-func getSpriteName(me model.Player, weapon model.WeaponType) string {
+func abilitySpriteName(me model.Player, weapon model.WeaponType) string {
 	s := weapon.Name()
 	if me.WeaponType == weapon {
 		s += "Selected"
 	} else if !me.IsAvailable(weapon) {
 		s += "Dark"
 	}
-	s += ".png"
-	return s
+	return Prefix("abilities", s)
 }
 
-//load health sprites
-var hp = Load(config.Conf.HealthPath, "", IMG)
 
 func (ah AnimationHandler) DrawHealthbar() {
 	var (
 		win = ah.win
 		me = ah.me
 		//load sprites
-		healthgraphic    = hp["health.png"].Sprites[0]
-		healthBackground = hp["healthbardark.png"].Sprites[0]
-		healthBarFrame   = hp["healthbarframe.png"].Sprites[0]
+		healthgraphic    = ah.animations[Prefix("health","health")].CurrentSprite()
+		healthBackground = ah.animations[Prefix("health","healthbardark")].CurrentSprite()
+		healthBarFrame   = ah.animations[Prefix("health","healthbarframe")].CurrentSprite()
 
 		//scalefactor on x and y axis so health width = ability width and health height is half of ability height
-		xScalefactor = ah.animations["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.X / healthBarFrame.Picture().Bounds().Max.X
-		yScalefactor = ah.animations["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y / healthBarFrame.Picture().Bounds().Max.Y / 2
+		xScalefactor = ah.animations[Prefix("abilities","abilitiesBar")].CurrentSprite().Picture().Bounds().Max.X / healthBarFrame.Picture().Bounds().Max.X
+		yScalefactor = ah.animations[Prefix("abilities","abilitiesBar")].CurrentSprite().Picture().Bounds().Max.Y / healthBarFrame.Picture().Bounds().Max.Y / 2
 
 		//frame and background are scaled to have same width as ability bar
 		// health is scaled according to the health of the player
 		scaled         = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor, yScalefactor))
 		healthscaled   = pixel.IM.ScaledXY(pixel.ZV, pixel.V(xScalefactor*float64(me.Health)/float64(me.GetMaxHealth()), yScalefactor))
-		frameLocation  = pixel.Vec{win.Bounds().Max.X / 2, win.Bounds().Min.Y + ah.animations["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
+		frameLocation  = pixel.Vec{win.Bounds().Max.X / 2, win.Bounds().Min.Y + ah.animations[Prefix("abilities","abilitiesBar")].CurrentSprite().Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
 		healthfraction = float64(me.GetMaxHealth()-me.Health) / float64(me.GetMaxHealth())
 		healthLocation = pixel.Vec{
 			win.Bounds().Max.X/2 + (healthgraphic.Picture().Bounds().Max.X/2*xScalefactor)*float64(healthfraction) - 2,
-			win.Bounds().Min.Y + ah.animations["abilitiesBar.png"].Sprites[0].Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
+			win.Bounds().Min.Y + ah.animations[Prefix("abilities","abilitiesBar")].CurrentSprite().Picture().Bounds().Max.Y + healthgraphic.Picture().Bounds().Max.Y/4}
 	)
 	pos := me.Pos.Sub(win.Bounds().Center())
 	frameLocation = frameLocation.Add(pos)

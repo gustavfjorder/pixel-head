@@ -33,8 +33,8 @@ var turnDelays = make(map[string]time.Duration)
 
 func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
 	player.WeaponList = make([]Weapon, nWeapon)
-	player.WeaponType = HANDGUN
-	player.NewWeapon(NewWeapon(KNIFE), NewWeapon(player.WeaponType), NewWeapon(SHOTGUN))
+	player.WeaponType = KNIFE
+	player.NewWeapon(NewWeapon(player.WeaponType), NewWeapon(RIFLE), NewWeapon(SHOTGUN))
 	player.Id = id
 	player.Stats = NewStats(HUMAN)
 	player.Dir = 0
@@ -147,7 +147,10 @@ func (player *Player) Shoot(g *Game) {
 		return
 	}
 	playerShoots := weapon.GenerateShoots(*player)
-	g.State.Shots = append(g.State.Shots, playerShoots...)
+	for _, shot := range playerShoots {
+		g.Add(shot)
+	}
+
 	player.SetAction(SHOOT)
 }
 
@@ -177,7 +180,9 @@ func (player *Player) Do(request Request, g *Game) {
 	}
 }
 
-
+func (player Player) GetHitbox() float64{
+	return 50
+}
 
 func (player Player) Turn() {
 	turnDelays[player.Id] = Timestamp + player.TurnSpeed()
@@ -203,3 +208,10 @@ func (player Player) EntityType() EntityType {
 	return PlayerE
 }
 
+func (player Player) GetPos() pixel.Vec{
+	return player.Pos
+}
+
+func (player Player) GetDir() float64{
+	return player.Dir
+}

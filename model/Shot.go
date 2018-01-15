@@ -42,3 +42,11 @@ func (s Shot) ID() string {
 func (s Shot) EntityType() EntityType {
 	return ShotE
 }
+
+func (s Shot) GetHitbox() float64 {
+	return 1
+}
+
+func (s Shot) GetDir() float64 {
+	return s.Angle - math.Pi/2
+}
