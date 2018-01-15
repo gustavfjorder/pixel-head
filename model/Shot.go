@@ -13,14 +13,14 @@ type Shot struct {
 	Start      pixel.Vec
 	Angle      float64
 	StartTime  time.Duration
-	WeaponType WeaponType
+	WeaponType WeaponI
 	Hit        bool
 }
 
 func NewShot(player Player, angleOffset ...float64) (shot Shot) {
 	shot.Start = player.Pos.Add(pixel.V(config.GunPosX, config.GunPosY).Rotated(player.Dir - math.Pi/2))
 	shot.Angle = player.Dir
-	shot.WeaponType = player.WeaponType
+	shot.WeaponType, _ = player.Weapon()
 	shot.StartTime = Timestamp
 	shot.Id = xid.New().String()
 	if len(angleOffset) > 0 {

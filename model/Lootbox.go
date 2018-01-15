@@ -9,7 +9,7 @@ import (
 type Lootbox struct {
 	Id     string
 	Pos    pixel.Vec
-	Weapon Weapon
+	Weapon WeaponI
 }
 
 func NewLootbox(x, y float64) Lootbox {
@@ -23,7 +23,12 @@ func NewLootbox(x, y float64) Lootbox {
 }
 
 func (player *Player) PickupLootbox(lootbox *Lootbox) {
-	player.WeaponList[lootbox.Weapon.WeaponType].Bullets += lootbox.Weapon.Bullets
+	if player.IsAvailable(lootbox.Weapon.Type()){
+		player.WeaponList[lootbox.Weapon.Type()].AddBullets(lootbox.Weapon.Capacity())
+	} else {
+		player.NewWeapon(lootbox.Weapon)
+	}
+	player.WeaponList[lootbox.Weapon.Type()].IncLevel()
 }
 
 func (lootbox Lootbox) ID() string {

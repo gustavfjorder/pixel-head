@@ -16,24 +16,57 @@ const (
 	nWeapon
 )
 
-type Weapon struct {
+type WeaponI interface {
+	RefillMag() bool
+	ReloadSpeed() time.Duration
+	ShootDelay() time.Duration
+	Power() int
+	Range() float64
+	ProjectileSpeed() float64
+	BulletsPerShot() int
+	Spread() float64
+	Capacity() int
+	Name() string
+	Type() WeaponType
+	AddBullets(n int)
+	RemoveBullets(n int)
+	GetMagazine() int
+	GetBullets() int
+	IncLevel()
+}
+
+type WeaponBase struct {
+	WeaponI
 	WeaponType
 	MagazineCurrent int
 	Bullets         int
+	Level           int
 }
 
-func NewWeapon(weaponNum WeaponType) (weapon Weapon) {
+func NewWeapon(weaponNum WeaponType) (weapon WeaponI) {
 	if weaponNum >= nWeapon {
 		panic(errors.New("No such weapon"))
 	}
-	weapon.WeaponType = weaponNum
-	weapon.MagazineCurrent = weapon.MagazineCapacity()
-	weapon.Bullets = weapon.Capacity()
+	base := WeaponBase{
+		WeaponType:      weaponNum,
+	}
+	base.MagazineCurrent = base.MagazineCapacity()
+	base.Bullets = base.Capacity()
+	switch weaponNum {
+	case SHOTGUN:
+		weapon = &Shotgun{base}
+	case RIFLE:
+		weapon = &Rifle{base}
+	case HANDGUN:
+		weapon = &Handgun{base}
+	default:
+		weapon = &Knife{base}
+	}
 	return weapon
 }
 
 //Returns true if the magazine was reloaded
-func (weapon *Weapon) RefillMag() bool {
+func (weapon *WeaponBase) RefillMag() bool {
 	if weapon.MagazineCurrent >= weapon.MagazineCapacity() {
 		return false
 	}
@@ -43,8 +76,12 @@ func (weapon *Weapon) RefillMag() bool {
 	return dBullet > 0
 }
 
-func (weapon *Weapon) GenerateShoots(player Player) []Shot {
-	if weapon.MagazineCurrent <= 0 {
+func GenerateShoots(player Player) (shots []Shot) {
+	weapon,err  := player.Weapon()
+	if err != nil {
+		return
+	}
+	if weapon.GetMagazine() <= 0 {
 		return []Shot{}
 	}
 	offset := 0.0
@@ -58,29 +95,52 @@ func (weapon *Weapon) GenerateShoots(player Player) []Shot {
 		shoots[i] = NewShot(player, angle)
 		angle += weapon.Spread()
 	}
-	weapon.MagazineCurrent--
+	weapon.RemoveBullets(1)
 	return shoots
 }
 
-func (weaponType WeaponType) ReloadSpeed() time.Duration {
-	return time.Second / 5
+func (weapon WeaponBase) GetMagazine() int {
+	return weapon.MagazineCurrent
 }
 
-func (weaponType WeaponType) ShootDelay() time.Duration {
-	switch weaponType {
-	case RIFLE:
-		return time.Second / 30
-	case HANDGUN:
-		return time.Second / 2
-	case SHOTGUN:
-		return time.Second / 4
-	default:
-		return 0
-	}
+func (weapon WeaponBase) GetBullets() int {
+	return weapon.Bullets
 }
 
-func (weaponType WeaponType) MagazineCapacity() int {
-	switch weaponType {
+func (weapon *WeaponBase) IncLevel() {
+	weapon.Level++
+}
+
+func (weapon *WeaponBase) AddBullets(n int) {
+	weapon.Bullets += n
+}
+
+func (weapon WeaponBase) Type() WeaponType {
+	return weapon.WeaponType
+}
+
+func (weapon WeaponBase) ReloadSpeed() time.Duration {
+	return time.Second / 2
+}
+
+func (weapon WeaponBase) ShootDelay() time.Duration {
+	return time.Second / 4
+}
+
+func (s Shotgun) ShootDelay() time.Duration {
+	return time.Second / 4
+}
+
+func (r Rifle) ShootDelay() time.Duration {
+	return time.Second / time.Duration(r.Level*4 + 1)
+}
+
+func (h Handgun) ShootDelay() time.Duration {
+	return time.Second / 2
+}
+
+func (weapon WeaponBase) MagazineCapacity() int {
+	switch weapon.Type() {
 	case RIFLE:
 		return 100
 	case HANDGUN:
@@ -92,8 +152,8 @@ func (weaponType WeaponType) MagazineCapacity() int {
 	}
 }
 
-func (weaponType WeaponType) Power() int {
-	switch weaponType {
+func (weapon WeaponBase) Power() int {
+	switch weapon.Type() {
 	case RIFLE:
 		return 10
 	case HANDGUN:
@@ -107,8 +167,8 @@ func (weaponType WeaponType) Power() int {
 	}
 }
 
-func (weaponType WeaponType) Range() float64 {
-	switch weaponType {
+func (weapon WeaponBase) Range() float64 {
+	switch weapon.Type() {
 	case RIFLE:
 		return 500
 	case HANDGUN:
@@ -124,8 +184,8 @@ func (weaponType WeaponType) Range() float64 {
 }
 
 //Units per second
-func (weaponType WeaponType) ProjectileSpeed() (speed float64) {
-	switch weaponType {
+func (weapon WeaponBase) ProjectileSpeed() (speed float64) {
+	switch weapon.Type() {
 	default:
 		speed = 1000
 	}
@@ -133,17 +193,16 @@ func (weaponType WeaponType) ProjectileSpeed() (speed float64) {
 	return
 }
 
-func (weaponType WeaponType) BulletsPerShot() int {
-	switch weaponType {
-	case SHOTGUN:
-		return 5
-	default:
-		return 1
-	}
+func (weapon WeaponBase) BulletsPerShot() int {
+	return 1
 }
 
-func (weaponType WeaponType) Spread() float64 {
-	switch weaponType {
+func (s Shotgun) BulletsPerShot() int {
+	return 5 + s.Level
+}
+
+func (weapon WeaponBase) Spread() float64 {
+	switch weapon.Type() {
 	case SHOTGUN:
 		return math.Pi / 40
 	default:
@@ -152,8 +211,8 @@ func (weaponType WeaponType) Spread() float64 {
 	}
 }
 
-func (weaponType WeaponType) Capacity() int {
-	switch weaponType {
+func (weapon WeaponBase) Capacity() int {
+	switch weapon.Type() {
 	case SHOTGUN:
 		return 150
 	case RIFLE:
@@ -163,8 +222,12 @@ func (weaponType WeaponType) Capacity() int {
 	}
 }
 
-func (weaponType WeaponType) Name() string {
-	switch weaponType {
+func (weapon WeaponBase) RemoveBullets(n int) {
+	weapon.Bullets -= n
+}
+
+func (weapon WeaponType) Name() string {
+	switch weapon {
 	case RIFLE:
 		return "rifle"
 	case HANDGUN:
@@ -176,4 +239,23 @@ func (weaponType WeaponType) Name() string {
 	default:
 		return ""
 	}
+}
+func (weapon WeaponBase) Name() string {
+	return weapon.Type().Name()
+}
+
+type Shotgun struct {
+	WeaponBase
+}
+
+type Rifle struct {
+	WeaponBase
+}
+
+type Handgun struct {
+	WeaponBase
+}
+
+type Knife struct {
+	WeaponBase
 }

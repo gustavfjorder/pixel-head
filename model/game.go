@@ -32,9 +32,9 @@ func NewGame(ids []string, mapName string) (game Game) {
 	return
 }
 
-func (g *Game) PrepareLevel(end chan<- bool) {
-	level := Levels[g.CurrentLevel]
-	g.State.Zombies = make([]ZombieI, 0)
+func (game *Game) PrepareLevel(end chan<- bool) {
+	level := Levels[game.CurrentLevel]
+	game.State.Zombies = make([]ZombieI, 0)
 	waveticker := time.NewTicker(level.TimeBetweenWaves)
 	zombieticker := time.NewTicker(level.TimeBetweenZombies)
 	fmt.Println("num zom", level.NumberOfZombiesPerWave, "num waves", level.NumberOfWaves)
@@ -45,7 +45,7 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 		for j := 0; j < level.NumberOfZombiesPerWave; j++ {
 			fmt.Println("j:", j)
 			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
-			fmt.Println(len(g.State.Zombies))
+			fmt.Println(len(game.State.Zombies))
 			var ZOM Being
 			switch rand.Intn(4) {
 			case 1:
@@ -57,7 +57,7 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 			case 3:
 				ZOM = SLOWZOMBIE
 			}
-			g.NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))], ZOM)
+			game.NewZombie(game.CurrentMap.SpawnPoint[rand.Intn(len(game.CurrentMap.SpawnPoint))], ZOM)
 			<-zombieticker.C
 		}
 	}
@@ -90,16 +90,16 @@ func (game *Game) HandleRequests(requests []Request) {
 
 var lastTime = time.Now()
 
-func (g *Game) HandleLoot() {
-	for i := len(g.State.Players) - 1; i >= 0; i-- {
-		player := &g.State.Players[i]
+func (game *Game) HandleLoot() {
+	for i := len(game.State.Players) - 1; i >= 0; i-- {
+		player := &game.State.Players[i]
 
-		for j := len(g.State.Lootboxes) - 1; j >= 0; j-- {
-			lootbox := g.State.Lootboxes[j]
+		for j := len(game.State.Lootboxes) - 1; j >= 0; j-- {
+			lootbox := game.State.Lootboxes[j]
 
 			if PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)) < 30 {
 				player.PickupLootbox(&lootbox)
-				g.Remove(Entry{lootbox, j})
+				game.Remove(Entry{lootbox, j})
 			}
 		}
 	}
@@ -107,13 +107,13 @@ func (g *Game) HandleLoot() {
 	// Place lootboxes
 	if lastTime.Add(time.Second * 10).Before(time.Now()) && float64(rand.Intn(100)) <= 3.8 {
 		min := 0
-		max := len(g.CurrentMap.LootPoints)
+		max := len(game.CurrentMap.LootPoints)
 
 		lootPoint := rand.Intn(max-min) + min
-		point := g.CurrentMap.LootPoints[lootPoint]
+		point := game.CurrentMap.LootPoints[lootPoint]
 
-		if ! g.State.HasLootboxAt(point) {
-			g.Add(NewLootbox(point.X, point.Y))
+		if ! game.State.HasLootboxAt(point) {
+			game.Add(NewLootbox(point.X, point.Y))
 
 			lastTime = time.Now()
 		}
@@ -203,11 +203,16 @@ func (game *Game) HandleBarrels() {
 func (game *Game) Add(entities ...EntityI) {
 	for _, entity := range entities {
 		switch entity.(type) {
-		case BarrelI:game.State.Barrels = append(game.State.Barrels, entity.(BarrelI))
-		case Shot:game.State.Shots = append(game.State.Shots, entity.(Shot))
-		case ZombieI:game.State.Zombies = append(game.State.Zombies, entity.(ZombieI))
-		case Player:game.State.Players = append(game.State.Players, entity.(Player))
-		case Lootbox:game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
+		case BarrelI:
+			game.State.Barrels = append(game.State.Barrels, entity.(BarrelI))
+		case Shot:
+			game.State.Shots = append(game.State.Shots, entity.(Shot))
+		case ZombieI:
+			game.State.Zombies = append(game.State.Zombies, entity.(ZombieI))
+		case Player:
+			game.State.Players = append(game.State.Players, entity.(Player))
+		case Lootbox:
+			game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
 		default: fmt.Fprintln(os.Stderr, "ADD: Unable to find:", entity, "with type", reflect.TypeOf(entity)); continue
 		}
 		game.Updates.Add(entity)

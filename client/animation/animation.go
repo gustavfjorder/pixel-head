@@ -13,10 +13,10 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-type AnimationType int
+type Type int
 
 const (
-	NonBlocking AnimationType = iota
+	NonBlocking Type = iota
 	Blocking
 	Terminal
 	Still
@@ -37,7 +37,7 @@ type Animation interface {
 	Copy() Animation
 }
 
-func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType AnimationType, speeds ...time.Duration) Animation {
+func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType Type, speeds ...time.Duration) Animation {
 	if len(sprites) <= 0 {
 		panic(errors.New("unable to make animation from no sprites for:" + prefix))
 	}
@@ -45,7 +45,7 @@ func NewAnimation(prefix string, sprites []*pixel.Sprite, animationType Animatio
 	if len(speeds) > 0 {
 		speed = speeds[0]
 	}
-	as := AnimationSpeed{Speed: speed}
+	as := Speed{Speed: speed}
 	switch animationType {
 	case NonBlocking, Blocking, Terminal:
 		nba := NonBlockingAnimation{
@@ -77,13 +77,13 @@ type Transformation struct {
 	Rotation float64
 }
 
-type AnimationSpeed struct {
+type Speed struct {
 	Speed     time.Duration
 	LastFrame time.Time
 	diff      float64
 }
 
-func (as *AnimationSpeed) IncFrames() int {
+func (as *Speed) IncFrames() int {
 	zerotime := time.Time{}
 	if as.LastFrame == zerotime {
 		as.LastFrame = time.Now()

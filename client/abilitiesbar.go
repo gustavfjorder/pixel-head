@@ -39,7 +39,7 @@ func (ah AnimationHandler) DrawAbilities() {
 		handgunLocation = pixel.Vec{abPos.X - (abilitiesBar.Picture().Bounds().Max.X / 8.8), abPos.Y}
 		rifleLocation   = pixel.Vec{abPos.X + (abilitiesBar.Picture().Bounds().Max.X / 8.5), abPos.Y}
 		shotgunLocation = pixel.Vec{abPos.X + (abilitiesBar.Picture().Bounds().Max.X / 2.8), abPos.Y}
-		myWep           = me.WeaponType
+		myWep,_           = me.Weapon()
 	)
 
 	ah.animations[abilitySpriteName(me, model.KNIFE)].CurrentSprite().Draw(win, scaled.Moved(knifeLocation))
@@ -52,8 +52,8 @@ func (ah AnimationHandler) DrawAbilities() {
 	bulletsText := text.New(pixel.V(abPos.X-abilitiesBar.Picture().Bounds().Max.X/2, abPos.Y), basicAtlas)
 	var bulletTextSize float64
 	fmt.Fprintln(weaponText, myWep.Name())
-	if myWep != model.KNIFE {
-		s := fmt.Sprint(wep.Bullets, wep.MagazineCurrent)
+	if myWep.Type() != model.KNIFE {
+		s := fmt.Sprint(wep.GetBullets(), wep.GetMagazine())
 		bulletTextSize = bulletsText.LineHeight * 1.3 * float64(len(s))
 		fmt.Fprintln(bulletsText, s)
 	}

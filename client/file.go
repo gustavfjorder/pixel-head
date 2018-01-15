@@ -136,7 +136,7 @@ func LoadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
-var AnimationIndex = map[string]AnimationType{
+var AnimationIndex = map[string]Type{
 	"idle":        NonBlocking,
 	"meleeattack": Blocking,
 	"move":        NonBlocking,

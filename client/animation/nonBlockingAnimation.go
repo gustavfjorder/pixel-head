@@ -11,7 +11,7 @@ type NonBlockingAnimation struct {
 	prefix         string
 	Sprites        []*pixel.Sprite
 	transformation Transformation
-	animationSpeed AnimationSpeed
+	animationSpeed Speed
 	cur            int
 }
 

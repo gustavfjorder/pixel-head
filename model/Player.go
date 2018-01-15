@@ -24,7 +24,7 @@ type Player struct {
 	Pos        pixel.Vec
 	Dir        float64
 	WeaponType WeaponType
-	WeaponList []Weapon
+	WeaponList []WeaponI
 	Action     Action
 	Stats
 }
@@ -33,7 +33,7 @@ var actionDelays = make(map[string]time.Duration)
 var turnDelays = make(map[string]time.Duration)
 
 func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
-	player.WeaponList = make([]Weapon, nWeapon)
+	player.WeaponList = make([]WeaponI, nWeapon)
 	player.WeaponType = KNIFE
 	player.NewWeapon(NewWeapon(player.WeaponType), NewWeapon(RIFLE), NewWeapon(SHOTGUN))
 	player.Id = id
@@ -68,20 +68,20 @@ func (player *Player) Move(dir float64, g *Game) {
 	}
 }
 
-func (player *Player) NewWeapon(weapons ...Weapon) {
+func (player *Player) NewWeapon(weapons ...WeaponI) {
 	for _, weapon := range weapons {
-		player.WeaponList[weapon.WeaponType] = weapon
+		player.WeaponList[weapon.Type()] = weapon
 	}
 
 }
 
-func (player *Player) Weapon() (weapon *Weapon, e error) {
+func (player *Player) Weapon() (weapon WeaponI, e error) {
 	if player.WeaponType >= nWeapon || player.WeaponType < 0 {
-		weapon = &Weapon{}
+		weapon = &WeaponBase{}
 		e = errors.New("Unable to change weapon")
 		return
 	}
-	weapon = &player.WeaponList[player.WeaponType]
+	weapon = player.WeaponList[player.WeaponType]
 	return weapon, e
 
 }
@@ -93,7 +93,7 @@ func (player *Player) ChangeWeapon(weaponType WeaponType) {
 }
 
 func (player *Player) IsAvailable(weaponType WeaponType) bool {
-	return player.WeaponList[weaponType] != Weapon{}
+	return player.WeaponList[weaponType] != nil
 }
 
 func (player Player) GetTurnDelay() time.Duration {
@@ -118,11 +118,15 @@ func (player *Player) SetAction(action Action){
 }
 
 func (player Player) Delay(action Action) time.Duration{
+	wep, err := player.Weapon()
+	if err != nil{
+		return 0
+	}
 	switch action {
 	case RELOAD:
-		return player.WeaponType.ReloadSpeed()
+		return wep.ReloadSpeed()
 	case SHOOT, MELEE:
-		return player.WeaponType.ShootDelay()
+		return wep.ShootDelay()
 	default:
 		return 0
 	}
@@ -142,15 +146,15 @@ func (player Player) EmptyMag() bool{
 	if err != nil {
 		return true
 	}
-	return wep.MagazineCurrent <= 0
+	return wep.GetMagazine() <= 0
 }
 
 func (player *Player) Shoot(g *Game) {
-	weapon, err := player.Weapon()
+	_, err := player.Weapon()
 	if err != nil {
 		return
 	}
-	playerShoots := weapon.GenerateShoots(*player)
+	playerShoots := GenerateShoots(*player)
 	for _, shot := range playerShoots {
 		g.Add(shot)
 	}
