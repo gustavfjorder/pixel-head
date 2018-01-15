@@ -9,7 +9,7 @@ type Button struct {
 	Component
 	Clickable
 
-	Text string
+	text  *Text
 }
 
 func NewButton(columns float64) *Button {
@@ -52,19 +52,17 @@ func (b *Button) Render() ComponentInterface {
 		sprite.Draw(b.Batch, pixel.IM/*.Scaled(pixel.ZV, 2)*/.Moved(place))
 	}
 
-	// Draw text if any
-	if b.Text != "" {
-		txtComp := NewTextWithContent(b.Text)
-		txtComp.SetSize(10)
-		txtComp.Pos(pixel.V(
-			b.bounds.W() / 2,
-			b.bounds.H() / 2,
-		))
-
-		b.Child(txtComp)
-	}
-
 	return b
+}
+
+func (b *Button) Text(str string) {
+	b.text = NewTextWithContent(str)
+	b.text.Pos(pixel.V(
+		b.bounds.W() / 2,
+		b.bounds.H() / 2,
+	))
+
+	b.Child(b.text)
 }
 
 func (b *Button) DetermineEvent(win *pixelgl.Window) {

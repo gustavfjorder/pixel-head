@@ -30,15 +30,15 @@ func (c *MainMenu) Run() {
 	menuContainer.Center()
 
 	buttonSP := component.NewButton(8)
-	buttonSP.Text = "Single Player"
 	buttonSP.Pos(pixel.V(140, 200)).Center()
+	buttonSP.Text("Single Player")
 	buttonSP.OnLeftMouseClick(func() {
 		c.App.ChangeTo("game")
 	})
 
 	buttonExit := component.NewButton(8)
-	buttonExit.Text = "Exit"
 	buttonExit.Pos(pixel.V(140, 175)).Center()
+	buttonExit.Text("Exit")
 	buttonExit.OnLeftMouseClick(func() {
 		os.Exit(0)
 	})
