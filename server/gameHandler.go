@@ -58,6 +58,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			model.Timestamp = time.Since(start)
 
 			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
+			g.HandleLoot()
 			g.HandleBarrels()
 			g.HandleZombies()
 			g.HandleShots()
@@ -151,6 +152,7 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
+	gob.Register(model.Lootbox{})
 	var t time.Duration
 	gob.Register(t)
 
@@ -171,6 +173,8 @@ func SetupSpace(uri string) space.Space {
 	spc.QueryP(&model.Point{})
 	spc.QueryP(&model.State{})
 	spc.QueryP(&model.Updates{})
+	gob.Register(model.Barrel{})
+	gob.Register(model.Lootbox{})
 	spc.QueryP(&t)
 
 	return spc

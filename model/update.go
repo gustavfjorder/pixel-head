@@ -12,6 +12,7 @@ type EntityType int
 const (
 	ShotE EntityType = iota
 	BarrelE
+	LootboxE
 	ZombieE
 	PlayerE
 )

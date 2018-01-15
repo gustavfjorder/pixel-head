@@ -93,6 +93,8 @@ func (ah AnimationHandler) handleUpdates() () {
 						anim.SetScale(model.Barrel{}.GetRange()*8/exp.CurrentSprite().Picture().Bounds().Max.X)
 						ah.activeAnimations[entity.ID] = anim
 					}
+				case model.LootboxE:
+					delete(ah.activeAnimations, entity.ID)
 				}
 			}
 			for _, entity := range update.Added {
@@ -113,6 +115,11 @@ func (ah AnimationHandler) handleUpdates() () {
 					ah.activeAnimations[entity.ID()] = ah.Get("zombie", "walk")
 				case model.PlayerE:
 					ah.activeAnimations[entity.ID()] = ah.Get("survivor", "knife", "idle")
+				case model.LootboxE:
+					lootbox := ah.Get("lootbox", "lootbox")
+					lootbox.SetPos(entity.GetPos())
+					lootbox.SetScale(0.2)
+					ah.activeAnimations[entity.ID()] = lootbox
 				}
 			}
 		default:
@@ -129,13 +136,6 @@ func (ah AnimationHandler) handleTracked(){
 	}
 }
 
-func (ah AnimationHandler) collectBulllets() {
-	for _, shot := range ah.state.Shots {
-		if anim, present := ah.activeAnimations[shot.ID()]; present {
-			anim.SetTransformation(Transformation{Scale: config.BulletScale, Pos: shot.GetPos(), Rotation: shot.GetDir()})
-		}
-	}
-}
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
 		v, ok := ah.activeAnimations[zombie.ID()]
