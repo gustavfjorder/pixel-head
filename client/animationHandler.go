@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"math/rand"
 	"time"
-	"fmt"
 )
 
 type AnimationHandler struct {
@@ -139,7 +138,6 @@ func (ah AnimationHandler) collectBulllets() {
 }
 func (ah AnimationHandler) collectZombies() {
 	for _, zombie := range ah.state.Zombies {
-		fmt.Println(zombie.ID(), zombie.GetPos())
 		v, ok := ah.activeAnimations[zombie.ID()]
 		if !ok {
 			continue

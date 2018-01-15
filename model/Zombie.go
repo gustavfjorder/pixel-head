@@ -6,7 +6,6 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 	"time"
 	"github.com/rs/xid"
-	"fmt"
 )
 
 type Zombie struct {
@@ -52,7 +51,6 @@ func NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
 //func NewBombZombie(vec pixel.Vec)
 
 func (zombie *Zombie) Move(game *Game) {
-	fmt.Println("Moving", zombie.Id, "To", zombie.Pos)
 	if len(game.State.Players) <= 0 {
 		return
 	}
@@ -76,7 +74,6 @@ func (zombie *Zombie) Move(game *Game) {
 		math.Abs(a) <= math.Pi/2 {
 		zombie.SetPos(zombie.GetPos().Add(pixel.V(zombie.GetStats().GetMoveSpeed(), 0).Rotated(zombie.GetDir())))
 	}
-	fmt.Println("TO", zombie.Pos)
 }
 
 func (zombie *Zombie) Attack(game *Game)  {
@@ -92,7 +89,6 @@ func (zombie *Zombie) Attack(game *Game)  {
 					if zombie.GetPos().Sub(player.GetPos()).Len() <= zombie.GetRange() &&
 						math.Abs(zombie.angle(player.GetPos())) <= zombie.GetMaxAttackAngle() {
 						player.Stats.Health -= zombie.GetStats().GetPower()
-						fmt.Println("normal attack")
 					}
 					break
 				}
@@ -107,8 +103,6 @@ func (zombie *Zombie) Attack(game *Game)  {
 			if zombie.Type == BOMBZOMBIE {
 				barrel := NewBarrel(zombie.GetPos())
 				barrel.Explode(&game.State)
-				fmt.Println("bomb attack")
-				fmt.Println(zombie.Id)
 				zombie.SetHealth(0)
 				break
 			} else {
