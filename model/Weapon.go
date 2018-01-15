@@ -73,7 +73,7 @@ func (weaponType WeaponType) ShootDelay() time.Duration {
 	case HANDGUN:
 		return time.Second / 2
 	case SHOTGUN:
-		return time.Second / 10
+		return time.Second / 4
 	default:
 		return 0
 	}
@@ -136,7 +136,7 @@ func (weaponType WeaponType) ProjectileSpeed() (speed float64) {
 func (weaponType WeaponType) BulletsPerShot() int {
 	switch weaponType {
 	case SHOTGUN:
-		return 100
+		return 5
 	default:
 		return 1
 	}

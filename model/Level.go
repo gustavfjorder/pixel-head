@@ -10,8 +10,8 @@ type Level struct {
 }
 
 var Levels = map[int]Level {
-	0: {1,1,time.Second*5,time.Second/1},
-	1: {2,2,time.Second*5,time.Second/2},
+	0: {10,1,time.Second*5,time.Second/1},
+	1: {20,2,time.Second*5,time.Second/2},
 	2: {30,3,time.Second*5,time.Second/3},
 	3: {40,4,time.Second*5,time.Second/4},
 	4: {50,5,time.Second*5,time.Second/5},

@@ -45,7 +45,18 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 			fmt.Println("j:", j)
 			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
 			fmt.Println(len(g.State.Zombies))
-			g.NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))],BOMBZOMBIE)
+			var ZOM Being
+			switch rand.Intn(4){
+			case 0:
+				ZOM = ZOMBIE
+			case 1:
+				ZOM = BOMBZOMBIE
+			case 2:
+				ZOM = FASTZOMBIE
+			case 3:
+				ZOM = SLOWZOMBIE
+			}
+			g.NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))],ZOM)
 			<-zombieticker.C
 		}
 	}

@@ -23,7 +23,7 @@ func NewLootbox(x, y float64) Lootbox {
 }
 
 func (player *Player) PickupLootbox(lootbox *Lootbox) {
-	player.WeaponList[lootbox.Weapon.WeaponType].Bullets += lootbox.Weapon.MagazineCurrent
+	player.WeaponList[lootbox.Weapon.WeaponType].Bullets += lootbox.Weapon.Bullets
 }
 
 func (lootbox Lootbox) ID() string {
