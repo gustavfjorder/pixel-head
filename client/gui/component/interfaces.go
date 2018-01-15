@@ -193,12 +193,12 @@ func (c *Clickable) DetermineEvent(win *pixelgl.Window) {
 func (c *Clickable) DistributeEvent(win *pixelgl.Window) {
 	if win.JustPressed(pixelgl.MouseButtonLeft) {
 		c.Pressed = true
-		c.RunListeners(pixelgl.MouseButtonLeft)
-	} else if win.JustPressed(pixelgl.MouseButtonRight) {
-		c.RunListeners(pixelgl.MouseButtonRight)
 	}
 
 	if win.JustReleased(pixelgl.MouseButtonLeft) {
 		c.Pressed = false
+		c.RunListeners(pixelgl.MouseButtonLeft)
+	} else if win.JustReleased(pixelgl.MouseButtonRight) {
+		c.RunListeners(pixelgl.MouseButtonRight)
 	}
 }
