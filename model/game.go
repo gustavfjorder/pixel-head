@@ -7,6 +7,7 @@ import (
 	"time"
 	"sort"
 	"github.com/gustavfjorder/pixel-head/helper"
+	"github.com/rs/xid"
 )
 
 type Game struct {
@@ -44,7 +45,7 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 			fmt.Println("j:", j)
 			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
 			fmt.Println(len(g.State.Zombies))
-			g.Add(NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))],FASTZOMBIE))
+			g.NewZombie(g.CurrentMap.SpawnPoint[rand.Intn(len(g.CurrentMap.SpawnPoint))],BOMBZOMBIE)
 			<-zombieticker.C
 		}
 	}
@@ -131,6 +132,13 @@ func (game *Game) HandleCorpses(){
 			game.Remove(Entry{zombie, i})
 		}
 	}
+	for i := len(game.State.Barrels) - 1; i >= 0; i-- {
+		barrel := game.State.Barrels[i]
+		if  barrel.Exploded{
+			//Remove zombie from game
+			game.Remove(Entry{barrel, i})
+		}
+	}
 }
 
 func (game *Game) HandleBarrels() {
@@ -207,4 +215,39 @@ func (game *Game) Remove(entries ...Entry){
 		game.State.Barrels[entry.index] = game.State.Barrels[last]
 		game.State.Barrels = game.State.Barrels[:last]
 	}
+}
+
+func (game *Game) NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
+	var zom ZombieI
+
+	zombie := Zombie{
+		Id:    xid.New().String(),
+		Pos:   vec,
+		Dir:   0,
+		Stats: NewStats(zombieType),
+		Type:  zombieType,
+	}
+
+	switch zombieType{
+	case FASTZOMBIE:
+		zom= &FastZombie{
+			zombie,
+		}
+	case BOMBZOMBIE:
+		barrel := NewBarrel(vec)
+		z:=BombZombie{
+			zombie,
+			&barrel,
+		}
+		game.Add(*z.Barrel)
+		zom=&z
+	case SLOWZOMBIE:
+		zom=&SlowZombie{
+			zombie,
+	}
+	case ZOMBIE:
+		zom=&zombie
+}
+	game.Add(zom)
+	return zom
 }

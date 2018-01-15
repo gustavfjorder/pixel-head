@@ -8,7 +8,6 @@ import (
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/config"
 	"encoding/gob"
-	"github.com/faiface/pixel"
 )
 
 type ClientSpace struct {
@@ -153,9 +152,14 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
-	z := model.NewZombie(pixel.ZV,model.ZOMBIE)
-	gob.Register(z)
-	gob.Register([]model.ZombieI{z})
+	gob.Register([]model.FastZombie{})
+	gob.Register([]model.SlowZombie{})
+	gob.Register([]model.BombZombie{})
+	gob.Register([]model.Zombie{})
+	gob.Register(&model.FastZombie{})
+	gob.Register(&model.SlowZombie{})
+	gob.Register(&model.BombZombie{})
+	gob.Register(&model.Zombie{})
 	var t time.Duration
 	gob.Register(t)
 
@@ -176,6 +180,15 @@ func SetupSpace(uri string) space.Space {
 	spc.QueryP(&model.Point{})
 	spc.QueryP(&model.State{})
 	spc.QueryP(&model.Updates{})
+	spc.QueryP(&[]model.FastZombie{})
+	spc.QueryP(&[]model.SlowZombie{})
+	spc.QueryP(&[]model.BombZombie{})
+	spc.QueryP(&[]model.Zombie{})
+	spc.QueryP(&model.FastZombie{})
+	spc.QueryP(&model.SlowZombie{})
+	spc.QueryP(&model.BombZombie{})
+	spc.QueryP(&model.Zombie{})
+
 	spc.QueryP(&t)
 
 	return spc

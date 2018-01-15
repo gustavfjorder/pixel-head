@@ -68,7 +68,6 @@ func run() {
 }
 
 func registerModels() {
-	// Register models for encoding to space
 	gob.Register(model.Request{})
 	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
@@ -82,9 +81,14 @@ func registerModels() {
 	gob.Register(model.State{})
 	gob.Register(model.Updates{})
 	gob.Register(model.Barrel{})
-	z := model.NewZombie(pixel.ZV,model.ZOMBIE)
-	gob.Register(z)
-	gob.Register([]model.ZombieI{z})
+	gob.Register([]model.FastZombie{})
+	gob.Register([]model.SlowZombie{})
+	gob.Register([]model.BombZombie{})
+	gob.Register([]model.Zombie{})
+	gob.Register(&model.FastZombie{})
+	gob.Register(&model.SlowZombie{})
+	gob.Register(&model.BombZombie{})
+	gob.Register(&model.Zombie{})
 	var t time.Duration
 	gob.Register(t)
 }

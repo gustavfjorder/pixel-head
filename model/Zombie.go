@@ -5,7 +5,7 @@ import (
 	"math"
 	"github.com/gustavfjorder/pixel-head/config"
 	"time"
-	"github.com/rs/xid"
+
 )
 
 type Zombie struct {
@@ -36,17 +36,7 @@ func (zombie Zombie) GetStats() Stats {
 
 var attackDelays = make(map[string]time.Duration)
 
-func NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
-	zombie := &Zombie{
-		Id:    xid.New().String(),
-		Pos:   vec,
-		Dir:   0,
-		Stats: NewStats(zombieType),
-		Type:  zombieType,
-	}
 
-	return zombie
-}
 
 //func NewBombZombie(vec pixel.Vec)
 
@@ -159,7 +149,7 @@ func (zombie Zombie) GetTurnSpeed() (turnSpeed float64) {
 	case FASTZOMBIE:
 		turnSpeed = math.Pi * 2000
 	case SLOWZOMBIE:
-		turnSpeed = math.Pi / 3
+		turnSpeed = math.Pi
 	case BOMBZOMBIE:
 		turnSpeed = math.Pi * 50
 	}
@@ -205,4 +195,23 @@ func (zombie Zombie) IsAttacking() bool {
 
 func (zombie *Zombie) SubHealth(health int){
 	zombie.Stats.Health-=health
+}
+
+type FastZombie struct{
+	Zombie
+
+}
+type BombZombie struct{
+	Zombie
+	Barrel *Barrel
+}
+
+func (zombie *BombZombie) Move(game *Game) {
+	zombie.Zombie.Move(game)
+	zombie.Barrel.Pos=zombie.Zombie.Pos
+}
+
+type SlowZombie struct{
+	Zombie
+
 }

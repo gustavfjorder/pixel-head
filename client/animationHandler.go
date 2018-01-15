@@ -154,8 +154,16 @@ func (ah AnimationHandler) collectZombies() {
 		if prefix != v.Prefix() {
 			v = v.ChangeAnimation(ah.Get(prefix))
 		}
-		if zombie.GetStats().Being == model.FASTZOMBIE {
+		switch zombie.(type) {
+		case *model.FastZombie:
 			v.SetAnimationSpeed(time.Second/100)
+		case *model.BombZombie:
+			bz := zombie.(*model.BombZombie)
+			if barrel, present :=ah.activeAnimations[bz.Barrel.ID()];present {
+				barrel.SetPos(bz.GetPos())
+			}
+		}
+		if zombie.GetStats().Being == model.FASTZOMBIE {
 		} else {
 			v.SetAnimationSpeed(time.Second/30)
 		}
