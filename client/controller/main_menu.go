@@ -26,18 +26,24 @@ func (c *MainMenu) Run() {
 	headLine.Color = colornames.Chocolate
 	headLine.Pos(pixel.V(0, 250))
 
-	menuContainer := component.NewBox(15, 22)
+	menuContainer := component.NewBox(14, 6)
 	menuContainer.Center()
 
 	buttonSP := component.NewButton(8)
-	buttonSP.Pos(pixel.V(140, 200)).Center()
+	buttonSP.Pos(pixel.V(
+		menuContainer.Bounds().W() / 2,
+		(menuContainer.Bounds().H() / 2) + 12,
+	)).Center()
 	buttonSP.Text("Single Player")
 	buttonSP.OnLeftMouseClick(func() {
 		c.App.ChangeTo("game")
 	})
 
 	buttonExit := component.NewButton(8)
-	buttonExit.Pos(pixel.V(140, 175)).Center()
+	buttonExit.Pos(pixel.V(
+		menuContainer.Bounds().W() / 2,
+		(menuContainer.Bounds().H() / 2) - 12,
+	)).Center()
 	buttonExit.Text("Exit")
 	buttonExit.OnLeftMouseClick(func() {
 		os.Exit(0)
