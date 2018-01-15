@@ -9,6 +9,7 @@ type State struct {
 	Zombies   []ZombieI
 	Shots     []Shot
 	Barrels   []Barrel
+	Lootboxes []Lootbox
 }
 
 var Timestamp time.Duration
@@ -35,4 +36,17 @@ func (s ByIndexDescending) Swap(i, j int) {
 }
 func (s ByIndexDescending) Less(i, j int) bool {
 	return s[i].index > s[j].index
+}
+
+func (state *State) HasLootboxAt(point Point) bool {
+	result := false
+
+	for _, box := range state.Lootboxes {
+		if box.Pos.X == point.X && box.Pos.Y == point.Y {
+			result = true
+			break
+		}
+	}
+
+	return result
 }

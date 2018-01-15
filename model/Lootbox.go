@@ -2,34 +2,47 @@ package model
 
 import (
 	"github.com/faiface/pixel"
+	"github.com/rs/xid"
 	"math/rand"
 )
 
 type Lootbox struct {
-	Id string
-	Pos pixel.Vec
-	Weapon
+	Id     string
+	Pos    pixel.Vec
+	Weapon Weapon
 }
 
-func NewLootbox(id string, x float64, y float64, randPos bool, weapon WeaponType) Lootbox{
-	if randPos{
-		return Lootbox{
-			Id: id,
+func NewLootbox(x, y float64) Lootbox {
+	weapon := rand.Intn(int(nWeapon) - 1) + 1 // Knife not allowed in lootbox
 
-			//todo: instead of 900+100 put map dimensions
-			Pos: pixel.V(rand.Float64()*900+100,rand.Float64()*900+100),
-			Weapon: NewWeapon(weapon),
-
-		}
-	}
 	return Lootbox{
-		Id: id,
-		Pos: pixel.V(x,y),
-		Weapon: NewWeapon(weapon),
+		Id:     xid.New().String(),
+		Pos:    pixel.V(x, y),
+		Weapon: NewWeapon(WeaponType(weapon)),
 	}
 }
 
-func (player *Player) PickupLootbox(lootbox Lootbox){
-	player.WeaponList[lootbox.Weapon.WeaponType].Bullets+=lootbox.Weapon.MagazineCurrent
+func (player *Player) PickupLootbox(lootbox *Lootbox) {
+	player.WeaponList[lootbox.Weapon.WeaponType].Bullets += lootbox.Weapon.MagazineCurrent
+}
+
+func (lootbox Lootbox) ID() string {
+	return lootbox.Id
+}
+
+func (lootbox Lootbox) EntityType() EntityType {
+	return LootboxE
+}
+
+func (lootbox Lootbox) GetPos() pixel.Vec {
+	return lootbox.Pos
+}
+
+func (lootbox Lootbox) GetDir() float64 {
+	return 0
+}
+
+func (lootbox Lootbox) GetHitbox() float64 {
+	return 0
 }
 

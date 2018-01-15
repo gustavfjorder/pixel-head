@@ -58,6 +58,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			model.Timestamp = time.Since(start)
 
 			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
+			g.HandleLoot()
 			g.HandleBarrels()
 			g.HandleZombies()
 			g.HandleShots()
@@ -67,7 +68,6 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			//Send new game state to clients
 			var ts time.Duration
 			compressed := g.State.Compress()
-			fmt.Println("putting state")
 			for _, spc := range clientSpaces {
 				spc.GetP("state",&ts, &model.State{})
 				spc.Put("state",model.Timestamp ,compressed)
@@ -75,7 +75,6 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 					spc.Put("update",model.Timestamp,g.Updates)
 				}
 			}
-			fmt.Println("F")
 			g.Updates.Clear()
 
 
@@ -160,6 +159,7 @@ func SetupSpace(uri string) space.Space {
 	gob.Register(&model.SlowZombie{})
 	gob.Register(&model.BombZombie{})
 	gob.Register(&model.Zombie{})
+	gob.Register(model.Lootbox{})
 	var t time.Duration
 	gob.Register(t)
 
@@ -180,6 +180,8 @@ func SetupSpace(uri string) space.Space {
 	spc.QueryP(&model.Point{})
 	spc.QueryP(&model.State{})
 	spc.QueryP(&model.Updates{})
+	gob.Register(model.Barrel{})
+	gob.Register(model.Lootbox{})
 	spc.QueryP(&[]model.FastZombie{})
 	spc.QueryP(&[]model.SlowZombie{})
 	spc.QueryP(&[]model.BombZombie{})

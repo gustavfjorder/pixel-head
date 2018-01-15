@@ -43,9 +43,8 @@ func run() {
 	app := framework.NewApplication(container)
 
 	app.AddController("main", &controller.MainMenu{})
-	gameCntrl := &controller.Game{}
-	gameCntrl.Init()
-	app.AddController("game", gameCntrl)
+	app.AddController("game", &controller.Game{})
+
 	app.SetController("main")
 	app.Run()
 
@@ -68,6 +67,7 @@ func run() {
 }
 
 func registerModels() {
+	// Register models for encoding to space
 	gob.Register(model.Request{})
 	gob.Register([]model.Request{})
 	gob.Register(model.Player{})
@@ -89,6 +89,7 @@ func registerModels() {
 	gob.Register(&model.SlowZombie{})
 	gob.Register(&model.BombZombie{})
 	gob.Register(&model.Zombie{})
+	gob.Register(model.Lootbox{})
 	var t time.Duration
 	gob.Register(t)
 }

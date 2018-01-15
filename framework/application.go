@@ -10,20 +10,20 @@ type Application struct {
 	container         *Container
 	CurrentController ControllerInterface
 
-	controllers map[string]reflect.Type
+	controllers map[string]ControllerInterface
 }
 
 func NewApplication(container *Container) *Application {
 	app := &Application{
 		container:   container,
-		controllers: make(map[string]reflect.Type),
+		controllers: make(map[string]ControllerInterface),
 	}
 
 	return app
 }
 
 func (app *Application) AddController(name string, c ControllerInterface) {
-	app.controllers[name] = reflect.Indirect(reflect.ValueOf(c)).Type()
+	app.controllers[name] = app.prepareController(name, reflect.Indirect(reflect.ValueOf(c)).Type())
 }
 
 func (app *Application) Run() {
@@ -35,7 +35,12 @@ func (app *Application) Update() {
 }
 
 func (app *Application) SetController(name string) {
-	app.CurrentController = app.prepareController(name)
+	controller, found := app.controllers[name]
+	if ! found {
+		panic(errors.New(fmt.Sprintf("Controller '%s' is not found", name)))
+	}
+
+	app.CurrentController = controller
 }
 
 func (app *Application) ChangeTo(name string) {
@@ -43,12 +48,7 @@ func (app *Application) ChangeTo(name string) {
 	app.CurrentController.Run()
 }
 
-func (app *Application) prepareController(name string) ControllerInterface {
-	controllerType, found := app.controllers[name]
-	if ! found {
-		panic(errors.New(fmt.Sprintf("Controller '%s' is not found", name)))
-	}
-
+func (app *Application) prepareController(name string, controllerType reflect.Type) ControllerInterface {
 	controller := reflect.New(controllerType)
 
 	// Set application

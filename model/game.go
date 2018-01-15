@@ -77,6 +77,38 @@ func (game *Game) HandleRequests(requests []Request) {
 	}
 }
 
+var lastTime = time.Now()
+func (g *Game) HandleLoot() {
+	for i := len(g.State.Players) - 1; i >= 0; i-- {
+		player := &g.State.Players[i]
+
+		for j := len(g.State.Lootboxes) - 1; j >= 0; j-- {
+			lootbox := g.State.Lootboxes[j]
+
+			fmt.Println("Distance", PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)))
+			if PointFrom(player.Pos).Dist(PointFrom(lootbox.Pos)) < 30 {
+				player.PickupLootbox(&lootbox)
+				g.Remove(Entry{lootbox, j})
+			}
+		}
+	}
+
+	// Place lootboxes
+	if lastTime.Add(time.Second * 10).Before(time.Now()) && float64(rand.Intn(100)) <= 3.8 {
+		min := 0
+		max := len(g.CurrentMap.LootPoints)
+
+		lootPoint := rand.Intn(max - min) + min
+		point := g.CurrentMap.LootPoints[lootPoint]
+
+		if ! g.State.HasLootboxAt(point) {
+			g.Add(NewLootbox(point.X, point.Y))
+
+			lastTime = time.Now()
+		}
+	}
+}
+
 func (game *Game) HandleZombies() {
 	for i := len(game.State.Zombies) - 1; i >= 0; i-- {
 		zombie := game.State.Zombies[i]
@@ -171,6 +203,7 @@ func (game *Game) Add(entities ...EntityI) {
 		case ShotE: game.State.Shots = append(game.State.Shots, entity.(Shot))
 		case ZombieE: game.State.Zombies = append(game.State.Zombies, entity.(ZombieI))
 		case PlayerE: game.State.Players = append(game.State.Players, entity.(Player))
+		case LootboxE: game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
 		}
 	}
 	game.Updates.Add(entities...)
@@ -182,12 +215,14 @@ func (game *Game) Remove(entries ...Entry){
 	players := make([]Entry, 0,minInt(len(entries), len(game.State.Players)))
 	zombies := make([]Entry, 0,minInt(len(entries), len(game.State.Zombies)))
 	barrels := make([]Entry, 0,minInt(len(entries), len(game.State.Barrels)))
+	lootboxes := make([]Entry, 0,minInt(len(entries), len(game.State.Lootboxes)))
 	for _, entry := range entries {
 		switch entry.elem.EntityType(){
 		case ShotE: shots = append(shots, entry)
 		case PlayerE: players = append(players, entry)
 		case ZombieE: zombies = append(zombies, entry)
 		case BarrelE: barrels = append(barrels, entry)
+		case LootboxE: lootboxes = append(lootboxes, entry)
 		}
 		game.Updates.Remove(entry.elem)
 	}
@@ -195,6 +230,7 @@ func (game *Game) Remove(entries ...Entry){
 	sort.Sort(ByIndexDescending(players))
 	sort.Sort(ByIndexDescending(zombies))
 	sort.Sort(ByIndexDescending(barrels))
+	sort.Sort(ByIndexDescending(lootboxes))
 	for _, entry := range shots {
 		last := len(game.State.Shots) - 1
 		game.State.Shots[entry.index] = game.State.Shots[last]
@@ -214,6 +250,11 @@ func (game *Game) Remove(entries ...Entry){
 		last := len(game.State.Barrels) - 1
 		game.State.Barrels[entry.index] = game.State.Barrels[last]
 		game.State.Barrels = game.State.Barrels[:last]
+	}
+	for _, entry := range lootboxes {
+		last := len(game.State.Lootboxes) - 1
+		game.State.Lootboxes[entry.index] = game.State.Lootboxes[last]
+		game.State.Lootboxes = game.State.Lootboxes[:last]
 	}
 }
 
