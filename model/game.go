@@ -100,7 +100,7 @@ func (g *Game) HandleLoot() {
 		point := g.CurrentMap.LootPoints[lootPoint]
 
 		if ! g.State.HasLootboxAt(point) {
-			lootbox := NewLootbox(point.X, point.Y, SHOTGUN)
+			lootbox := NewLootbox(point.X, point.Y)
 			g.State.Lootboxes = append(g.State.Lootboxes, lootbox)
 
 			lastTime = time.Now()
