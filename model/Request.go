@@ -37,3 +37,7 @@ func (request Request) Melee() bool {
 func (request Request) Idle() bool {
 	return request.Action == IDLE
 }
+
+func (request Request) Barrel() bool {
+	return request.Action == BARREL
+}

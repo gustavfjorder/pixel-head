@@ -11,11 +11,12 @@ import (
 type Action int
 
 const (
-	RELOAD Action = iota
+	IDLE Action = iota
 	SHOOT
 	MELEE
 	MOVE
-	IDLE
+	RELOAD
+	BARREL
 )
 
 type Player struct {
@@ -54,6 +55,9 @@ func (player *Player) Move(dir float64, g *Game) {
 			return
 		}
 		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed(), 0).Rotated(player.Dir))
+		if !g.CurrentMap.Bounds.Contains(newpos){
+			return
+		}
 		for _, wall := range g.CurrentMap.Walls {
 			if wall.Intersect(NewLine(PointFrom(player.Pos), PointFrom(newpos))) {
 				return
@@ -171,6 +175,9 @@ func (player *Player) Do(request Request, g *Game) {
 	case request.Melee():
 		player.SetAction(MELEE)
 		// todo: create melee attack
+	case request.Barrel():
+		player.SetAction(BARREL)
+		g.Add(NewBarrel(player.Pos))
 	default:
 		if request.Moved() {
 			player.Action = MOVE

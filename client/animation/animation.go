@@ -31,6 +31,7 @@ type Animation interface {
 	SetPos(pos pixel.Vec)
 	SetScale(scale float64)
 	SetAnimationSpeed(duration time.Duration)
+	GetTransformation() *Transformation
 	Prefix() string
 	CurrentSprite() *pixel.Sprite
 	Copy() Animation

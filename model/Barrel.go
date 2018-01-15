@@ -69,7 +69,7 @@ func (barrel Barrel) GetPower() float64 {
 }
 
 func (barrel Barrel) GetRange() float64 {
-	return 100
+	return 200
 }
 
 func (barrel Barrel) ID() string {

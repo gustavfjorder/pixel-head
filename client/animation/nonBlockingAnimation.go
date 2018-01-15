@@ -7,6 +7,7 @@ import (
 )
 
 type NonBlockingAnimation struct {
+	Animation
 	prefix         string
 	Sprites        []*pixel.Sprite
 	transformation Transformation
@@ -63,4 +64,8 @@ func (nba *NonBlockingAnimation) SetPos(pos pixel.Vec) {
 
 func (nba *NonBlockingAnimation) SetScale(scale float64){
 	nba.transformation.Scale = scale
+}
+
+func (nba *NonBlockingAnimation) GetTransformation()*Transformation{
+	return &nba.transformation
 }

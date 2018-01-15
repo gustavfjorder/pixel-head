@@ -37,7 +37,7 @@ func (weapon *Weapon) RefillMag() bool {
 	if weapon.MagazineCurrent >= weapon.MagazineCapacity() {
 		return false
 	}
-	dBullet := minInt(weapon.MagazineCapacity(), weapon.Bullets)
+	dBullet := MinInt(weapon.MagazineCapacity(), weapon.Bullets)
 	weapon.MagazineCurrent = dBullet
 	weapon.Bullets -= dBullet
 	return dBullet > 0

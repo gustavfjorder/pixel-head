@@ -47,7 +47,7 @@ func (g *Game) PrepareLevel(end chan<- bool) {
 			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
 			fmt.Println(len(g.State.Zombies))
 			var ZOM Being
-			switch rand.Intn(1) {
+			switch rand.Intn(4) {
 			case 1:
 				ZOM = ZOMBIE
 			case 0:
@@ -215,11 +215,11 @@ func (game *Game) Add(entities ...EntityI) {
 }
 
 func (game *Game) Remove(entries ...Entry) {
-	shots := make([]Entry, 0, minInt(len(entries), len(game.State.Shots)))
-	players := make([]Entry, 0, minInt(len(entries), len(game.State.Players)))
-	zombies := make([]Entry, 0, minInt(len(entries), len(game.State.Zombies)))
-	barrels := make([]Entry, 0, minInt(len(entries), len(game.State.Barrels)))
-	lootboxes := make([]Entry, 0, minInt(len(entries), len(game.State.Lootboxes)))
+	shots := make([]Entry, 0, MinInt(len(entries), len(game.State.Shots)))
+	players := make([]Entry, 0, MinInt(len(entries), len(game.State.Players)))
+	zombies := make([]Entry, 0, MinInt(len(entries), len(game.State.Zombies)))
+	barrels := make([]Entry, 0, MinInt(len(entries), len(game.State.Barrels)))
+	lootboxes := make([]Entry, 0, MinInt(len(entries), len(game.State.Lootboxes)))
 	for _, entry := range entries {
 		switch entry.elem.(type) {
 		case Shot: shots = append(shots, entry)
@@ -280,12 +280,12 @@ func (game *Game) NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
 			zombie,
 		}
 	case BOMBZOMBIE:
-		game.Add(NewBarrel(vec))
-		z := BombZombie{
+		barrel := NewBarrel(vec)
+		game.Add(barrel)
+		zom = &BombZombie{
 			zombie,
-			game.State.Barrels[len(game.State.Barrels)-1],
+			barrel,
 		}
-		zom = &z
 	case SLOWZOMBIE:
 		zom = &SlowZombie{
 			zombie,

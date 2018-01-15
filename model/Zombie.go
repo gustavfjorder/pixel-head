@@ -130,7 +130,10 @@ func (zombie Zombie) GetHitbox() float64 {
 
 //Time from attack is initiated till hit is calculated
 func (zombie Zombie) GetAttackDelay() time.Duration {
-	return time.Second / 5
+	switch zombie.Stats.Being {
+	case FASTZOMBIE: return time.Second/5
+	default:return time.Second / 3
+	}
 }
 
 //Radians per second

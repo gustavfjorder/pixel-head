@@ -57,6 +57,8 @@ func HandleControls(spc *space.Space, win *pixelgl.Window) {
 			r.Action = model.SHOOT
 		} else if win.Pressed(Conf.MeleeKey) {
 			r.Action = model.MELEE
+		} else if win.Pressed(Conf.BarrelKey) {
+			r.Action = model.BARREL
 		}
 		r.PlayerId = ID
 		spc.Put(r)

@@ -37,7 +37,7 @@ func (being Being) GetMaxHealth() int{
 	case FASTZOMBIE:
 		return 5
 	case SLOWZOMBIE:
-		return 200
+		return 100
 	case BOMBZOMBIE:
 		return 20
 	}
@@ -50,11 +50,11 @@ func (being Being) GetMoveSpeed() (speed float64){
 	case HUMAN:
 		speed = 400
 	case ZOMBIE:
-		speed =  50
+		speed =  100
 	case FASTZOMBIE:
 		speed = 200
 	case SLOWZOMBIE:
-		speed = 5
+		speed = 50
 	case BOMBZOMBIE:
 		speed = 200
 	}

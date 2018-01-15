@@ -123,7 +123,7 @@ func min(v1, v2 float64) float64 {
 	return v2
 }
 
-func minInt(v1,v2 int) int {
+func MinInt(v1,v2 int) int {
 	if v1 < v2{
 		return v1
 	}

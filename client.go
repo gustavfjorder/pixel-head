@@ -27,7 +27,7 @@ func run() {
 	//Make window
 	cfg := pixelgl.WindowConfig{
 		Title:  "Zombie Hunter 3000!",
-		Bounds: pixel.R(0, 0, 1024, 800),
+		Bounds: pixel.R(0, 0, 1920, 1080),
 		//VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)

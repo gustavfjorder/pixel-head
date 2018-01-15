@@ -27,6 +27,7 @@ var Conf = Config{
 	RifleKey:          pixelgl.Key3,
 	ShotgunKey:        pixelgl.Key4,
 	ReloadKey:         pixelgl.KeyR,
+	BarrelKey:         pixelgl.KeyB,
 	Online:            false,
 	LoungeUri:         "tcp://localhost:31415/lounge",
 }
@@ -46,6 +47,7 @@ type Config struct {
 	RifleKey          pixelgl.Button
 	ShotgunKey        pixelgl.Button
 	ReloadKey         pixelgl.Button
+	BarrelKey         pixelgl.Button
 	Online            bool
 	LoungeUri         string
 }

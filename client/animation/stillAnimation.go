@@ -7,6 +7,7 @@ import (
 )
 
 type StillAnimation struct {
+	Animation
 	prefix         string
 	Sprite         *pixel.Sprite
 	transformation Transformation
@@ -58,4 +59,8 @@ func (sa *StillAnimation) SetPos(pos pixel.Vec) {
 
 func (sa *StillAnimation) SetScale(scale float64){
 	sa.transformation.Scale = scale
+}
+
+func (sa *StillAnimation) GetTransformation() *Transformation {
+	return &sa.transformation
 }

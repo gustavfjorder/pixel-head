@@ -121,7 +121,10 @@ func (ah AnimationHandler) handleUpdates() () {
 						}
 						exp.SetAnimationSpeed(time.Second / 120)
 						exp = barrel.ChangeAnimation(exp)
-						exp.SetScale(model.Barrel{}.GetRange()*8/exp.CurrentSprite().Picture().Bounds().Max.X) //Times 8 as the spritesheet is bigger
+						t := exp.GetTransformation()
+						y := exp.CurrentSprite().Picture().Bounds().Max.Y
+						t.Scale = model.Barrel{}.GetRange()*8/y  //Times 8 as the spritesheet is bigger
+						t.Pos = t.Pos.Add(pixel.V(0,model.Barrel{}.GetRange()/4))
 						ah.activeAnimations[Layer(entity.EntityType)][entity.ID] = exp
 					}
 				case model.LootboxE:
@@ -155,8 +158,9 @@ func (ah AnimationHandler) handleUpdates() () {
 				case model.LootboxE:
 					lootbox, err := ah.Get("lootbox", "lootbox")
 					if err != nil {fmt.Fprint(os.Stderr,err.Error()); continue}
-					lootbox.SetPos(entity.GetPos())
-					lootbox.SetScale(0.2)
+					t := lootbox.GetTransformation()
+					t.Pos = entity.GetPos()
+					t.Scale = 0.2
 					ah.activeAnimations[Layer(entity.EntityType())][entity.ID()] = lootbox
 				}
 			}

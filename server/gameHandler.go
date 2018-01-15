@@ -89,6 +89,12 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			<-t
 			select {
 			case <-sec:
+				for i := range g.State.Players {
+					player := &g.State.Players[i]
+					if player.Stats.Health <= player.Stats.GetMaxHealth(){
+						player.Stats.Health +=  model.MinInt(player.GetMaxHealth()-player.Health, 1)
+					}
+				}
 				config.Conf.ServerHandleSpeed = time.Second / speed
 				speed = 0
 			default:

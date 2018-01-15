@@ -9,6 +9,7 @@ type Map struct {
 	Walls []Wall
 	SpawnPoint []pixel.Vec
 	LootPoints []Point
+	Bounds pixel.Rect
 }
 
 type Wall struct {
@@ -16,15 +17,18 @@ type Wall struct {
 	Thickness float64
 }
 
+
+
 var MapTemplates = map[string]Map{
 	"Test1": {
 		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
-		SpawnPoint: []pixel.Vec{pixel.Vec{200,450},pixel.Vec{900,450}},
+		SpawnPoint: []pixel.Vec{{200,450},{900,450}},
 		LootPoints: []Point{
 			NewPoint(150, 150),
 			NewPoint(150, 250),
 			NewPoint(150, 350),
 		},
+		Bounds : pixel.R(100,100,1000,1000),
 	},
 }
 
