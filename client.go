@@ -43,9 +43,8 @@ func run() {
 	app := framework.NewApplication(container)
 
 	app.AddController("main", &controller.MainMenu{})
-	gameCntrl := &controller.Game{}
-	gameCntrl.Init()
-	app.AddController("game", gameCntrl)
+	app.AddController("game", &controller.Game{})
+
 	app.SetController("main")
 	app.Run()
 
