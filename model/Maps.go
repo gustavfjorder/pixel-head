@@ -22,14 +22,10 @@ type Wall struct {
 
 var MapTemplates = map[string]Map{
 	"Test1": {
-		Walls: NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
-		SpawnPoint: randomSpawnPoints(pixel.R(100,100,1000,1000), 10),
-		LootPoints: []Point{
-			NewPoint(150, 150),
-			NewPoint(150, 250),
-			NewPoint(150, 350),
-		},
-		Bounds : pixel.R(100,100,1000,1000),
+		Walls:      NewWallSeries(30, NewPoint(100, 100), NewPoint(100, 1000), NewPoint(1000, 1000), NewPoint(1000, 100)),
+		SpawnPoint: RandomSpawnPoints(pixel.R(100,100,1000,1000), 10),
+		LootPoints: vecToPoint(RandomSpawnPoints(pixel.R(100,100,1000,1000), 10)...),
+		Bounds : pixel.R(130,130,970,970),
 	},
 }
 
@@ -68,7 +64,15 @@ func NewWall(p, q Point, thickness float64) Wall {
 	}
 }
 
-func randomSpawnPoints(bounds pixel.Rect, n int) []pixel.Vec{
+func vecToPoint(vecs ...pixel.Vec) []Point{
+	res := make([]Point, len(vecs))
+	for i, vec := range vecs {
+		res[i] = NewPoint(vec.X, vec.Y)
+	}
+	return res
+}
+
+func RandomSpawnPoints(bounds pixel.Rect, n int) []pixel.Vec{
 	res := make([]pixel.Vec,n)
 	diffX := bounds.Max.X - bounds.Min.X
 	diffY := bounds.Max.Y - bounds.Min.Y
@@ -78,4 +82,8 @@ func randomSpawnPoints(bounds pixel.Rect, n int) []pixel.Vec{
 		res[i] = pixel.V(x,y)
 	}
 	return res
+}
+
+func (m Map) RandomSpawnPoints(n int)[]pixel.Vec{
+	return RandomSpawnPoints(m.Bounds, n)
 }

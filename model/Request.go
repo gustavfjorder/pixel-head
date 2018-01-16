@@ -41,3 +41,7 @@ func (request Request) Idle() bool {
 func (request Request) Barrel() bool {
 	return request.Action == BARREL
 }
+
+func (request Request) Valid(me Player) bool {
+	return request.Action != IDLE || me.WeaponType != request.Weapon
+}

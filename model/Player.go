@@ -32,18 +32,15 @@ type Player struct {
 var actionDelays = make(map[string]time.Duration)
 var turnDelays = make(map[string]time.Duration)
 
-func NewPlayer(id string, pos ...pixel.Vec) (player Player) {
+func NewPlayer(id string, pos pixel.Vec) (player Player) {
 	player.WeaponList = make([]WeaponI, nWeapon)
 	player.WeaponType = KNIFE
 	player.NewWeapon(NewWeapon(player.WeaponType), NewWeapon(RIFLE), NewWeapon(SHOTGUN))
 	player.Id = id
 	player.Stats = NewStats(HUMAN)
 	player.Dir = 0
-	if len(pos) > 0 {
-		player.Pos = pos[0]
-	} else {
-		player.Pos = pixel.V(rand.Float64()*1000, rand.Float64()*1000)
-	}
+	player.Pos = pos
+
 	return
 }
 

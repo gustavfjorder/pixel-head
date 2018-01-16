@@ -14,7 +14,7 @@ import (
 )
 
 const MaxRooms = 10
-const PlayersPerRoom = 2
+const PlayersPerRoom = 1
 
 var startPort = 31415
 

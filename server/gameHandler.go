@@ -79,6 +79,7 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 			//If all players died end game
 			if len(g.State.Players) == 0 {
+				levelRdy <- true
 				goto endgame
 			}
 
@@ -109,9 +110,7 @@ endgame:
 	for _, spc := range clientSpaces {
 		spc.Put("game over")
 	}
-	for _, spc := range clientSpaces {
-		spc.Get("quit")
-	}
+	g.Clear()
 	<-finished
 	fmt.Println("Game ended")
 }

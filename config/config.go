@@ -29,7 +29,7 @@ var Conf = Config{
 	ReloadKey:         pixelgl.KeyR,
 	BarrelKey:         pixelgl.KeyB,
 	Online:            false,
-	LoungeUri:         "tcp://localhost:31415/lounge",
+	LoungeUri:         "tcp://localhost:31416/lounge",
 }
 
 type Config struct {

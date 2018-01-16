@@ -8,7 +8,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/config"
 )
 
-func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Updates) {
+func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Updates, done chan<- bool) {
 	//Handle loop
 	sec := time.NewTicker(time.Second)
 	delay := time.NewTicker(config.Conf.ServerHandleSpeed)
@@ -28,6 +28,11 @@ func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Up
 		updateTuples, err := spc.GetAll("update", &t, &model.Updates{})
 		for _, updateTuple := range updateTuples {
 			updates <- updateTuple.GetFieldAt(2).(model.Updates)
+		}
+		if _, err := spc.GetP("game over"); err == nil {
+			fmt.Println("Ending game")
+			done <-true; done <- true
+			break
 		}
 		<-delay.C
 		select {

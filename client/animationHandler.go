@@ -34,13 +34,10 @@ func NewAnimationHandler() (ah AnimationHandler) {
 	ah.animations["explosion"] = NewAnimation("explosion",
 		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath+"images/explosion/explosion.png"),
 		Terminal)
-	ah.activeAnimations = make([]map[string]Animation,5)
-	for i := range ah.activeAnimations {
-		ah.activeAnimations[i] = make(map[string]Animation)
-	}
+	ah.Clear()
 	ah.tracked = make(map[string]model.EntityI)
 	ah.center = pixel.ZV
-	ah.me = model.NewPlayer(config.ID)
+	ah.me = model.NewPlayer(config.ID, pixel.V(0,0))
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
 	return
 }
@@ -84,6 +81,13 @@ func (ah AnimationHandler) Draw(state model.State) {
 	}
 	ah.DrawAbilities()
 	ah.DrawHealthbar()
+}
+
+func (ah *AnimationHandler) Clear(){
+	ah.activeAnimations = make([]map[string]Animation,5)
+	for i := range ah.activeAnimations {
+		ah.activeAnimations[i] = make(map[string]Animation)
+	}
 }
 
 func (ah AnimationHandler) handleUpdates() () {

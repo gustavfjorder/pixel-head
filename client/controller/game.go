@@ -13,6 +13,7 @@ import (
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/client/animation"
+	"strconv"
 )
 
 type Game struct {
@@ -21,6 +22,7 @@ type Game struct {
 
 	me         *model.Player
 	state      *model.State
+	GameDone   chan bool
 	Ready      bool
 	LoadChan   chan bool
 	LoadedAnim bool
@@ -31,11 +33,11 @@ func (g *Game) Init() {
 	g.me = &model.Player{Id: config.ID}
 	g.state = &model.State{}
 	g.LoadChan = make(chan bool)
-	g.Ready = false
+	g.GameDone = make(chan bool, 2)
 	if !g.LoadedAnim {
 		go func() {
-			g.LoadedAnim = true
 			g.ah = client.NewAnimationHandler()
+			g.LoadedAnim = true
 			g.LoadChan <- true
 		}()
 	}
@@ -43,7 +45,9 @@ func (g *Game) Init() {
 
 func (g *Game) Run() {
 	go func() {
-		<-g.LoadChan
+		if !g.LoadedAnim{
+			<-g.LoadChan
+		}
 		var (
 			spc, gameMap = gotoLounge()
 		)
@@ -56,9 +60,9 @@ func (g *Game) Run() {
 		g.ah.SetUpdateChan(updateChan)
 
 		//Start state handler
-		go client.HandleEvents(&spc, g.state, updateChan)
+		go client.HandleEvents(&spc, g.state, updateChan, g.GameDone)
 		//Start control handler
-		go client.HandleControls(&spc, win)
+		go client.HandleControls(&spc, win, g.GameDone, g.me)
 		g.Ready = true
 	}()
 }
@@ -74,11 +78,20 @@ func (g *Game) Update() {
 		win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(g.me.Pos)))
 
 		g.ah.Draw(*g.state)
+
+		select {
+		case <- g.GameDone:
+			g.App.SetController("main")
+			win.SetMatrix(pixel.IM)
+			g.ah.Clear()
+		default:
+		}
 	}
 
 	win.Update()
 }
 
+var port = 31415
 func gotoLounge() (spc space.Space, m model.Map) {
 	if config.Conf.Online {
 		var myUri string
@@ -98,7 +111,8 @@ func gotoLounge() (spc space.Space, m model.Map) {
 	} else {
 		g := model.NewGame([]string{config.ID}, "Test1")
 		m = model.MapTemplates["Test1"]
-		uri := config.Conf.LoungeUri
+		uri := "tcp://localhost:" + strconv.Itoa(port) + "/game"
+		port++
 		clientSpace := server.ClientSpace{
 			Id:    config.ID,
 			Uri:   uri,

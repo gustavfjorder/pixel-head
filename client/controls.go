@@ -7,11 +7,12 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"time"
 	"github.com/pspaces/gospace/space"
+	"fmt"
 )
 
-func HandleControls(spc *space.Space, win *pixelgl.Window) {
+func HandleControls(spc *space.Space, win *pixelgl.Window, done <-chan bool, me *model.Player) {
 	t := time.Tick(Conf.ServerHandleSpeed)
-	r := model.Request{PlayerId:ID}
+	r := model.Request{PlayerId: ID}
 	for {
 		angle, i := 0.0, 0
 
@@ -61,7 +62,17 @@ func HandleControls(spc *space.Space, win *pixelgl.Window) {
 			r.Action = model.BARREL
 		}
 		r.PlayerId = ID
-		spc.Put(r)
+		if r.Valid(*me){
+			spc.Put(r)
+			fmt.Println("sent request", r)
+		}
+
+		select {
+		case <-done:
+			fmt.Println("Ended control")
+			return
+		default:
+		}
 		<-t
 	}
 }

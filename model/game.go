@@ -25,14 +25,15 @@ func NewGame(ids []string, mapName string) (game Game) {
 	game.CurrentLevel = 0
 	game.CurrentMap = MapTemplates[mapName]
 	game.Add(NewBarrel(pixel.V(500, 500)), NewBarrel(pixel.V(600, 600)), NewBarrel(pixel.V(700, 700)), NewBarrel(pixel.V(900, 900)), NewBarrel(pixel.V(1000, 1000)))
-	for _, id := range ids {
-		game.Add(NewPlayer(id))
+	pos := game.CurrentMap.RandomSpawnPoints(len(ids))
+	for i, id := range ids {
+		game.Add(NewPlayer(id, pos[i]))
 		game.PlayerIds[id] = true
 	}
 	return
 }
 
-func (game *Game) PrepareLevel(end chan<- bool) {
+func (game *Game) PrepareLevel(end chan bool) {
 	level := Levels[game.CurrentLevel]
 	game.State.Zombies = make([]ZombieI, 0)
 	waveticker := time.NewTicker(level.TimeBetweenWaves)
@@ -58,7 +59,10 @@ func (game *Game) PrepareLevel(end chan<- bool) {
 				ZOM = SLOWZOMBIE
 			}
 			game.NewZombie(game.CurrentMap.SpawnPoint[rand.Intn(len(game.CurrentMap.SpawnPoint))], ZOM)
-			<-zombieticker.C
+			select {
+			case <-zombieticker.C:
+			case <-end:return
+			}
 		}
 	}
 	end <- true
@@ -177,7 +181,7 @@ func (game *Game) HandleCorpses() {
 	}
 	for i := len(game.State.Barrels) - 1; i >= 0; i-- {
 		barrel := game.State.Barrels[i]
-		if barrel.IsExploded(){
+		if barrel.IsExploded() {
 			//Remove zombie from game
 			game.Remove(Entry{barrel, i})
 		}
@@ -213,7 +217,8 @@ func (game *Game) Add(entities ...EntityI) {
 			game.State.Players = append(game.State.Players, entity.(Player))
 		case Lootbox:
 			game.State.Lootboxes = append(game.State.Lootboxes, entity.(Lootbox))
-		default: fmt.Fprintln(os.Stderr, "ADD: Unable to find:", entity, "with type", reflect.TypeOf(entity)); continue
+		default:
+			fmt.Fprintln(os.Stderr, "ADD: Unable to find:", entity, "with type", reflect.TypeOf(entity)); continue
 		}
 		game.Updates.Add(entity)
 	}
@@ -227,12 +232,18 @@ func (game *Game) Remove(entries ...Entry) {
 	lootboxes := make([]Entry, 0, MinInt(len(entries), len(game.State.Lootboxes)))
 	for _, entry := range entries {
 		switch entry.elem.(type) {
-		case Shot: shots = append(shots, entry)
-		case Player: players = append(players, entry)
-		case ZombieI: zombies = append(zombies, entry)
-		case BarrelI: barrels = append(barrels, entry)
-		case Lootbox: lootboxes = append(lootboxes, entry)
-		default:fmt.Fprintln(os.Stderr, "REMOVE: Unable to find:", entry, "with type:",reflect.TypeOf(entry.elem)); continue
+		case Shot:
+			shots = append(shots, entry)
+		case Player:
+			players = append(players, entry)
+		case ZombieI:
+			zombies = append(zombies, entry)
+		case BarrelI:
+			barrels = append(barrels, entry)
+		case Lootbox:
+			lootboxes = append(lootboxes, entry)
+		default:
+			fmt.Fprintln(os.Stderr, "REMOVE: Unable to find:", entry, "with type:", reflect.TypeOf(entry.elem)); continue
 		}
 		game.Updates.Remove(entry.elem)
 	}
@@ -300,4 +311,9 @@ func (game *Game) NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
 	}
 	game.Add(zom)
 	return zom
+}
+
+func (game *Game) Clear() {
+	actionDelays = make(map[string]time.Duration)
+	turnDelays = make(map[string]time.Duration)
 }
