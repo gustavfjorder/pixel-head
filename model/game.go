@@ -69,6 +69,13 @@ func (game *Game) PrepareLevel(end chan bool) {
 }
 
 func (game *Game) HandleRequests(requests []Request) {
+	for i := range game.State.Players {
+		player := &game.State.Players[i]
+		if Timestamp >= player.ActionDelay() {
+			player.Action = IDLE
+		}
+
+	}
 	// Load incoming requests
 	for _, request := range requests {
 		// Load player
@@ -81,10 +88,6 @@ func (game *Game) HandleRequests(requests []Request) {
 
 		if request.Moved() {
 			player.Move(request.Dir, game)
-		}
-
-		if Timestamp >= player.ActionDelay() {
-			player.Action = IDLE
 		}
 
 		//Action priority is like so: weapon change > reload > shoot > melee

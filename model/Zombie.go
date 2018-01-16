@@ -140,13 +140,13 @@ func (zombie Zombie) GetAttackDelay() time.Duration {
 func (zombie Zombie) GetTurnSpeed() (turnSpeed float64) {
 	switch zombie.Type {
 	case ZOMBIE:
-		turnSpeed = math.Pi * 50
+		turnSpeed = math.Pi / 3
 	case FASTZOMBIE:
-		turnSpeed = math.Pi * 2000
+		turnSpeed = math.Pi * 2
 	case SLOWZOMBIE:
-		turnSpeed = math.Pi
+		turnSpeed = math.Pi / 5
 	case BOMBZOMBIE:
-		turnSpeed = math.Pi * 50
+		turnSpeed = math.Pi/2
 	}
 
 	return turnSpeed * config.Conf.ServerHandleSpeed.Seconds()

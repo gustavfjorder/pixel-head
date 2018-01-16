@@ -3,10 +3,11 @@ package model
 import (
 	"github.com/faiface/pixel"
 	"math"
+	"time"
 )
 
 type Request struct {
-	Timestamp int64
+	Timestamp time.Duration
 	PlayerId  string
 	Weapon    WeaponType
 	Dir       float64

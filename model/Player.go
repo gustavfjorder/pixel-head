@@ -5,7 +5,6 @@ import (
 	"math"
 	"time"
 	"github.com/pkg/errors"
-	"math/rand"
 )
 
 type Action int
@@ -147,15 +146,11 @@ func (player Player) EmptyMag() bool{
 }
 
 func (player *Player) Shoot(g *Game) {
-	_, err := player.Weapon()
+	weapon, err := player.Weapon()
 	if err != nil {
 		return
 	}
-	playerShoots := GenerateShoots(*player)
-	for _, shot := range playerShoots {
-		g.Add(shot)
-	}
-
+	weapon.Shoot(*player, g)
 	player.SetAction(SHOOT)
 }
 
@@ -169,7 +164,7 @@ func (player *Player) Do(request Request, g *Game) {
 		player.ChangeWeapon(request.Weapon)
 	case request.Reload() && player.Reload():
 		player.SetAction(RELOAD)
-	case request.Shoot() && !player.EmptyMag():
+	case request.Shoot() && (!player.EmptyMag() || player.WeaponType == KNIFE):
 		player.Shoot(g)
 	case request.Shoot() && player.Reload(): // Has no ammo
 		player.SetAction(RELOAD)

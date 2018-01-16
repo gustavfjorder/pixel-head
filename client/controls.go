@@ -12,6 +12,7 @@ import (
 
 func HandleControls(spc *space.Space, win *pixelgl.Window, done <-chan bool, me *model.Player) {
 	t := time.Tick(Conf.ServerHandleSpeed)
+	start := time.Now()
 	r := model.Request{PlayerId: ID}
 	for {
 		angle, i := 0.0, 0
@@ -63,8 +64,8 @@ func HandleControls(spc *space.Space, win *pixelgl.Window, done <-chan bool, me 
 		}
 		r.PlayerId = ID
 		if r.Valid(*me){
+			r.Timestamp = time.Since(start)
 			spc.Put(r)
-			fmt.Println("sent request", r)
 		}
 
 		select {
