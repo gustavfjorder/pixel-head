@@ -33,6 +33,7 @@ type WeaponI interface {
 	GetMagazine() int
 	GetBullets() int
 	IncLevel()
+	Shoot(Player, *Game)
 }
 
 type WeaponBase struct {
@@ -76,27 +77,43 @@ func (weapon *WeaponBase) RefillMag() bool {
 	return dBullet > 0
 }
 
-func GenerateShoots(player Player) (shots []Shot) {
-	weapon,err  := player.Weapon()
-	if err != nil {
+func (weapon *WeaponBase) Shoot(player Player, game *Game){
+	if weapon.GetMagazine() <= 0 {
 		return
 	}
+	game.Add(NewShot(player))
+	weapon.MagazineCurrent -= 1
+}
+
+func (weapon *Shotgun) Shoot(player Player, game *Game){
 	if weapon.GetMagazine() <= 0 {
-		return []Shot{}
+		return
 	}
 	offset := 0.0
 	if weapon.BulletsPerShot()%2 == 0 {
 		offset = weapon.Spread() * 0.5
 	}
 	angle := offset - weapon.Spread()*float64(weapon.BulletsPerShot()/2)
-	shoots := make([]Shot, weapon.BulletsPerShot())
+	shots := make([]Shot, weapon.BulletsPerShot())
 
 	for i := 0; i < weapon.BulletsPerShot(); i++ {
-		shoots[i] = NewShot(player, angle)
+		shots[i] = NewShot(player, angle)
 		angle += weapon.Spread()
 	}
-	weapon.RemoveBullets(1)
-	return shoots
+	weapon.WeaponBase.MagazineCurrent -= 1
+	for _, shot := range shots {
+		game.Add(shot)
+	}
+}
+
+func (knife *Knife) Shoot(player Player, game *Game) {
+	for _, zombie := range game.State.Zombies{
+		dAngle := math.Mod(math.Abs(player.Dir - angle(player.Pos, zombie.GetPos())),math.Pi)
+		if dAngle <= knife.AttackCone() &&
+			player.Pos.Sub(zombie.GetPos()).Len() <= knife.Range(){
+				zombie.SubHealth(knife.Power())
+		}
+	}
 }
 
 func (weapon WeaponBase) GetMagazine() int {
@@ -176,7 +193,7 @@ func (weapon WeaponBase) Range() float64 {
 	case SHOTGUN:
 		return 300
 	case KNIFE:
-		return 100
+		return 70
 	default:
 		return 0
 
@@ -214,16 +231,16 @@ func (weapon WeaponBase) Spread() float64 {
 func (weapon WeaponBase) Capacity() int {
 	switch weapon.Type() {
 	case SHOTGUN:
-		return 150
+		return 50
 	case RIFLE:
-		return 10000
+		return 500
 	default:
-		return 1000
+		return 50
 	}
 }
 
-func (weapon WeaponBase) RemoveBullets(n int) {
-	weapon.Bullets -= n
+func (weapon *WeaponBase) RemoveBullets(n int) {
+	weapon.MagazineCurrent -= n
 }
 
 func (weapon WeaponType) Name() string {
@@ -258,4 +275,8 @@ type Handgun struct {
 
 type Knife struct {
 	WeaponBase
+}
+
+func (knife Knife) AttackCone() float64 {
+	return math.Pi * 2 /3
 }
