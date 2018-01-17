@@ -109,7 +109,7 @@ func (component *Component) Draw(win *pixelgl.Window) {
 	//component.Render()
 
 	if component.Text != nil {
-		pos := component.bounds.Min
+		pos := component.Bounds().Min
 		if component.center {
 			pos = pos.Sub(component.Text.Bounds().Center())
 		}
@@ -122,7 +122,7 @@ func (component *Component) Draw(win *pixelgl.Window) {
 	}
 
 	for _, child := range component.children {
-		child.ParentPos(component.bounds.Min)
+		child.ParentPos(component.Bounds().Min)
 		child.Render().Draw(win)
 
 		var clickableInterface ClickableInterface
