@@ -95,6 +95,10 @@ func (component *Component) Child(child ...ComponentInterface) {
 	component.children = append(component.children, child...)
 }
 
+func (component *Component) ClearChildren() {
+	component.children = make([]ComponentInterface, 0)
+}
+
 func (component *Component) Draw(win *pixelgl.Window) {
 	// todo: would be better to do this here. Investigate polymorphic behaviour
 	//if component.center {

@@ -62,6 +62,7 @@ func (b *Button) Text(str string) {
 		b.bounds.H() / 2,
 	))
 
+	b.ClearChildren()
 	b.Child(b.text)
 }
 
