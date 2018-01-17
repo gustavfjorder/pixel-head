@@ -43,6 +43,7 @@ func run() {
 	app := framework.NewApplication(container)
 
 	app.AddController("main", &controller.MainMenu{})
+	app.AddController("multiplayer", &controller.Multiplayer{})
 	app.AddController("game", &controller.Game{})
 	app.AddController("game_over", &controller.GameOver{})
 

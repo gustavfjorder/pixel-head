@@ -32,24 +32,34 @@ func (c *MainMenu) Run() {
 	buttonSP := component.NewButton(8)
 	buttonSP.Pos(pixel.V(
 		menuContainer.Bounds().W() / 2,
-		(menuContainer.Bounds().H() / 2) + 12,
+		(menuContainer.Bounds().H() / 2) + 25,
 	)).Center()
 	buttonSP.Text("Single Player")
 	buttonSP.OnLeftMouseClick(func() {
 		c.App.ChangeTo("game")
 	})
 
+	buttonMP := component.NewButton(8)
+	buttonMP.Pos(pixel.V(
+		menuContainer.Bounds().W() / 2,
+		menuContainer.Bounds().H() / 2,
+	)).Center()
+	buttonMP.Text("Multi Player")
+	buttonMP.OnLeftMouseClick(func() {
+		c.App.ChangeTo("multiplayer")
+	})
+
 	buttonExit := component.NewButton(8)
 	buttonExit.Pos(pixel.V(
 		menuContainer.Bounds().W() / 2,
-		(menuContainer.Bounds().H() / 2) - 12,
+		(menuContainer.Bounds().H() / 2) - 25,
 	)).Center()
 	buttonExit.Text("Exit")
 	buttonExit.OnLeftMouseClick(func() {
 		os.Exit(0)
 	})
 
-	menuContainer.Child(buttonSP, buttonExit)
+	menuContainer.Child(buttonSP, buttonMP, buttonExit)
 
 	c.addViewItem(component.NewContainer(menuContainer, headLine))
 }
