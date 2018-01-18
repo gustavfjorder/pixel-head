@@ -9,6 +9,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/framework"
 	"github.com/gustavfjorder/pixel-head/client/controller"
 	"github.com/gustavfjorder/pixel-head/setup"
+	"github.com/gustavfjorder/pixel-head/client"
 )
 
 func main() {
@@ -39,6 +40,10 @@ func run() {
 
 	container := framework.NewContainer()
 	container.SetService("window", win)
+
+	ah := client.NewAnimationHandler()
+	go ah.Load()
+	container.SetService("ah", &ah)
 
 	app := framework.NewApplication(container)
 

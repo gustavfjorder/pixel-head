@@ -26,20 +26,26 @@ type AnimationHandler struct {
 	state            model.State
 	ticker           *time.Ticker
 	me               model.Player
+	loaded           bool
 }
 
 func NewAnimationHandler() (ah AnimationHandler) {
-	spritePath := "client/sprites/"
-	ah.animations = LoadAll(spritePath+"animations", spritePath+"images")
-	ah.animations["explosion"] = NewAnimation("explosion",
-		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath+"images/explosion/explosion.png"),
-		Terminal)
 	ah.Clear()
 	ah.tracked = make(map[string]model.EntityI)
 	ah.center = pixel.ZV
 	ah.me = model.NewPlayer(config.ID, pixel.V(0,0))
 	ah.ticker = time.NewTicker(config.Conf.AnimationSpeed)
 	return
+}
+
+func (ah *AnimationHandler) Load() {
+	spritePath := "client/sprites/"
+	ah.animations = LoadAll(spritePath+"animations", spritePath+"images")
+	ah.animations["explosion"] = NewAnimation("explosion",
+		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath+"images/explosion/explosion.png"),
+		Terminal)
+
+	ah.loaded = true
 }
 
 func Layer(entityType model.EntityType) int{
@@ -62,6 +68,10 @@ func (ah *AnimationHandler) SetUpdateChan(ch chan model.Updates) {
 }
 
 func (ah AnimationHandler) Draw(state model.State) {
+	if ! ah.loaded {
+		return
+	}
+
 	ah.state = state
 	GetPlayer(state.Players, &ah.me)
 	ah.handleUpdates()

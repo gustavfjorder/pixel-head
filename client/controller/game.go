@@ -18,36 +18,24 @@ import (
 
 type Game struct {
 	framework.Controller
-	ah client.AnimationHandler
+	ah *client.AnimationHandler
 
 	me         *model.Player
 	state      *model.State
 	GameDone   chan bool
 	Ready      bool
-	LoadChan   chan bool
-	LoadedAnim bool
 	usedMap    *imdraw.IMDraw
 }
 
 func (g *Game) Init() {
 	g.me = &model.Player{Id: config.ID}
 	g.state = &model.State{}
-	g.LoadChan = make(chan bool)
 	g.GameDone = make(chan bool, 2)
-	if !g.LoadedAnim {
-		go func() {
-			g.ah = client.NewAnimationHandler()
-			g.LoadedAnim = true
-			g.LoadChan <- true
-		}()
-	}
+	g.ah = g.Container.Get("ah").(*client.AnimationHandler)
 }
 
 func (g *Game) Run() {
 	go func() {
-		if !g.LoadedAnim{
-			<-g.LoadChan
-		}
 		var (
 			spc, gameMap = gotoLounge()
 		)
