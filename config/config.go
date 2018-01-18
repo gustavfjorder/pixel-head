@@ -16,7 +16,7 @@ var ID = xid.New().String()
 
 var Conf = Config{
 	AnimationSpeed:    time.Second / 30,
-	ServerHandleSpeed: time.Second / 300,
+	ServerHandleSpeed: time.Second / 60,
 	Fps:               time.Second / 300,
 	LeftKey:           pixelgl.KeyA,
 	RightKey:          pixelgl.KeyD,

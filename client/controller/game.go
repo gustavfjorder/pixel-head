@@ -13,7 +13,6 @@ import (
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/client/animation"
-	"strconv"
 )
 
 type Game struct {
@@ -99,7 +98,7 @@ func gotoLounge() (spc space.Space, m model.Map) {
 	} else {
 		g := model.NewGame([]string{config.ID}, "Test1")
 		m = model.MapTemplates["Test1"]
-		uri := "tcp://localhost:" + strconv.Itoa(port) + "/game"
+		uri := "tcp://localhost:" + server.NextValidPort() + "/game"
 		port++
 		clientSpace := server.ClientSpace{
 			Id:    config.ID,

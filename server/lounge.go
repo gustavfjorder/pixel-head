@@ -7,27 +7,41 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/gustavfjorder/pixel-head/setup"
 	. "github.com/pspaces/gospace/space"
+	"net"
 )
 
-const PlayersPerRoom = 2
+const PlayersPerRoom = 1
+var startPort = 31415
+var ip, _ = config.GetIp()
 
-func NewLounge(maxRooms int) {
+
+func NewLounge(maxRooms int) *Space {
+	config.Conf.Online = true
 	setup.RegisterModels()
 
-	startPort := 31415
-
-	ip, _ := config.GetIp()
 	fmt.Println(ip)
+	config.Conf.LoungeUri = "tcp://" + ip + ":" + NextValidPort() + "/lounge"
+	lounge := NewSpace(config.Conf.LoungeUri)
+	go newLounge(maxRooms, lounge)
+	return &lounge
+}
 
-	lounge := NewSpace("tcp://" + ip + ":" + strconv.Itoa(startPort) + "/lounge")
-
+func newLounge(maxRooms int, lounge Space) {
 	active := make([]chan bool, 0)
 	rooms := make([]string, 0, maxRooms)
 	awaiting := make([]string, 0, PlayersPerRoom)
 
 	for len(rooms) < cap(rooms) {
+		_, err := lounge.GetP("close")
+		if err == nil{
+			fmt.Println("Stopping server")
+			return
+		}
 		var id string
-		lounge.Get("request", &id)
+		_, err = lounge.GetP("request", &id)
+		if err != nil {
+			continue
+		}
 
 		fmt.Println("Player '" + id + "' has connected")
 
@@ -38,9 +52,8 @@ func NewLounge(maxRooms int) {
 		if len(awaiting) == cap(awaiting) {
 			clientSpaces := make([]ClientSpace, len(awaiting))
 			for i, id := range awaiting {
-				startPort++
 				clientSpaces[i].Id = id
-				clientSpaces[i].Uri = "tcp://" + ip + ":" + strconv.Itoa(startPort) + "/game/" + id
+				clientSpaces[i].Uri = "tcp://" + ip + ":" + NextValidPort() + "/game/" + id
 				clientSpaces[i].Space = SetupSpace(clientSpaces[i].Uri)
 
 				lounge.Put("join", id, clientSpaces[i].Uri)
@@ -53,6 +66,18 @@ func NewLounge(maxRooms int) {
 			awaiting = make([]string, 0, PlayersPerRoom)
 		}
 	}
+}
 
-	lounge.Get("close")
+func NextValidPort() string{
+	for { // Check that the port is valid before making the space
+		conn, err := net.Listen("tcp", ":" + strconv.Itoa(startPort))
+		if err == nil {
+			conn.Close()
+			break
+		} else {
+			fmt.Println(startPort, "is invalid retrying")
+			startPort++
+		}
+	}
+	return strconv.Itoa(startPort)
 }

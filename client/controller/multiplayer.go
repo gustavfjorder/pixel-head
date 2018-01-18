@@ -14,6 +14,7 @@ import (
 	"sort"
 	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/gustavfjorder/pixel-head/server"
+	"github.com/pspaces/gospace/space"
 )
 
 type Multiplayer struct {
@@ -23,6 +24,7 @@ type Multiplayer struct {
 }
 
 var updateView func()
+var spc *space.Space
 
 func (c *Multiplayer) Init() {
 	c.viewItems = make([]component.ComponentInterface, 0)
@@ -56,10 +58,13 @@ func (c *Multiplayer) Run() {
 	buttonSP.OnLeftMouseClick(func() {
 		if broadcasting {
 			endBroadcast <- true
+			if spc != nil {
+				spc.Put("close")
+			}
 			buttonSP.Text("Create game")
 			broadcasting = false
 		} else {
-			go server.NewLounge(1)
+			spc = server.NewLounge(2)
 			go broadCastServer(endBroadcast)
 			buttonSP.Text("Close game")
 			broadcasting = true
@@ -176,10 +181,13 @@ func (c *Multiplayer) addViewItem(viewItem component.ComponentInterface) {
 }
 
 func listenForBroadCast(c chan bool, handler func(addr net.Addr, msg string)) {
-	listener, _ := net.ListenMulticastUDP("udp4", nil, &net.UDPAddr{
+	listener, err := net.ListenMulticastUDP("udp4", nil, &net.UDPAddr{
 		IP:   net.IPv4(225, 0, 0, 1),
 		Port: 9999,
 	})
+	if err != nil {
+		return
+	}
 
 	defer listener.Close()
 
@@ -212,10 +220,13 @@ func listenForBroadCast(c chan bool, handler func(addr net.Addr, msg string)) {
 func broadCastServer(c chan bool) {
 	localAddr, _ := net.ResolveUDPAddr("udp4", "0.0.0.0:25001")
 
-	conn, _ := net.DialUDP("udp4", localAddr, &net.UDPAddr{
+	conn, err := net.DialUDP("udp4", localAddr, &net.UDPAddr{
 		IP:   net.IPv4(225, 0, 0, 1),
 		Port: 9999,
 	})
+	if err != nil {
+		return
+	}
 
 	defer conn.Close()
 
