@@ -14,20 +14,19 @@ func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Up
 	delay := time.NewTicker(config.Conf.ServerHandleSpeed)
 	defer sec.Stop()
 	defer delay.Stop()
-	var t time.Duration
 	var tempState model.State
 	count := 0
 	fmt.Println("Handling events")
 	for {
-		_, err := spc.GetP("state", &t, &tempState)
+		_, err := spc.GetP("state", &tempState)
 		if err == nil {
 			count++
-			model.Timestamp = t
 			*state = tempState
+			model.Timestamp = state.Timestamp
 		}
-		updateTuples, err := spc.GetAll("update", &t, &model.Updates{})
+		updateTuples, err := spc.GetAll("update", &model.Updates{})
 		for _, updateTuple := range updateTuples {
-			updates <- updateTuple.GetFieldAt(2).(model.Updates)
+			updates <- updateTuple.GetFieldAt(1).(model.Updates)
 		}
 		if _, err := spc.GetP("game over"); err == nil {
 			fmt.Println("Ending game")
@@ -43,6 +42,7 @@ func HandleEvents(spc *space.Space, state *model.State,  updates chan<- model.Up
 			break
 		}
 	}
+	fmt.Println("Ended eventhandler")
 }
 
 func GetPlayer(players []model.Player, player *model.Player) {

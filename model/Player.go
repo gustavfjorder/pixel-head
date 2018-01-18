@@ -28,9 +28,6 @@ type Player struct {
 	Stats
 }
 
-var actionDelays = make(map[string]time.Duration)
-var turnDelays = make(map[string]time.Duration)
-
 func NewPlayer(id string, pos pixel.Vec) (player Player) {
 	player.WeaponList = make([]WeaponI, nWeapon)
 	player.WeaponType = KNIFE
@@ -45,9 +42,9 @@ func NewPlayer(id string, pos pixel.Vec) (player Player) {
 
 func (player *Player) Move(dir float64, g *Game) {
 	if !math.IsNaN(dir) {
-		if player.TurnDelay() < Timestamp {
+		if player.TurnDelay(g) < g.State.Timestamp {
 			player.Dir = dir
-			player.Turn()
+			player.Turn(g)
 			return
 		}
 		newpos := player.Pos.Add(pixel.V(player.Stats.GetMoveSpeed(), 0).Rotated(player.Dir))
@@ -108,9 +105,9 @@ func findPlayer(players []Player, id string) (p *Player, e error) {
 	return
 }
 
-func (player *Player) SetAction(action Action){
+func (player *Player) SetAction(action Action, game *Game){
 	player.Action = action
-	actionDelays[player.Id] = player.Delay(action) + Timestamp
+	game.actionDelays[player.Id] = player.Delay(action) + game.State.Timestamp
 }
 
 func (player Player) Delay(action Action) time.Duration{
@@ -128,12 +125,12 @@ func (player Player) Delay(action Action) time.Duration{
 	}
 }
 
-func (player Player) Reload() bool{
+func (player Player) Reload(game *Game) bool{
 	wep, err := player.Weapon()
 	if err != nil {
 		return false
 	}
-	player.SetAction(RELOAD)
+	player.SetAction(RELOAD, game)
 	return wep.RefillMag()
 }
 
@@ -151,28 +148,28 @@ func (player *Player) Shoot(g *Game) {
 		return
 	}
 	weapon.Shoot(*player, g)
-	player.SetAction(SHOOT)
+	player.SetAction(SHOOT, g)
 }
 
 func (player *Player) Do(request Request, g *Game) {
-	if Timestamp < player.ActionDelay(){
+	if g.State.Timestamp < player.ActionDelay(g){
 		return
 	}
 
 	switch{
 	case player.WeaponType != request.Weapon && player.IsAvailable(request.Weapon):
 		player.ChangeWeapon(request.Weapon)
-	case request.Reload() && player.Reload():
-		player.SetAction(RELOAD)
+	case request.Reload() && player.Reload(g):
+		player.SetAction(RELOAD, g)
 	case request.Shoot() && (!player.EmptyMag() || player.WeaponType == KNIFE):
 		player.Shoot(g)
-	case request.Shoot() && player.Reload(): // Has no ammo
-		player.SetAction(RELOAD)
+	case request.Shoot() && player.Reload(g): // Has no ammo
+		player.SetAction(RELOAD, g)
 	case request.Melee():
-		player.SetAction(MELEE)
+		player.SetAction(MELEE, g)
 		// todo: create melee attack
 	case request.Barrel():
-		player.SetAction(BARREL)
+		player.SetAction(BARREL, g)
 		g.Add(NewBarrel(player.Pos))
 	default:
 		if request.Moved() {
@@ -187,16 +184,16 @@ func (player Player) GetHitbox() float64{
 	return 50
 }
 
-func (player Player) Turn() {
-	turnDelays[player.Id] = Timestamp + player.TurnSpeed()
+func (player Player) Turn(game *Game) {
+	game.turnDelays[player.Id] = game.State.Timestamp + player.TurnSpeed()
 }
 
-func (player Player) ActionDelay() time.Duration {
-	return actionDelays[player.Id]
+func (player Player) ActionDelay(game *Game) time.Duration {
+	return game.actionDelays[player.Id]
 }
 
-func (player Player) TurnDelay() time.Duration {
-	return turnDelays[player.Id]
+func (player Player) TurnDelay(game *Game) time.Duration {
+	return game.turnDelays[player.Id]
 }
 
 func (player Player) TurnSpeed() time.Duration {

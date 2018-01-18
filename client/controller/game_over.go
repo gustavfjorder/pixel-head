@@ -10,18 +10,18 @@ import (
 	"github.com/gustavfjorder/pixel-head/helper"
 )
 
-type MainMenu struct {
+type GameOver struct {
 	framework.Controller
 
 	viewItems []component.ComponentInterface
 }
 
-func (c *MainMenu) Init() {
+func (c *GameOver) Init() {
 	c.viewItems = make([]component.ComponentInterface, 0)
 }
 
-func (c *MainMenu) Run() {
-	headLine := component.NewTextWithContent("Zombie Hunter 3000!")
+func (c *GameOver) Run() {
+	headLine := component.NewTextWithContent("Game over...")
 	headLine.SetSize(40)
 	headLine.Color = colornames.Chocolate
 	headLine.Pos(pixel.V(0, 250))
@@ -32,39 +32,32 @@ func (c *MainMenu) Run() {
 	buttonSP := component.NewButton(8)
 	buttonSP.Pos(pixel.V(
 		menuContainer.Bounds().W() / 2,
-		(menuContainer.Bounds().H() / 2) + 25,
+		(menuContainer.Bounds().H() / 2) + 12,
 	)).Center()
-	buttonSP.Text("Single Player")
+	buttonSP.Text("Go to menu")
 	buttonSP.OnLeftMouseClick(func() {
-		c.App.ChangeTo("game")
-	})
-
-	buttonMP := component.NewButton(8)
-	buttonMP.Pos(pixel.V(
-		menuContainer.Bounds().W() / 2,
-		menuContainer.Bounds().H() / 2,
-	)).Center()
-	buttonMP.Text("Multi Player")
-	buttonMP.OnLeftMouseClick(func() {
-		c.App.ChangeTo("multiplayer")
+		c.App.ChangeTo("main")
 	})
 
 	buttonExit := component.NewButton(8)
 	buttonExit.Pos(pixel.V(
 		menuContainer.Bounds().W() / 2,
-		(menuContainer.Bounds().H() / 2) - 25,
+		(menuContainer.Bounds().H() / 2) - 12,
 	)).Center()
 	buttonExit.Text("Exit")
 	buttonExit.OnLeftMouseClick(func() {
 		os.Exit(0)
 	})
 
-	menuContainer.Child(buttonSP, buttonMP, buttonExit)
+	menuContainer.Child(buttonSP, buttonExit)
 
 	c.addViewItem(component.NewContainer(menuContainer, headLine))
+
+	// Reset window position
+	c.Container.Get("window").(*pixelgl.Window).SetMatrix(pixel.IM)
 }
 
-func (c *MainMenu) Update() {
+func (c *GameOver) Update() {
 	win := c.Container.Get("window").(*pixelgl.Window)
 
 	win.Clear(colornames.Lightgoldenrodyellow)
@@ -82,6 +75,6 @@ func (c *MainMenu) Update() {
 	win.Update()
 }
 
-func (c *MainMenu) addViewItem(viewItem component.ComponentInterface) {
+func (c *GameOver) addViewItem(viewItem component.ComponentInterface) {
 	c.viewItems = append(c.viewItems, viewItem)
 }

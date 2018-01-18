@@ -95,6 +95,10 @@ func (component *Component) Child(child ...ComponentInterface) {
 	component.children = append(component.children, child...)
 }
 
+func (component *Component) ClearChildren() {
+	component.children = make([]ComponentInterface, 0)
+}
+
 func (component *Component) Draw(win *pixelgl.Window) {
 	// todo: would be better to do this here. Investigate polymorphic behaviour
 	//if component.center {
@@ -105,7 +109,7 @@ func (component *Component) Draw(win *pixelgl.Window) {
 	//component.Render()
 
 	if component.Text != nil {
-		pos := component.bounds.Min
+		pos := component.Bounds().Min
 		if component.center {
 			pos = pos.Sub(component.Text.Bounds().Center())
 		}
@@ -118,7 +122,7 @@ func (component *Component) Draw(win *pixelgl.Window) {
 	}
 
 	for _, child := range component.children {
-		child.ParentPos(component.bounds.Min)
+		child.ParentPos(component.Bounds().Min)
 		child.Render().Draw(win)
 
 		var clickableInterface ClickableInterface
@@ -193,12 +197,12 @@ func (c *Clickable) DetermineEvent(win *pixelgl.Window) {
 func (c *Clickable) DistributeEvent(win *pixelgl.Window) {
 	if win.JustPressed(pixelgl.MouseButtonLeft) {
 		c.Pressed = true
-		c.RunListeners(pixelgl.MouseButtonLeft)
-	} else if win.JustPressed(pixelgl.MouseButtonRight) {
-		c.RunListeners(pixelgl.MouseButtonRight)
 	}
 
 	if win.JustReleased(pixelgl.MouseButtonLeft) {
 		c.Pressed = false
+		c.RunListeners(pixelgl.MouseButtonLeft)
+	} else if win.JustReleased(pixelgl.MouseButtonRight) {
+		c.RunListeners(pixelgl.MouseButtonRight)
 	}
 }

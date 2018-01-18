@@ -17,6 +17,9 @@ type Game struct {
 	Updates      Updates
 	CurrentMap   Map
 	CurrentLevel int
+	actionDelays map[string]time.Duration
+	turnDelays   map[string]time.Duration
+	attackDelays map[string]time.Duration
 }
 
 func NewGame(ids []string, mapName string) (game Game) {
@@ -30,6 +33,9 @@ func NewGame(ids []string, mapName string) (game Game) {
 		game.Add(NewPlayer(id, pos[i]))
 		game.PlayerIds[id] = true
 	}
+	game.actionDelays = make(map[string]time.Duration)
+	game.turnDelays = make(map[string]time.Duration)
+	game.attackDelays = make(map[string]time.Duration)
 	return
 }
 
@@ -61,7 +67,8 @@ func (game *Game) PrepareLevel(end chan bool) {
 			game.NewZombie(game.CurrentMap.SpawnPoint[rand.Intn(len(game.CurrentMap.SpawnPoint))], ZOM)
 			select {
 			case <-zombieticker.C:
-			case <-end:return
+			case <-end:
+				return
 			}
 		}
 	}
@@ -71,7 +78,7 @@ func (game *Game) PrepareLevel(end chan bool) {
 func (game *Game) HandleRequests(requests []Request) {
 	for i := range game.State.Players {
 		player := &game.State.Players[i]
-		if Timestamp >= player.ActionDelay() {
+		if game.State.Timestamp >= player.ActionDelay(game) {
 			player.Action = IDLE
 		}
 
@@ -135,7 +142,7 @@ func (game *Game) HandleZombies() {
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shoot := game.State.Shots[j]
 
-			if shoot.GetPos().Sub(zombie.GetPos()).Len() <= zombie.GetHitbox() {
+			if shoot.GetPosT(game.State.Timestamp).Sub(zombie.GetPos()).Len() <= zombie.GetHitbox() {
 				zombie.Hit(shoot, &game.State)
 				game.Remove(Entry{shoot, j})
 			}
@@ -155,7 +162,7 @@ func (game *Game) HandleZombies() {
 func (game *Game) HandleShots() {
 	for i := len(game.State.Shots) - 1; i >= 0; i-- {
 		shot := game.State.Shots[i]
-		if shot.GetPos().Sub(shot.Start).Len() > shot.WeaponType.Range() {
+		if shot.GetPosT(game.State.Timestamp).Sub(shot.Start).Len() > shot.WeaponType.Range() {
 			game.Remove(Entry{shot, i})
 			continue
 		}
@@ -196,7 +203,7 @@ func (game *Game) HandleBarrels() {
 		barrel := game.State.Barrels[i]
 		for j := len(game.State.Shots) - 1; j >= 0; j-- {
 			shot := game.State.Shots[j]
-			if shot.GetPos().Sub(barrel.GetPos()).Len() < barrel.GetHitbox() {
+			if shot.GetPosT(game.State.Timestamp).Sub(barrel.GetPos()).Len() < barrel.GetHitbox() {
 				//Update objects
 				barrel.Explode(&game.State)
 				game.Remove(Entry{shot, j})
@@ -314,9 +321,4 @@ func (game *Game) NewZombie(vec pixel.Vec, zombieType Being) ZombieI {
 	}
 	game.Add(zom)
 	return zom
-}
-
-func (game *Game) Clear() {
-	actionDelays = make(map[string]time.Duration)
-	turnDelays = make(map[string]time.Duration)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/gustavfjorder/pixel-head/framework"
 	"github.com/gustavfjorder/pixel-head/client/controller"
 	"github.com/gustavfjorder/pixel-head/setup"
+	"github.com/gustavfjorder/pixel-head/client"
 )
 
 func main() {
@@ -26,9 +27,10 @@ func run() {
 
 	//Make window
 	cfg := pixelgl.WindowConfig{
-		Title:  "Zombie Hunter 3000!",
-		Bounds: pixel.R(0, 0, 1500, 800),
-		//VSync:  true,
+		Title:     "Zombie Hunter 3000!",
+		Bounds:    pixel.R(0, 0, 1024, 768),
+		Resizable: true,
+		//VSync:     true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -39,10 +41,16 @@ func run() {
 	container := framework.NewContainer()
 	container.SetService("window", win)
 
+	ah := client.NewAnimationHandler()
+	go ah.Load()
+	container.SetService("ah", &ah)
+
 	app := framework.NewApplication(container)
 
 	app.AddController("main", &controller.MainMenu{})
+	app.AddController("multiplayer", &controller.Multiplayer{})
 	app.AddController("game", &controller.Game{})
+	app.AddController("game_over", &controller.GameOver{})
 
 	app.SetController("main")
 	app.Run()

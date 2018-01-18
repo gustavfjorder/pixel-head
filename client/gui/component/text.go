@@ -19,18 +19,14 @@ type Text struct {
 }
 
 func NewText() *Text {
-	return NewTextWithContents([]string{})
+	return NewTextWithContent()
 }
 
-func NewTextWithContent(content string) *Text {
-	return NewTextWithContents([]string{content})
-}
-
-func NewTextWithContents(content []string) *Text {
+func NewTextWithContent(contents ...string) *Text {
 	txt := &Text{
 		Color:   colornames.Black,
 		size:    12,
-		content: content,
+		content: contents,
 	}
 
 	txt.loadFontFace()
@@ -53,11 +49,7 @@ func (t *Text) loadFontFace() {
 func (t *Text) Render() ComponentInterface {
 	t.Text.Color = t.Color
 
-	for _, str := range t.content {
-		//t.Text.Dot.X -= t.Text.BoundsOf(str).W() // Right align
-		//t.Text.Dot.X -= t.Text.BoundsOf(str).W() / 2 // Center align
-		fmt.Fprintln(t.Text, str)
-	}
+	t.write(t.content...)
 
 	return t
 }
@@ -67,7 +59,11 @@ func (t *Text) SetSize(size float64) {
 	t.loadFontFace()
 }
 
-func (t *Text) Write(txt string) {
-	t.content = append(t.content, txt)
+func (t *Text) write(txt ...string) {
+	for _, str := range t.content {
+		//t.Text.Dot.X -= t.Text.BoundsOf(str).W() // Right align
+		//t.Text.Dot.X -= t.Text.BoundsOf(str).W() / 2 // Center align
+		fmt.Fprintln(t.Text, str)
+	}
 }
 
