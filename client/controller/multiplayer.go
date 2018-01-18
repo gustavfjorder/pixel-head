@@ -20,6 +20,8 @@ type Multiplayer struct {
 	viewItems []component.ComponentInterface
 }
 
+var updateView func()
+
 func (c *Multiplayer) Init() {
 	c.viewItems = make([]component.ComponentInterface, 0)
 }
@@ -97,27 +99,6 @@ func (c *Multiplayer) Run() {
 	go listenForBroadCast(endListen, func(addr net.Addr, msg string) {
 		fmt.Println("Found: ", addr.String(), msg)
 
-		updateView := func() {
-			gamesContainer.ClearChildren()
-
-			i := 0
-			for _, server := range broadcasts {
-				a := server.ip
-				item := component.NewButton(10)
-				item.Pos(pixel.V(
-					gamesContainer.Bounds().W() / 2,
-					gamesContainer.Bounds().H() - float64(20 * (i + 1)),
-				)).Center()
-				item.Text(server.ip)
-				item.OnLeftMouseClick(func() {
-					fmt.Println("Clicked: " + a)
-				})
-
-				gamesContainer.Child(item)
-				i++
-			}
-		}
-
 		server, found := broadcasts[addr.String()]
 		if found {
 			server.selfDestructer.Reset(time.Second * 2)
@@ -129,20 +110,47 @@ func (c *Multiplayer) Run() {
 					lock.Lock()
 					delete(broadcasts, addr.String())
 					lock.Unlock()
-
-					updateView()
 				}),
 			}
 		}
-
-		updateView()
 	})
+
+	updateView = func() {
+		gamesContainer.ClearChildren()
+
+		j := 0
+		sorted := make([]string, len(broadcasts))
+		for _, server := range broadcasts {
+			sorted[j] = server.ip
+			j++
+		}
+		sort.Strings(sorted)
+
+		i := 0
+		for _, ip := range sorted {
+			a := ip
+			item := component.NewButton(10)
+			item.Pos(pixel.V(
+				gamesContainer.Bounds().W() / 2,
+				gamesContainer.Bounds().H() - float64(20 * (i + 1)),
+			)).Center()
+			item.Text(ip)
+			item.OnLeftMouseClick(func() {
+				fmt.Println("Clicked: " + a)
+			})
+
+			gamesContainer.Child(item)
+			i++
+		}
+	}
 }
 
 func (c *Multiplayer) Update() {
 	win := c.Container.Get("window").(*pixelgl.Window)
 
 	win.Clear(colornames.Lightgoldenrodyellow)
+
+	updateView()
 
 	for _, view := range c.viewItems {
 		view.Pos(win.Bounds().Center())
