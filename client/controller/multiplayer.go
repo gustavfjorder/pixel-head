@@ -12,6 +12,8 @@ import (
 	"time"
 	"sync"
 	"sort"
+	"github.com/gustavfjorder/pixel-head/config"
+	"github.com/gustavfjorder/pixel-head/server"
 )
 
 type Multiplayer struct {
@@ -57,6 +59,7 @@ func (c *Multiplayer) Run() {
 			buttonSP.Text("Create game")
 			broadcasting = false
 		} else {
+			go server.NewLounge(1)
 			go broadCastServer(endBroadcast)
 			buttonSP.Text("Close game")
 			broadcasting = true
@@ -128,7 +131,7 @@ func (c *Multiplayer) Run() {
 
 		i := 0
 		for _, ip := range sorted {
-			a := ip
+			uri := ip
 			item := component.NewButton(10)
 			item.Pos(pixel.V(
 				gamesContainer.Bounds().W() / 2,
@@ -136,7 +139,10 @@ func (c *Multiplayer) Run() {
 			)).Center()
 			item.Text(ip)
 			item.OnLeftMouseClick(func() {
-				fmt.Println("Clicked: " + a)
+				fmt.Println("Clicked: " + uri)
+				config.Conf.LoungeUri = uri
+				config.Conf.Online = true
+				c.App.ChangeTo("game")
 			})
 
 			gamesContainer.Child(item)
@@ -215,7 +221,12 @@ func broadCastServer(c chan bool) {
 
 	ticker := time.Tick(time.Second / 10)
 	for {
-		conn.Write([]byte(getIp()))
+		ip, err := config.GetIp()
+		if err != nil {
+			continue
+		}
+
+		conn.Write([]byte(ip))
 
 		select {
 		case <-c:
@@ -226,34 +237,4 @@ func broadCastServer(c chan bool) {
 	}
 
 	endBroadCast:
-}
-
-func getIp() string {
-	ifaces, _ := net.Interfaces()
-
-	for _, i := range ifaces {
-		addrs, _ := i.Addrs()
-
-		var ip net.IP
-		for _, addr := range addrs {
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-
-			return ip.String()
-		}
-	}
-
-	return "no ip"
 }

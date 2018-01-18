@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 	"github.com/rs/xid"
+	"net"
+	"errors"
 )
 
 var ID = xid.New().String()
@@ -67,4 +69,34 @@ func SaveConfig(file string) {
 	return
 	js, _ := json.Marshal(Conf)
 	ioutil.WriteFile(file, js, 0644) // todo: find better way to save settings file
+}
+
+func GetIp() (string, error) {
+	ifaces, _ := net.Interfaces()
+
+	for _, i := range ifaces {
+		addrs, _ := i.Addrs()
+
+		var ip net.IP
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+
+			return ip.String(), nil
+		}
+	}
+
+	return "", errors.New("NO IP FOUND")
 }

@@ -15,7 +15,7 @@ type ClientSpace struct {
 	space.Space
 }
 
-func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
+func Start(g *model.Game, clientSpaces []ClientSpace, finished chan <- bool) {
 	fmt.Println("Starting game")
 	start := time.Now()
 
@@ -112,7 +112,7 @@ endgame:
 		spc.Put("game over")
 	}
 	fmt.Println("Sending to finished")
-	//<-finished
+	finished <- true
 	fmt.Println("Game ended")
 }
 
