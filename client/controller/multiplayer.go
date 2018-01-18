@@ -10,6 +10,7 @@ import (
 	"net"
 	"fmt"
 	"time"
+	"sync"
 )
 
 type Multiplayer struct {
@@ -23,9 +24,11 @@ func (c *Multiplayer) Init() {
 }
 
 func (c *Multiplayer) Run() {
+	win := c.Container.Get("window").(*pixelgl.Window)
+
 	broadcasting := false
-	endListen := make(chan bool)
-	endBrodcast := make(chan bool)
+	endListen := make(chan bool, 1)
+	endBroadcast := make(chan bool, 1)
 
 
 	headLine := component.NewTextWithContent("Select multiplayer game")
@@ -34,7 +37,10 @@ func (c *Multiplayer) Run() {
 	headLine.Pos(pixel.V(0, 250))
 
 	menuContainer := component.NewBox(14, 6)
-	menuContainer.Center()
+	menuContainer.Pos(pixel.V(
+		win.Bounds().W() / 7,
+		0,
+	)).Center()
 
 	buttonSP := component.NewButton(8)
 	buttonSP.Pos(pixel.V(
@@ -44,11 +50,11 @@ func (c *Multiplayer) Run() {
 	buttonSP.Text("Create game")
 	buttonSP.OnLeftMouseClick(func() {
 		if broadcasting {
-			endBrodcast <- true
+			endBroadcast <- true
 			buttonSP.Text("Create game")
 			broadcasting = false
 		} else {
-			go broadCastServer(endBrodcast)
+			go broadCastServer(endBroadcast)
 			buttonSP.Text("Close game")
 			broadcasting = true
 		}
@@ -62,7 +68,7 @@ func (c *Multiplayer) Run() {
 	buttonExit.Text("Back")
 	buttonExit.OnLeftMouseClick(func() {
 		if broadcasting {
-			endBrodcast <- true
+			endBroadcast <- true
 		}
 		endListen <- true
 		c.App.ChangeTo("main")
@@ -70,37 +76,66 @@ func (c *Multiplayer) Run() {
 
 	menuContainer.Child(buttonSP, buttonExit)
 
-	itemList := component.NewList()
-	itemList.Pos(pixel.V(-250, -250))
+	gamesContainer := component.NewBox(14, 6)
+	gamesContainer.Pos(pixel.V(
+		- win.Bounds().W() / 7,
+		0,
+	)).Center()
 
-	broadcasts := make(map[string]bool)
+	c.addViewItem(component.NewContainer(menuContainer, gamesContainer, headLine))
+
+
+	type lanServer struct {
+		addr    net.Addr
+		ip      string
+		selfDestructer *time.Timer
+	}
+
+	lock := &sync.RWMutex{}
+	broadcasts := make(map[string]*lanServer)
 	go listenForBroadCast(endListen, func(addr net.Addr, msg string) {
-		_, found := broadcasts[addr.String()]
-		if found && msg != "open" {
-			delete(broadcasts, addr.String())
+		fmt.Println("Found: ", addr.String(), msg)
+
+		updateView := func() {
+			gamesContainer.ClearChildren()
+
+			i := 0
+			for _, server := range broadcasts {
+				a := server.ip
+				item := component.NewButton(10)
+				item.Pos(pixel.V(
+					gamesContainer.Bounds().W() / 2,
+					gamesContainer.Bounds().H() - float64(20 * (i + 1)),
+				)).Center()
+				item.Text(server.ip)
+				item.OnLeftMouseClick(func() {
+					fmt.Println("Clicked: " + a)
+				})
+
+				gamesContainer.Child(item)
+				i++
+			}
+		}
+
+		server, found := broadcasts[addr.String()]
+		if found {
+			server.selfDestructer.Reset(time.Second * 2)
 		} else {
-			broadcasts[addr.String()] = true
-			broadcasts["12.12.12.12:3000"] = true
+			broadcasts[addr.String()] = &lanServer{
+				addr:    addr,
+				ip:      msg,
+				selfDestructer: time.AfterFunc(time.Second * 2, func() {
+					lock.Lock()
+					delete(broadcasts, addr.String())
+					lock.Unlock()
+
+					updateView()
+				}),
+			}
 		}
 
-		itemList.ClearChildren()
-
-		i := 0
-		for addr := range broadcasts {
-			a := addr
-			item := component.NewButton(12)
-			item.Pos(pixel.V(0, -float64(20 * i)))
-			item.Text(addr)
-			item.OnLeftMouseClick(func() {
-				fmt.Println("Clicked: " + a)
-			})
-
-			itemList.Child(item)
-			i++
-		}
+		updateView()
 	})
-
-	c.addViewItem(component.NewContainer(menuContainer, headLine, itemList))
 }
 
 func (c *Multiplayer) Update() {
@@ -133,20 +168,26 @@ func listenForBroadCast(c chan bool, handler func(addr net.Addr, msg string)) {
 
 	defer listener.Close()
 
-	for {
+	receivedUDP := make(chan bool)
+
+	listen2 := func() {
 		data := make([]byte, 4096)
 		n, addr, err := listener.ReadFromUDP(data) // blocking
 
 		if err == nil {
 			msg := string(data[:n])
 			handler(addr, msg)
+			receivedUDP <- true
 		}
+	}
 
+	go listen2()
+	for {
 		select {
 		case <-c:
 			goto endListen
-		default:
-
+		case <-receivedUDP:
+			go listen2()
 		}
 	}
 
@@ -163,20 +204,47 @@ func broadCastServer(c chan bool) {
 
 	defer conn.Close()
 
-	ticker := time.Tick(time.Second * 5)
+	ticker := time.Tick(time.Second)
 	for {
-		conn.Write([]byte("open"))
+		conn.Write([]byte(getIp()))
 
 		select {
 		case <-c:
-			conn.Write([]byte("closed"))
 			goto endBroadCast
-		default:
+		case <- ticker:
 
 		}
-
-		<- ticker
 	}
 
 	endBroadCast:
+}
+
+func getIp() string {
+	ifaces, _ := net.Interfaces()
+
+	for _, i := range ifaces {
+		addrs, _ := i.Addrs()
+
+		var ip net.IP
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+
+			return ip.String()
+		}
+	}
+
+	return nil
 }
