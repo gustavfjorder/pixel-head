@@ -1,16 +1,20 @@
 package model
 
-import "github.com/faiface/pixel"
+import (
+	"github.com/faiface/pixel"
+	"time"
+)
 
 type Updates struct {
-	Removed []Entity
-	Added []EntityI
+	Removed   []Entity
+	Added     []EntityI
+	Timestamp time.Duration
 }
 
 type EntityType int
 
 const (
-	ShotE EntityType = iota
+	ShotE    EntityType = iota
 	BarrelE
 	LootboxE
 	ZombieE
@@ -32,16 +36,16 @@ type EntityI interface {
 
 func (updates *Updates) Clear() {
 	updates.Removed = make([]Entity, 0)
-	updates.Added = make([]EntityI,0)
+	updates.Added = make([]EntityI, 0)
 }
 
-func (updates *Updates) Add(entities ...EntityI){
+func (updates *Updates) Add(entities ...EntityI) {
 	updates.Added = append(updates.Added, entities...)
 }
 
 func (updates *Updates) Remove(entities ...EntityI) {
-	for _, entity  := range entities {
-		updates.Removed = append(updates.Removed, Entity{ID:entity.ID(), EntityType:entity.EntityType()})
+	for _, entity := range entities {
+		updates.Removed = append(updates.Removed, Entity{ID: entity.ID(), EntityType: entity.EntityType()})
 	}
 }
 

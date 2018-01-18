@@ -10,9 +10,8 @@ type State struct {
 	Shots     []Shot
 	Barrels   []BarrelI
 	Lootboxes []Lootbox
+	Timestamp    time.Duration
 }
-
-var Timestamp time.Duration
 
 type Entry struct {
 	elem  EntityI
@@ -22,6 +21,7 @@ type Entry struct {
 func (state State) Compress() (compressed State) {
 	compressed.Players = state.Players
 	compressed.Zombies = state.Zombies
+	compressed.Timestamp = state.Timestamp
 	return
 }
 

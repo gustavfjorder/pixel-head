@@ -81,7 +81,7 @@ func (weapon *WeaponBase) Shoot(player Player, game *Game){
 	if weapon.GetMagazine() <= 0 {
 		return
 	}
-	game.Add(NewShot(player))
+	game.Add(NewShot(player, game.State.Timestamp))
 	weapon.MagazineCurrent -= 1
 }
 
@@ -97,7 +97,7 @@ func (weapon *Shotgun) Shoot(player Player, game *Game){
 	shots := make([]Shot, weapon.BulletsPerShot())
 
 	for i := 0; i < weapon.BulletsPerShot(); i++ {
-		shots[i] = NewShot(player, angle)
+		shots[i] = NewShot(player, game.State.Timestamp, angle)
 		angle += weapon.Spread()
 	}
 	weapon.WeaponBase.MagazineCurrent -= 1

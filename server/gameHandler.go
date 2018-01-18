@@ -54,7 +54,8 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			default:
 			}
 			//Update game
-			model.Timestamp = time.Since(start)
+			g.State.Timestamp = time.Since(start)
+			g.Updates.Timestamp = g.State.Timestamp
 
 			g.HandleRequests(collectRequests(clientSpaces, g.PlayerIds))
 			g.HandleLoot()
@@ -65,13 +66,12 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 			g.HandleCorpses()
 
 			//Send new game state to clients
-			var ts time.Duration
 			compressed := g.State.Compress()
 			for _, spc := range clientSpaces {
-				spc.GetP("state",&ts, &model.State{})
-				spc.Put("state",model.Timestamp ,compressed)
+				spc.GetP("state", &model.State{})
+				spc.Put("state",compressed)
 				if !g.Updates.Empty(){
-					spc.Put("update",model.Timestamp,g.Updates)
+					spc.Put("update", g.Updates)
 				}
 			}
 			g.Updates.Clear()
@@ -107,11 +107,12 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished <-chan bool) {
 
 	}
 endgame:
+	fmt.Println("Putting to tuple space:")
 	for _, spc := range clientSpaces {
 		spc.Put("game over")
 	}
-	g.Clear()
-	<-finished
+	fmt.Println("Sending to finished")
+	//<-finished
 	fmt.Println("Game ended")
 }
 

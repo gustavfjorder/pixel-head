@@ -83,7 +83,7 @@ func (g *Game) Update() {
 		case <- g.GameDone:
 			g.ah.Clear()
 			win.SetMatrix(pixel.IM)
-			g.App.ChangeTo("game_over")
+			g.App.SetController("main")
 		default:
 		}
 	}
@@ -118,8 +118,7 @@ func gotoLounge() (spc space.Space, m model.Map) {
 			Uri:   uri,
 			Space: server.SetupSpace(uri),
 		}
-		c := make(chan bool, 1)
-		go server.Start(&g, []server.ClientSpace{clientSpace}, c)
+		go server.Start(&g, []server.ClientSpace{clientSpace}, make(chan bool, 1))
 		spc = space.NewRemoteSpace(uri)
 	}
 	spc.Get("map", &m)
