@@ -8,6 +8,7 @@ import (
 	"os"
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/helper"
+	"github.com/gustavfjorder/pixel-head/config"
 )
 
 type MainMenu struct {
@@ -36,6 +37,7 @@ func (c *MainMenu) Run() {
 	)).Center()
 	buttonSP.Text("Single Player")
 	buttonSP.OnLeftMouseClick(func() {
+		config.Conf.Online = false
 		c.App.ChangeTo("game")
 	})
 

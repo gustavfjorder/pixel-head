@@ -15,15 +15,16 @@ var startPort = 31415
 var ip, _ = config.GetIp()
 
 
-func NewLounge(maxRooms int) *Space {
+func NewLounge(maxRooms int) (spc *Space, port string) {
 	config.Conf.Online = true
 	setup.RegisterModels()
 
 	fmt.Println(ip)
-	config.Conf.LoungeUri = "tcp://" + ip + ":" + NextValidPort() + "/lounge"
+	port = NextValidPort()
+	config.Conf.LoungeUri = "tcp://" + ip + ":" + port + "/lounge"
 	lounge := NewSpace(config.Conf.LoungeUri)
 	go newLounge(maxRooms, lounge)
-	return &lounge
+	return &lounge, port
 }
 
 func newLounge(maxRooms int, lounge Space) {
