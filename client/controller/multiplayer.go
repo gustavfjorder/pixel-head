@@ -227,7 +227,7 @@ func broadCastServer(c chan bool, port string) {
 	localAddr, _ := net.ResolveUDPAddr("udp4", "0.0.0.0:25001")
 
 	conn, err := net.DialUDP("udp4", localAddr, &net.UDPAddr{
-		IP:   net.IPv4(225, 0, 0, 1),
+		IP:   net.IPv4(255, 255, 255, 255 ),
 		Port: 9999,
 	})
 	if err != nil {

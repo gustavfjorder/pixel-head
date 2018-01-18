@@ -10,7 +10,7 @@ import (
 	"net"
 )
 
-const PlayersPerRoom = 1
+const PlayersPerRoom = 2
 var startPort = 31415
 var ip, _ = config.GetIp()
 

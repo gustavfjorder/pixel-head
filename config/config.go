@@ -72,31 +72,13 @@ func SaveConfig(file string) {
 }
 
 func GetIp() (string, error) {
-	ifaces, _ := net.Interfaces()
-
-	for _, i := range ifaces {
-		addrs, _ := i.Addrs()
-
-		var ip net.IP
-		for _, addr := range addrs {
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-
-			return ip.String(), nil
-		}
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "", errors.New("not connected to the internet")
 	}
+	defer conn.Close()
 
-	return "", errors.New("NO IP FOUND")
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP.String(), nil
 }
