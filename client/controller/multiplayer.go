@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"time"
 	"sync"
+	"sort"
 )
 
 type Multiplayer struct {
@@ -204,7 +205,7 @@ func broadCastServer(c chan bool) {
 
 	defer conn.Close()
 
-	ticker := time.Tick(time.Second)
+	ticker := time.Tick(time.Second / 10)
 	for {
 		conn.Write([]byte(getIp()))
 
@@ -246,5 +247,5 @@ func getIp() string {
 		}
 	}
 
-	return nil
+	return "no ip"
 }
