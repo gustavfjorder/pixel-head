@@ -35,8 +35,6 @@
 
 [[constraint]]
   branch = "master"
-#  branch = "bldng"
-#  branch = "aggregation-policy"
   name = "github.com/pspaces/gospace"
 
 [[constraint]]

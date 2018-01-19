@@ -52,8 +52,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/pspaces/gospace"
-  packages = [".","protocol","shared","space"]
-  revision = "5697d60b85dc82e34ae8d38f8070694c07202739"
+  packages = ["protocol","shared","space"]
+  revision = "0311981050a86d57e868203699e4be8fa22c71ab"
 
 [[projects]]
   name = "github.com/rs/xid"
@@ -76,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b33373dd88f7bb58278648f62ba929812e3b7241bdcc4b238185984173acd45a"
+  inputs-digest = "662e416f085fcd5e58e1f2488ea34b82424c5574c6aab4f1717d302d0dea7235"
   solver-name = "gps-cdcl"
   solver-version = 1
