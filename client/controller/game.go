@@ -8,7 +8,6 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"github.com/gustavfjorder/pixel-head/config"
 	"github.com/pspaces/gospace/space"
-	"fmt"
 	"github.com/gustavfjorder/pixel-head/server"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel"
@@ -88,8 +87,7 @@ func gotoLounge() (spc space.Space, m model.Map) {
 			panic(err)
 		}
 
-		k, err := servspc.Get("join", config.ID, &myUri)
-		fmt.Println(k)
+		_, err = servspc.Get("join", config.ID, &myUri)
 		if err != nil {
 			panic(err)
 		}

@@ -3,8 +3,6 @@ package server
 import (
 	"time"
 	"github.com/gustavfjorder/pixel-head/model"
-	"fmt"
-	"strconv"
 	"github.com/pspaces/gospace/space"
 	"github.com/gustavfjorder/pixel-head/config"
 )
@@ -16,7 +14,6 @@ type ClientSpace struct {
 }
 
 func Start(g *model.Game, clientSpaces []ClientSpace, finished chan <- bool) {
-	fmt.Println("Starting game")
 	start := time.Now()
 
 	for _, spc := range clientSpaces {
@@ -27,12 +24,10 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished chan <- bool) {
 		spc.Get("joined")
 	}
 
-	fmt.Println("Starting game loop")
 	t := time.Tick(config.Conf.ServerHandleSpeed)
 	sec := time.Tick(time.Second)
 	speed := config.Conf.ServerHandleSpeed
 	for g.CurrentLevel < len(model.Levels) {
-		fmt.Println("Starting level " + strconv.Itoa(g.CurrentLevel))
 
 		duration := time.Second * 1
 		if g.CurrentLevel == 0 {
@@ -44,8 +39,6 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished chan <- bool) {
 		time.AfterFunc(duration, func() {
 			g.PrepareLevel(levelRdy)
 		})
-
-		fmt.Println("after prepare")
 
 		for {
 			select {
@@ -102,18 +95,14 @@ func Start(g *model.Game, clientSpaces []ClientSpace, finished chan <- bool) {
 		}
 
 		//g.LevelDone(g.CurrentLevel)
-		fmt.Println("print level done",g.CurrentLevel)
 		g.CurrentLevel++
 
 	}
 endgame:
-	fmt.Println("Putting to tuple space:")
 	for _, spc := range clientSpaces {
 		spc.Put("game over")
 	}
-	fmt.Println("Sending to finished")
 	finished <- true
-	fmt.Println("Game ended")
 }
 
 func collectRequests(clientSpaces []ClientSpace, playerIds map[string]bool) (requests []model.Request) {

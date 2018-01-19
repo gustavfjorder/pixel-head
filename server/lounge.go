@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/gustavfjorder/pixel-head/config"
 	"strconv"
 	"github.com/gustavfjorder/pixel-head/model"
@@ -19,7 +18,6 @@ func NewLounge(maxRooms int) (spc *Space, port string) {
 	config.Conf.Online = true
 	setup.RegisterModels()
 
-	fmt.Println(ip)
 	port = NextValidPort()
 	config.Conf.LoungeUri = "tcp://" + ip + ":" + port + "/lounge"
 	lounge := NewSpace(config.Conf.LoungeUri)
@@ -35,7 +33,6 @@ func newLounge(maxRooms int, lounge Space) {
 	for len(rooms) < cap(rooms) {
 		_, err := lounge.GetP("close")
 		if err == nil{
-			fmt.Println("Stopping server")
 			return
 		}
 		var id string
@@ -44,11 +41,7 @@ func newLounge(maxRooms int, lounge Space) {
 			continue
 		}
 
-		fmt.Println("Player '" + id + "' has connected")
-
 		awaiting = append(awaiting, id)
-
-		fmt.Printf("Awaiting %d more players \n", cap(awaiting)-len(awaiting))
 
 		if len(awaiting) == cap(awaiting) {
 			clientSpaces := make([]ClientSpace, len(awaiting))
@@ -76,7 +69,6 @@ func NextValidPort() string{
 			conn.Close()
 			break
 		} else {
-			fmt.Println(startPort, "is invalid retrying")
 			startPort++
 		}
 	}

@@ -44,15 +44,10 @@ func (game *Game) PrepareLevel(end chan bool) {
 	game.State.Zombies = make([]ZombieI, 0)
 	waveticker := time.NewTicker(level.TimeBetweenWaves)
 	zombieticker := time.NewTicker(level.TimeBetweenZombies)
-	fmt.Println("num zom", level.NumberOfZombiesPerWave, "num waves", level.NumberOfWaves)
 
 	for i := 0; i < level.NumberOfWaves; i++ {
-		fmt.Println("i:", i)
 		<-waveticker.C
 		for j := 0; j < level.NumberOfZombiesPerWave; j++ {
-			fmt.Println("j:", j)
-			fmt.Println("i*level.NumberOfZombiesPerWave+j", i*level.NumberOfZombiesPerWave+j)
-			fmt.Println(len(game.State.Zombies))
 			var ZOM Being
 			switch rand.Intn(4) {
 			case 1:
@@ -89,7 +84,6 @@ func (game *Game) HandleRequests(requests []Request) {
 		player, err := findPlayer(game.State.Players, request.PlayerId)
 
 		if err != nil {
-			fmt.Println(err)
 			continue
 		}
 

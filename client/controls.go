@@ -7,7 +7,6 @@ import (
 	"github.com/gustavfjorder/pixel-head/model"
 	"time"
 	"github.com/pspaces/gospace/space"
-	"fmt"
 )
 
 func HandleControls(spc *space.Space, win *pixelgl.Window, done <-chan bool, me *model.Player) {
@@ -70,7 +69,6 @@ func HandleControls(spc *space.Space, win *pixelgl.Window, done <-chan bool, me 
 
 		select {
 		case <-done:
-			fmt.Println("Ended control")
 			return
 		default:
 		}

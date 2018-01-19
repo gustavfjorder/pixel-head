@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/faiface/pixel/pixelgl"
 	"io/ioutil"
 	"os"
@@ -58,7 +57,6 @@ func LoadJson(file string, config interface{}) {
 	configFile, err := os.Open(file)
 	defer configFile.Close()
 	if err != nil {
-		fmt.Println(err.Error())
 		return
 	}
 	jsonParser := json.NewDecoder(configFile)

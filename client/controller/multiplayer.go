@@ -8,7 +8,6 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/helper"
 	"net"
-	"fmt"
 	"time"
 	"sort"
 	"github.com/gustavfjorder/pixel-head/config"
@@ -113,8 +112,6 @@ func (c *Multiplayer) Run() {
 
 	go listenForBroadCast(endListen, func(addr net.Addr, msg string) {
 		str := addr.String()
-		fmt.Println("Found: ", str, msg)
-
 		server, found := broadcasts[str]
 		if found {
 			server.selfDestructer.Reset(time.Second * 2)
@@ -150,7 +147,6 @@ func (c *Multiplayer) Run() {
 			)).Center()
 			item.Text(ip)
 			item.OnLeftMouseClick(func() {
-				fmt.Println("Clicked: " + uri)
 				config.Conf.LoungeUri = "tcp://" + uri + "/lounge"
 				config.Conf.Online = true
 				c.App.ChangeTo("game")
