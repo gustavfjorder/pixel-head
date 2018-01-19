@@ -1,16 +1,16 @@
 package client
 
 import (
-	"os"
 	"regexp"
 	"strconv"
-	"io/ioutil"
 	"github.com/faiface/pixel"
 	"sort"
 	"image"
 	"strings"
 	_ "image/png"
 	."github.com/gustavfjorder/pixel-head/client/animation"
+	"github.com/gustavfjorder/pixel-head/assets"
+	"bytes"
 )
 
 func LoadAll(paths ...string) (res map[string]Animation) {
@@ -25,7 +25,7 @@ func LoadAll(paths ...string) (res map[string]Animation) {
 
 func Load(path, prefix string) (res []Animation){
 	res = make([]Animation,0)
-	elems, err := ioutil.ReadDir(path)
+	elems, err := assetsReadDir(path)
 	if err != nil {
 		return
 	}
@@ -34,28 +34,37 @@ func Load(path, prefix string) (res []Animation){
 		if len(prefix) <= 0 {
 			del = ""
 		}
-		animationType, present := AnimationIndex[elem.Name()]
-		if elem.IsDir() && present {
-			sprites, names := LoadSprites(path + "/" + elem.Name())
+		animationType, present := AnimationIndex[elem]
+		if present {
+			sprites, names := LoadSprites(path + "/" + elem)
 			if len(sprites) <= 0 {
 				continue
 			} else if animationType == Still {
 				for i, sprite := range sprites {
-					res = append(res, NewAnimation(elem.Name() + "." + names[i], []*pixel.Sprite{sprite}, animationType))
+					res = append(res, NewAnimation(elem + "." + names[i], []*pixel.Sprite{sprite}, animationType))
 				}
 			} else {
-				res = append(res, NewAnimation(prefix+del+elem.Name(), sprites,animationType))
+				res = append(res, NewAnimation(prefix+del+elem, sprites,animationType))
 			}
 		} else {
-			loaded := Load(path + "/" + elem.Name(), prefix + del + elem.Name())
+			loaded := Load(path + "/" + elem, prefix + del + elem)
 			res = append(res, loaded...)
 		}
 	}
 	return
 }
 
+func assetsReadDir(path string) ([]string, error) {
+	dirPaths, err := assets.AssetDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return dirPaths, nil
+}
+
 func LoadSprites(path string) (res []*pixel.Sprite, names []string) {
-	elems, err := ioutil.ReadDir(path)
+	elems, err := assetsReadDir(path)
 	if err != nil {
 		return
 	}
@@ -63,16 +72,13 @@ func LoadSprites(path string) (res []*pixel.Sprite, names []string) {
 	names = make([]string, 0, len(elems))
 	sort.Sort(ByString(elems))
 	for _, elem := range elems {
-		if elem.IsDir() {
-			continue
-		}
-		img, err := LoadPicture(path + "/" + elem.Name())
+		img, err := LoadPicture(path + "/" + elem)
 		if err != nil {
 			continue
 		}
 		res = append(res, pixel.NewSprite(img, img.Bounds()))
-		i := strings.Index(elem.Name(), ".")
-		names = append(names,elem.Name()[:i] )
+		i := strings.Index(elem, ".")
+		names = append(names,elem[:i] )
 	}
 	return
 }
@@ -107,7 +113,7 @@ func LoadSpriteSheet(deltax float64, deltay float64, total int, path string) (sp
 	return sprites
 }
 
-type ByString []os.FileInfo
+type ByString []string
 
 func (s ByString) Len() int {
 	return len(s)
@@ -117,18 +123,25 @@ func (s ByString) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 func (s ByString) Less(i, j int) bool {
-	r := regexp.MustCompile("[0-9]+")
-	si, _ := strconv.Atoi(r.FindString(s[i].Name()))
-	sj, _ := strconv.Atoi(r.FindString(s[j].Name()))
+	r := regexp.MustCompile("([0-9]+).png")
+
+	resI := r.FindStringSubmatch(s[i])
+	resJ := r.FindStringSubmatch(s[j])
+	if len(resI) <= 1 || len(resJ) <= 1 {
+		return true
+	}
+
+	si, _ := strconv.Atoi(resI[1])
+	sj, _ := strconv.Atoi(resJ[1])
 	return si < sj
 }
 
 func LoadPicture(path string) (pixel.Picture, error) {
-	file, err := os.Open(path)
+	data, err := assets.Asset(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	file := bytes.NewReader(data)
 	img, _, err := image.Decode(file)
 	if err != nil {
 		return nil, err

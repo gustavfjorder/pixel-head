@@ -39,7 +39,7 @@ func NewAnimationHandler() (ah AnimationHandler) {
 }
 
 func (ah *AnimationHandler) Load() {
-	spritePath := "client/sprites/"
+	spritePath := "assets/sprites/"
 	ah.animations = LoadAll(spritePath+"animations", spritePath+"images")
 	ah.animations["explosion"] = NewAnimation("explosion",
 		LoadSpriteSheet(1024/8, 1024/8, 8*8, spritePath+"images/explosion/explosion.png"),

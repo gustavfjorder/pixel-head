@@ -3,11 +3,12 @@ package component
 import (
 	"github.com/faiface/pixel"
 	"github.com/gustavfjorder/pixel-head/client"
-	"os"
 	"io/ioutil"
 	"github.com/golang/freetype/truetype"
 	"encoding/xml"
 	"golang.org/x/image/font"
+	"github.com/gustavfjorder/pixel-head/assets"
+	"bytes"
 )
 
 //type Data struct {
@@ -49,42 +50,41 @@ func LoadSprite(file string) (pixel.Picture, []pixel.Rect, SpriteData) {
 }
 
 func LoadTTF(path string, size float64) (font.Face, error) {
-	file, err := os.Open(path)
+	data, err := assets.Asset(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	file := bytes.NewReader(data)
 
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	font, err := truetype.Parse(bytes)
+	dataBytes, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	return truetype.NewFace(font, &truetype.Options{
+	dataFont, err := truetype.Parse(dataBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return truetype.NewFace(dataFont, &truetype.Options{
 		Size:              size,
 		GlyphCacheEntries: 1,
 	}), nil
 }
 
 func loadXml(file string, structure interface{}) (*interface{}, error) {
-	xmlFile, err := os.Open(file)
+	data, err := assets.Asset(file)
+	if err != nil {
+		return nil, err
+	}
+	xmlFile := bytes.NewReader(data)
+
+	dataBytes, err := ioutil.ReadAll(xmlFile)
 	if err != nil {
 		return nil, err
 	}
 
-	defer xmlFile.Close()
-
-	bytes, err := ioutil.ReadAll(xmlFile)
-	if err != nil {
-		return nil, err
-	}
-
-	err = xml.Unmarshal(bytes, &structure)
+	err = xml.Unmarshal(dataBytes, &structure)
 	if err != nil {
 		return nil, err
 	}
